@@ -402,7 +402,7 @@ class LoginWindow(RoundedDialogue):
                 self.hide()
     
     def loadStarted(self):
-        self.progress.start()
+        self.progress.start(ani=bool(self.view.url().toString()))
     
     def loadFinished(self):
         self.progress.finish()
@@ -609,7 +609,7 @@ class DownloadPage(QFrame):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.pages = {}
         
-        self.page = QWidget()
+        self.page = self.DownloadVanilla()
         self.page.setObjectName(u"page")
         self.pushButton = PushButton(self.frame)
         self.pushButton.setObjectName(u"pushButton")
