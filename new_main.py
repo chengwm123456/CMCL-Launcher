@@ -418,7 +418,58 @@ class LoginWindow(RoundedDialogue):
                   QGuiApplication.primaryScreen().geometry().height()), QGradient(QGradient.Preset.PerfectWhite))
 
 
-class MultiPageBase(QFrame):
+# class MultiPageBase(QFrame):
+#     def __init__(self, parent):
+#         super().__init__(parent)
+#         self.verticalLayout = QVBoxLayout(self)
+#         self.verticalLayout.setObjectName(u"verticalLayout")
+#         self.frame = Panel(self)
+#         self.horizontalLayout = QHBoxLayout(self.frame)
+#         self.horizontalLayout.setObjectName(u"horizontalLayout")
+#         self.pushButton = PushButton(self.frame)
+#         self.pushButton.setObjectName(u"pushButton")
+#         self.pushButton.setCheckable(True)
+#         self.pushButton.setChecked(True)
+#         self.pushButton.setAutoExclusive(True)
+#
+#         self.horizontalLayout.addWidget(self.pushButton)
+#
+#         self.pushButton_2 = PushButton(self.frame)
+#         self.pushButton_2.setObjectName(u"pushButton_2")
+#         self.pushButton_2.setCheckable(True)
+#         self.pushButton_2.setAutoExclusive(True)
+#
+#         self.horizontalLayout.addWidget(self.pushButton_2)
+#
+#         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+#
+#         self.horizontalLayout.addItem(self.horizontalSpacer)
+#
+#         self.verticalLayout.addWidget(self.frame)
+#
+#         self.stackedWidget = QStackedWidget(self)
+#         self.stackedWidget.setObjectName(u"stackedWidget")
+#         self.page = QWidget()
+#         self.page.setObjectName(u"page")
+#         self.stackedWidget.addWidget(self.page)
+#         self.page_2 = QWidget()
+#         self.page_2.setObjectName(u"page_2")
+#         self.stackedWidget.addWidget(self.page_2)
+#
+#         self.verticalLayout.addWidget(self.stackedWidget)
+#
+#         self.retranslateUi()
+#         #
+#         # QMetaObject.connectSlotsByName(Form)
+#
+#     # setupUi
+#
+#     def retranslateUi(self):
+#         self.pushButton.setText("Page2")
+#         self.pushButton_2.setText("Page2")
+#     # retranslateUi
+
+class DownloadPage(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.verticalLayout = QVBoxLayout(self)
@@ -434,13 +485,13 @@ class MultiPageBase(QFrame):
         
         self.horizontalLayout.addWidget(self.pushButton)
         
-        self.pushButton_2 = PushButton(self.frame)
-        self.pushButton_2.setObjectName(u"pushButton_2")
-        self.pushButton_2.setCheckable(True)
-        self.pushButton_2.setAutoExclusive(True)
-        
-        self.horizontalLayout.addWidget(self.pushButton_2)
-        
+        # self.pushButton_2 = PushButton(self.frame)
+        # self.pushButton_2.setObjectName(u"pushButton_2")
+        # self.pushButton_2.setCheckable(True)
+        # self.pushButton_2.setAutoExclusive(True)
+        #
+        # self.horizontalLayout.addWidget(self.pushButton_2)
+        #
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         
         self.horizontalLayout.addItem(self.horizontalSpacer)
@@ -458,15 +509,15 @@ class MultiPageBase(QFrame):
         
         self.verticalLayout.addWidget(self.stackedWidget)
         
-        self.retranslateUi(self)
+        self.retranslateUi()
         #
         # QMetaObject.connectSlotsByName(Form)
     
     # setupUi
     
-    def retranslateUi(self, Form):
-        self.pushButton.setText("Page2")
-        self.pushButton_2.setText("Page2")
+    def retranslateUi(self):
+        self.pushButton.setText("原版")
+        # self.pushButton_2.setText("")
     # retranslateUi
 
 
