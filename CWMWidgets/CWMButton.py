@@ -18,12 +18,13 @@ class PushButton(QPushButton):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
-        painter.setOpacity(1.0 if self.isDown() or self.underMouse() or self.hasFocus() else 0.6)
+        painter.setOpacity(1.0 if self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus() else 0.6)
         if not self.isEnabled():
             painter.setOpacity(0.3)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(getBorderColour(highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled()))
-        painter.setBrush(getBackgroundColour(highlight=self.isDown() and self.isEnabled()))
+        painter.setPen(getBorderColour(
+            highlight=(self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus()) and self.isEnabled()))
+        painter.setBrush(getBackgroundColour(highlight=(self.isDown() or self.isChecked()) and self.isEnabled()))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         if self.menu():
             painter.save()
@@ -74,18 +75,22 @@ class ToolButton(QToolButton):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
-        painter.setOpacity(1.0 if self.isDown() or self.underMouse() or self.hasFocus() else 0.6)
+        painter.setOpacity(1.0 if self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus() else 0.6)
         if not self.isEnabled():
             painter.setOpacity(0.3)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(getBorderColour(highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled()))
-        painter.setBrush(getBackgroundColour(highlight=self.isDown() and self.isEnabled()))
+        painter.setPen(getBorderColour(
+            highlight=(self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus()) and self.isEnabled()))
+        painter.setBrush(getBackgroundColour(highlight=(self.isDown() or self.isChecked()) and self.isEnabled()))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         if self.menu():
             painter.save()
-            painter.setPen(QPen(getBorderColour(
-                highlight=self.isEnabled()) if self.isDown() or self.hasFocus() or self.underMouse() else getForegroundColour(),
-                                1, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+            p = QPen(getBorderColour(
+                highlight=self.isEnabled()) if self.isDown() or self.hasFocus() or self.underMouse() else getForegroundColour())
+            p.setCapStyle(Qt.PenCapStyle.RoundCap)
+            p.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+            painter.setPen(p)
+            del p
             painter.setBrush(
                 getBorderColour(highlight=self.isEnabled()) if self.isDown() else getForegroundColour())
             painter.translate((self.width() - 8) - 3, self.height() / 2 - 4)
