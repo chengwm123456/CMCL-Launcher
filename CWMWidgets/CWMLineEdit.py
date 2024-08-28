@@ -7,47 +7,11 @@ from .CWMThemeControl import *
 class LineEdit(QLineEdit):
     def __init__(self, parent):
         super().__init__(parent)
-        #         self.setStyleSheet(f"""LineEdit{{
-        #     background: rgba({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-        #     color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-        #     border: 1px solid rgba({str(getBorderColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-        #     padding: 5px;
-        #     border-radius: 10px;
-        # }}
-        # LineEdit:focus, LineEdit:hover{{
-        #     border: 1px solid rgb({str(getBorderColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-        #     color: rgb({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')});
-        # }}
-        # LineEdit:hover{{
-        #     background: rgb({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')});
-        # }}
-        # LineEdit:focus{{
-        #     background: rgb({str(getBackgroundColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-        # }}
-        # """)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.installEventFilter(ToolTip(self))
     
     def paintEvent(self, a0):
-        # self.setStyleSheet(f"""LineEdit{{
-        #     background: rgba({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-        #     color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-        #     border: 1px solid rgba({str(getBorderColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-        #     padding: 5px;
-        #     border-radius: 10px;
-        # }}
-        # LineEdit:focus, LineEdit:hover{{
-        #     border: 1px solid rgb({str(getBorderColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-        #     color: rgb({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')});
-        # }}
-        # LineEdit:hover{{
-        #     background: rgb({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')});
-        # }}
-        # LineEdit:focus{{
-        #     background: rgb({str(getBackgroundColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-        # }}
-        # """)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)

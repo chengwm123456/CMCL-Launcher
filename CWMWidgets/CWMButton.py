@@ -18,7 +18,7 @@ class PushButton(QPushButton):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
-        painter.setOpacity(1.0 if self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus() else 0.6)
+        painter.setOpacity(1.0 if self.underMouse() or self.hasFocus() else 0.6)
         if not self.isEnabled():
             painter.setOpacity(0.3)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -29,13 +29,14 @@ class PushButton(QPushButton):
         if self.menu():
             painter.save()
             p = QPen(getBorderColour(
-                highlight=self.isEnabled()) if self.isDown() or self.hasFocus() or self.underMouse() else getForegroundColour())
+                highlight=self.isEnabled()) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour())
             p.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
             painter.setPen(p)
             del p
             painter.setBrush(
-                getBorderColour(highlight=self.isEnabled()) if self.isDown() else getForegroundColour())
+                getBorderColour(
+                    highlight=self.isEnabled()) if self.isDown() or self.isChecked() else getForegroundColour())
             painter.translate((self.width() - 8) - 3, self.height() / 2 - 4)
             painter.drawPolygon([QPoint(0, 0), QPoint(4, 8), QPoint(8, 0)])
             painter.restore()
@@ -75,7 +76,7 @@ class ToolButton(QToolButton):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
-        painter.setOpacity(1.0 if self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus() else 0.6)
+        painter.setOpacity(1.0 if self.underMouse() or self.hasFocus() else 0.6)
         if not self.isEnabled():
             painter.setOpacity(0.3)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -86,13 +87,14 @@ class ToolButton(QToolButton):
         if self.menu():
             painter.save()
             p = QPen(getBorderColour(
-                highlight=self.isEnabled()) if self.isDown() or self.hasFocus() or self.underMouse() else getForegroundColour())
+                highlight=self.isEnabled()) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour())
             p.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
             painter.setPen(p)
             del p
             painter.setBrush(
-                getBorderColour(highlight=self.isEnabled()) if self.isDown() else getForegroundColour())
+                getBorderColour(
+                    highlight=self.isEnabled()) if self.isDown() or self.isChecked() else getForegroundColour())
             painter.translate((self.width() - 8) - 3, self.height() / 2 - 4)
             painter.drawPolygon([QPoint(0, 0), QPoint(4, 8), QPoint(8, 0)])
             painter.restore()

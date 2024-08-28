@@ -469,57 +469,6 @@ class LoginWindow(RoundedDialogue):
 #         self.pushButton_2.setText("Page2")
 #     # retranslateUi
 
-class DownloadPage(QFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.verticalLayout = QVBoxLayout(self)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.frame = Panel(self)
-        self.horizontalLayout = QHBoxLayout(self.frame)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.pushButton = PushButton(self.frame)
-        self.pushButton.setObjectName(u"pushButton")
-        self.pushButton.setCheckable(True)
-        self.pushButton.setChecked(True)
-        self.pushButton.setAutoExclusive(True)
-        
-        self.horizontalLayout.addWidget(self.pushButton)
-        
-        # self.pushButton_2 = PushButton(self.frame)
-        # self.pushButton_2.setObjectName(u"pushButton_2")
-        # self.pushButton_2.setCheckable(True)
-        # self.pushButton_2.setAutoExclusive(True)
-        #
-        # self.horizontalLayout.addWidget(self.pushButton_2)
-        #
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        
-        self.horizontalLayout.addItem(self.horizontalSpacer)
-        
-        self.verticalLayout.addWidget(self.frame)
-        
-        self.stackedWidget = QStackedWidget(self)
-        self.stackedWidget.setObjectName(u"stackedWidget")
-        self.page = QWidget()
-        self.page.setObjectName(u"page")
-        self.stackedWidget.addWidget(self.page)
-        self.page_2 = QWidget()
-        self.page_2.setObjectName(u"page_2")
-        self.stackedWidget.addWidget(self.page_2)
-        
-        self.verticalLayout.addWidget(self.stackedWidget)
-        
-        self.retranslateUi()
-        #
-        # QMetaObject.connectSlotsByName(Form)
-    
-    # setupUi
-    
-    def retranslateUi(self):
-        self.pushButton.setText("原版")
-        # self.pushButton_2.setText("")
-    # retranslateUi
-
 
 class MainPage(QFrame):
     def __init__(self, parent):
@@ -646,6 +595,66 @@ class MainPage(QFrame):
         self.label2.adjustSize()
 
 
+class DownloadPage(QFrame):
+    class DownloadVanilla(QFrame):
+        def __init__(self):
+            super().__init__()
+    
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.frame = Panel(self)
+        self.horizontalLayout = QHBoxLayout(self.frame)
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.pages = {}
+        
+        self.page = QWidget()
+        self.page.setObjectName(u"page")
+        self.pushButton = PushButton(self.frame)
+        self.pushButton.setObjectName(u"pushButton")
+        self.pushButton.setCheckable(True)
+        self.pushButton.setChecked(True)
+        self.pushButton.setAutoExclusive(True)
+        self.pushButton.pressed.connect(lambda: self.update_page(self.pushButton))
+        
+        self.horizontalLayout.addWidget(self.pushButton)
+        self.pages[self.pushButton] = self.page
+        
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        
+        self.horizontalLayout.addItem(self.horizontalSpacer)
+        
+        self.verticalLayout.addWidget(self.frame)
+        
+        self.stackedWidget = QStackedWidget(self)
+        self.stackedWidget.setObjectName(u"stackedWidget")
+        self.stackedWidget.addWidget(self.page)
+        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.currentChanged.connect(self.update_navigation)
+        
+        self.verticalLayout.addWidget(self.stackedWidget)
+        
+        self.retranslateUi()
+        #
+        # QMetaObject.connectSlotsByName(Form)
+    
+    # setupUi
+    
+    def retranslateUi(self):
+        self.pushButton.setText("原版")
+        # self.pushButton_2.setText("")
+    
+    # retranslateUi
+    
+    def update_page(self, btn):
+        self.stackedWidget.setCurrentWidget(self.pages[btn])
+    
+    def update_navigation(self, _):
+        print(_)
+        print(self.stackedWidget.currentIndex())
+
+
 class MainWindow(RoundedWindow):
     def __init__(self):
         super().__init__()
@@ -669,7 +678,7 @@ class MainWindow(RoundedWindow):
         self.topWidget = FoldableNavigationPanel(self.centralwidget)
         self.HomePage = MainPage(self)
         self.topWidget.addItem(self.HomePage, "Home.svg")
-        self.DownloadPage = QFrame()
+        self.DownloadPage = DownloadPage(self)
         self.topWidget.addItem(self.DownloadPage, "Download.svg")
         self.topWidget.addButton("user_icon-black.svg", selectable=False, pressed=self.start_login)
         self.topWidget.addButton("auto_black.svg", selectable=False)
