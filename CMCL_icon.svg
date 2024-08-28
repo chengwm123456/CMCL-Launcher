@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <polygon points="19,0 45,0 64,19 64,45 45,64 19,64 0,45 0,19" fill="#A5F1FF"/>
+    <polygon points="32,2 55,12 61,37.5 44,58 20,58 3,37.5 9,12" fill="#5A9CCE"/>
+    <polygon points="20,11 44,11 54,30 43,49 21,49 10,30" fill="#9CCEFF"/>
+    <polygon points="22,15 42,15 48,30.5 31.5,45.5 16,30.5" fill="#006F9F"/>
+    <text x="6.75" y="37.5" font-family="Consolas" font-size="23" fill="#FFFFFF">CMCL</text>
+</svg>
