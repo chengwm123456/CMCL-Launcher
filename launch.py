@@ -221,9 +221,11 @@ def generate_launch_command(
                 libraries_files.append(str(path_artifact))
         else:
             libraries_dir_path = Path(minecraft_path / "libraries")
-            name = lib.get("name", "")
+            name = lib.get("name", "::")
             names = name.split(":")
-            path = Path(names[0].replace(".", "/")) / names[1]
+            basepath = Path(Path(names[0].replace(".", "/")) / names[1])
+            secondpath = Path(Path(names[2]) / f"{names[1]}-{names[2]}.jar")
+            path = Path(basepath / secondpath)
             path_artifact = Path(libraries_dir_path / path)
             libraries_files.append(str(path_artifact))
     sep = ":" if not get_os.getOperationSystemName()[0] == "Windows" else ";"

@@ -69,7 +69,7 @@ if DEBUG:
     qInstallMessageHandler(log)
 
 CMCL_version = ("Alpha-24001", "Alpha-24001")
-minecraft_path = Path(r"D:\Program Files\.minecraft")
+minecraft_path = Path(r"D:\Program Files\minecraft")
 language = "zh-cn"
 
 
@@ -545,6 +545,8 @@ class MainPage(QFrame):
                 menu.addAction(action)
         self.select_version_btn.setMenu(menu)
         self.horizontalLayout.addWidget(self.select_version_btn)
+        self.change_dir_btn = PushButton(self.bottomPanel)
+        self.horizontalLayout.addWidget(self.change_dir_btn)
         spacer2 = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.horizontalLayout.addItem(spacer2)
         self.retranslateUI()
@@ -553,6 +555,7 @@ class MainPage(QFrame):
     def retranslateUI(self):
         self.launch_btn.setText("启动")
         self.select_version_btn.setText(self.version or "选择版本")
+        self.change_dir_btn.setText("切换文件夹")
     
     def select_version(self, version):
         self.version = version
