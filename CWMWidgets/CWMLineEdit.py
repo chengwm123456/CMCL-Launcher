@@ -4,6 +4,11 @@ from .CWMWindows import RoundedMenu
 from .CWMThemeControl import *
 
 
+class CompleterMenu(RoundedMenu):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+
 class LineEdit(QLineEdit):
     def __init__(self, parent):
         super().__init__(parent)
@@ -30,46 +35,8 @@ class LineEdit(QLineEdit):
         super().paintEvent(a0)
     
     def contextMenuEvent(self, e):
+        default = self.createStandardContextMenu()
         menu = RoundedMenu(self)
-        if not self.isReadOnly():
-            undo = QAction()
-            undo.setText("Undo")
-            undo.setEnabled(self.isUndoAvailable())
-            undo.triggered.connect(self.undo)
-            undo.setShortcut("Ctrl+Z")
-            menu.addAction(undo)
-            redo = QAction()
-            redo.setText("Redo")
-            redo.setEnabled(self.isRedoAvailable())
-            redo.triggered.connect(self.redo)
-            redo.setShortcut("Ctrl+Y")
-            menu.addAction(redo)
-            menu.addSeparator()
-            cut = QAction()
-            cut.setText("Cut")
-            cut.triggered.connect(self.cut)
-            cut.setShortcut("Ctrl+X")
-            menu.addAction(cut)
-        copy = QAction()
-        copy.setText("Copy")
-        copy.triggered.connect(self.copy)
-        copy.setShortcut("Ctrl+C")
-        menu.addAction(copy)
-        if not self.isReadOnly():
-            paste = QAction()
-            paste.setText("Paste")
-            paste.triggered.connect(self.paste)
-            paste.setShortcut("Ctrl+V")
-            menu.addAction(paste)
-            delete = QAction()
-            delete.setText("Delete")
-            delete.triggered.connect(
-                lambda: self.setText(self.text()[:self.cursorPosition() - 1] + self.text()[self.cursorPosition():]))
-            menu.addAction(delete)
-        menu.addSeparator()
-        select_all = QAction()
-        select_all.setText("Select All")
-        select_all.triggered.connect(self.selectAll)
-        select_all.setShortcut("Ctrl+A")
-        menu.addAction(select_all)
+        for i in default.actions():
+            menu.addAction(i)
         menu.exec(self.mapToGlobal(e.pos()))

@@ -9,7 +9,7 @@ from .CWMButton import PushButton, ToolButton
 from .CWMComboBox import ComboBox
 from .CWMLineEdit import LineEdit
 from .CWMTextEdit import TextEdit, PlainTextEdit
-from .CWMTable import TableView
+from .CWMTable import HeaderView, TableView, TableWidget
 from .CWMNagivationItem import NavigationItem
 from .CWMNagivationPanel import NavigationPanel, FoldableNavigationPanel
 from .CWMTip import Tip, PopoutTip

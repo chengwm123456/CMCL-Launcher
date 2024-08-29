@@ -7,7 +7,8 @@ project start time:1693310592
 import sqlite3
 import base64
 import hashlib
-import subprocess
+import datetime
+import pytz
 import sys
 import traceback
 import re
@@ -27,7 +28,7 @@ from qframelesswindow import StandardTitleBar
 from launch import launch
 from login import get_user_data
 from player import Player
-from getversion import get_version_by_scan_dir
+from getversion import get_version_by_scan_dir, get_version_by_api
 
 DEBUG = True
 
@@ -114,7 +115,7 @@ class ContentPanel(Panel):
         return super().event(a0)
 
 
-class LoadingSvgSplash(QFrame):
+class LoadingAnimation(QFrame):
     class LoadingTextAnimation(QThread):
         def __init__(self, target):
             super().__init__(target)
@@ -146,10 +147,7 @@ class LoadingSvgSplash(QFrame):
             self.parent().hide()
         
         def __del__(self):
-            try:
-                self.terminate()
-            except RuntimeError:
-                pass
+            self.wait()
     
     class TransparencyAnimation(QVariantAnimation):
         def __init__(self, parent=None, variant="in"):
@@ -229,15 +227,11 @@ class LoadingSvgSplash(QFrame):
         if not failed:
             if ani:
                 self.TransparencyAnimation(self, "out").start()
-                _ = self.HideAnimation(self)
-                _.start()
+                self.HideAnimation(self).start()
             else:
-                _ = None
                 self.hide()
             self.statusLabel.setText("已加载完成")
             self.failedSvg.hide()
-            if ani and _:
-                _.exec()
         else:
             self.setStyleSheet("background: rgb(255, 200, 200);")
             self.statusLabel.setText("加载失败，请重试")
@@ -382,7 +376,7 @@ class LoginWindow(RoundedDialogue):
         self.view.loadStarted.connect(self.loadStarted)
         self.view.loadFinished.connect(self.loadFinished)
         self.view.page().profile().setHttpAcceptLanguage(language)
-        self.progress = LoadingSvgSplash(self)
+        self.progress = LoadingAnimation(self)
         self.progress.hide()
         self.titleBar.raise_()
         self.update()
@@ -598,6 +592,19 @@ class MainPage(QFrame):
 
 class DownloadPage(QFrame):
     class DownloadVanilla(QFrame):
+        class GetVersionThread(QThread):
+            gotVersion = pyqtSignal(dict)
+            
+            def run(self):
+                try:
+                    response = get_version_by_api(returns="RETURN_JSON")
+                    if response:
+                        self.gotVersion.emit({"status": "successfully", "result": response})
+                    else:
+                        self.gotVersion.emit({"status": "failed", "result": None})
+                except:
+                    self.gotVersion.emit({"status": "failed", "result": None})
+        
         def __init__(self, parent=None):
             super().__init__(parent)
             self.verticalLayout = QVBoxLayout(self)
@@ -608,19 +615,27 @@ class DownloadPage(QFrame):
             
             self.verticalLayout.addWidget(self.lineEdit)
             
-            self.tableWidget = TableView(self)
-            self.tableWidget.setObjectName(u"tableWidget")
-            m = QStandardItemModel()
-            m.setHorizontalHeaderLabels(["F", "F", "F"])
-            m.setItem(1, 1, QStandardItem("FFFFF"))
-            self.tableWidget.setModel(m)
+            self.tableView = TableView(self)
+            self.tableView.setObjectName(u"tableView")
+            self.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
+            self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+            self.tableView.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            self.tableView.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+            self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            self.tableView.horizontalHeader().setVisible(True)
+            self.tableView.verticalHeader().setVisible(False)
+            # self.tableView.clicked.connect(self.turn_to_download_page)
+            self.versionModel = QStandardItemModel(self.tableView)
+            self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
+            self.tableView.setModel(self.versionModel)
+            self.versions = {}
             sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
             sizePolicy.setHorizontalStretch(0)
             sizePolicy.setVerticalStretch(0)
-            sizePolicy.setHeightForWidth(self.tableWidget.sizePolicy().hasHeightForWidth())
-            self.tableWidget.setSizePolicy(sizePolicy)
+            sizePolicy.setHeightForWidth(self.tableView.sizePolicy().hasHeightForWidth())
+            self.tableView.setSizePolicy(sizePolicy)
             
-            self.verticalLayout.addWidget(self.tableWidget)
+            self.verticalLayout.addWidget(self.tableView)
             
             self.frame = Panel(self)
             self.frame.setObjectName(u"frame")
@@ -655,12 +670,168 @@ class DownloadPage(QFrame):
             
             self.retranslateUi()
             
+            self.loadingAnimation = None
+            self.getVersionThread = None
+            
             # QMetaObject.connectSlotsByName(self)
             # setupUi
         
         def retranslateUi(self):
             self.label.setText(u"\u4e0b\u8f7d\u6e90\uff1a")
+            self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
+        
         # retranslateUi
+        
+        def showEvent(self, *args, **kwargs):
+            super().showEvent(*args, **kwargs)
+            if self.versions:
+                pass
+            else:
+                self.getVersionThread = self.GetVersionThread(self)
+                self.getVersionThread.gotVersion.connect(self.displayVersion)
+                self.getVersionThread.start()
+                self.loadingAnimation = LoadingAnimation(self)
+                self.startAnimation(False)
+        
+        def startAnimation(self, ani=True):
+            if not self.loadingAnimation:
+                self.loadingAnimation = LoadingAnimation(self)
+            self.loadingAnimation.start(ani)
+        
+        def finishAnimation(self, ani=True, stat=True):
+            if not self.loadingAnimation:
+                return
+            self.loadingAnimation.finish(ani, not stat)
+        
+        def displayVersion(self, data):
+            if data["status"] == "successfully":
+                data = data["result"]
+                self.finishAnimation()
+                completer_l = []
+                for e, i in enumerate(data["versions"]):
+                    version = i["id"]
+                    version_type_real = i["type"]
+                    match version_type_real:
+                        case "release":
+                            version_type = "正式版"
+                        case "snapshot":
+                            version_type = "快照版"
+                        case "old_beta":
+                            version_type = "远古 beta"
+                        case "old_alpha":
+                            version_type = "远古 alpha"
+                        case _:
+                            version_type = version_type_real
+                    unformatted_release_time = i["releaseTime"]
+                    zone = int((datetime.datetime.now() - datetime.datetime.utcnow()).seconds / 60 / 60)
+                    release_time = datetime.datetime.strptime(unformatted_release_time,
+                                                              "%Y-%m-%dT%H:%M:%S+00:00").replace(
+                        tzinfo=datetime.UTC).astimezone(pytz.timezone(f"Etc/GMT-{zone}")).strftime(
+                        "%Y-%m-%d %H:%M:%S")
+                    time_1 = datetime.datetime.strptime(release_time, "%Y-%m-%d %H:%M:%S")
+                    if time_1.month == 4 and time_1.day == 1:
+                        version_type = "愚人节版本"
+                        version_type_real = "april_fool"
+                    for e2, i2 in enumerate([version, version_type, release_time]):
+                        self.versionModel.setItem(e, e2, QStandardItem(i2))
+                    self.versions[version] = {"VersionId": version, "VersionType": version_type_real,
+                                              "releaseTime": release_time}
+                    completer_l.append(version)
+                self.lineEdit.setCompleter(QCompleter(completer_l, self.lineEdit))
+                self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
+                self.tableView.setModel(self.versionModel)
+                self.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
+                self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+                self.tableView.horizontalHeader().setVisible(True)
+                self.tableView.verticalHeader().setVisible(False)
+            else:
+                self.finishAnimation(stat=False)
+        
+        def searchVersion(self, value):
+            version_d = value
+            self.versionModel.clear()
+            i = 0
+            latest_release = False
+            latest_snapshot = False
+            for key, value in self.versions.items():
+                if version_d == "":
+                    version = value["VersionId"]
+                    version_type = value["VersionType"]
+                    match version_type:
+                        case "release":
+                            version_type = "正式版"
+                        case "snapshot":
+                            version_type = "快照版"
+                        case "old_beta":
+                            version_type = "远古 beta"
+                        case "old_alpha":
+                            version_type = "远古 alpha"
+                        case _:
+                            version_type = version_type
+                    release_time = value["releaseTime"]
+                    time_1 = datetime.datetime.strptime(release_time, "%Y-%m-%d %H:%M:%S")
+                    if time_1.month == 4 and time_1.day == 1:
+                        version_type = "愚人节版本"
+                    for e2, i2 in enumerate([version, version_type, release_time]):
+                        self.versionModel.setItem(i, e2, QStandardItem(i2))
+                    i += 1
+                elif version_d == "latest" and (not latest_release or not latest_snapshot):
+                    version = value["VersionId"]
+                    version_type = value["VersionType"]
+                    match version_type:
+                        case "release":
+                            if latest_release:
+                                continue
+                            version_type = "正式版"
+                            latest_release = True
+                        case "snapshot":
+                            if latest_snapshot:
+                                continue
+                            version_type = "快照版"
+                            latest_snapshot = True
+                        case _:
+                            continue
+                    release_time = value["releaseTime"]
+                    for e2, i2 in enumerate([version, version_type, release_time]):
+                        self.versionModel.setItem(i, e2, QStandardItem(i2))
+                    i += 1
+                else:
+                    try:
+                        if re.match(version_d, key, re.UNICODE) or re.match(version_d, value["VersionType"],
+                                                                            re.UNICODE) or re.match(version_d, value[
+                            "releaseTime"], re.UNICODE):
+                            version = value["VersionId"]
+                            version_type = value["VersionType"]
+                            match version_type:
+                                case "release":
+                                    version_type = "正式版"
+                                case "snapshot":
+                                    version_type = "快照版"
+                                case "old_beta":
+                                    version_type = "远古 beta"
+                                case "old_alpha":
+                                    version_type = "远古 alpha"
+                                case _:
+                                    version_type = version_type
+                            release_time = value["releaseTime"]
+                            time_1 = datetime.datetime.strptime(release_time, "%Y-%m-%d %H:%M:%S")
+                            if time_1.month == 4 and time_1.day == 1:
+                                version_type = "愚人节版本"
+                            for e2, i2 in enumerate([version, version_type, release_time]):
+                                self.versionModel.setItem(i, e2, QStandardItem(i2))
+                            i += 1
+                    except re.error:
+                        pass
+            self.versionModel.setHorizontalHeaderLabels(
+                [app.translate("DownloadPage.DownloadMinecraft", "DownloadPage.DownloadMinecraft.TabelHeader.1"),
+                 app.translate("DownloadPage.DownloadMinecraft", "DownloadPage.DownloadMinecraft.TabelHeader.2"),
+                 app.translate("DownloadPage.DownloadMinecraft",
+                               "DownloadPage.DownloadMinecraft.TabelHeader.3")])
+            self.tableView.setModel(self.versionModel)
+            self.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
+            self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+            self.tableView.horizontalHeader().setVisible(True)
+            self.tableView.verticalHeader().setVisible(False)
     
     def __init__(self, parent):
         super().__init__(parent)

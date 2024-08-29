@@ -1,6 +1,7 @@
 .fleet
 .idea
 config
+__pycache__
 CMCL-zh-cn.qm
 CMCL-zh-cn.ts
 CMCL_Attributes.json
