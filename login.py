@@ -32,8 +32,8 @@ def get_user_data(token="", is_refresh_login=False):
         headers={"Content-Type": "application/x-www-form-urlencoded"},
         verify=True
     )
-    if response.json().get('player_accessToken', None) is not None:
-        access_token_1 = response.json()['player_accessToken']
+    if response.json().get('access_token'):
+        access_token_1 = response.json()['access_token']
         refresh_token = response.json()['refresh_token']
     else:
         return "Unsuccessfully", None, None, None, None, False
@@ -79,7 +79,7 @@ def get_user_data(token="", is_refresh_login=False):
             json={"identityToken": f"XBL3.0 x={uhs};{xsts_token}"},
             verify=True
         )
-        minecraft_access_token = response_4.json()["player_accessToken"]
+        minecraft_access_token = response_4.json()["access_token"]
         response_profile = requests.get(
             "https://api.minecraftservices.com/minecraft/profile",
             headers={"Authorization": f"Bearer {minecraft_access_token}"},

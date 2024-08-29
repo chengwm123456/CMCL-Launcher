@@ -200,23 +200,31 @@ def generate_launch_command(
 ):
     jsons = json.loads(
         Path(minecraft_path / "versions" / version_launch / f"{version_launch}.json").read_text(encoding="utf-8"))
-    libraries_file_data = jsons["libraries"]
+    libraries_file_data = jsons.get("libraries", [])
     libraries_files = []
     for lib in libraries_file_data:
-        if lib.get("rules"):
-            action = "disallow"
-            for rule in lib.get("rules", []):
-                rule_of_os = rule.get("os", {}).get("name", get_os.getOperationSystemInMojangApi()[0])
-                if rule_of_os != get_os.getOperationSystemInMojangApi()[0]:
-                    continue
-                action = rule.get("action")
-            allow = bool(lib.get("downloads", {}).get("artifact")) and action == "allow"
+        if lib.get("downloads"):
+            if lib.get("rules"):
+                action = "disallow"
+                for rule in lib.get("rules", []):
+                    rule_of_os = rule.get("os", {}).get("name", get_os.getOperationSystemInMojangApi()[0])
+                    if rule_of_os != get_os.getOperationSystemInMojangApi()[0]:
+                        continue
+                    action = rule.get("action", action)
+                allow = bool(lib.get("downloads", {}).get("artifact", {})) and action == "allow"
+            else:
+                allow = bool(lib.get("downloads", {}).get("artifact", {}))
+            data = lib.get("downloads", {})
+            libraries_dir_path = Path(minecraft_path / "libraries")
+            if data.get("artifact") and allow:
+                path_artifact = Path(libraries_dir_path / data.get("artifact", {}).get("path", ""))
+                libraries_files.append(str(path_artifact))
         else:
-            allow = bool(lib.get("downloads", {}).get("artifact"))
-        data = lib.get("downloads", {})
-        libraries_dir_path = Path(minecraft_path / "libraries")
-        if data.get("artifact") and allow:
-            path_artifact = Path(libraries_dir_path / data["artifact"]["path"])
+            libraries_dir_path = Path(minecraft_path / "libraries")
+            name = lib.get("name", "")
+            names = name.split(":")
+            path = Path(names[0].replace(".", "/")) / names[1]
+            path_artifact = Path(libraries_dir_path / path)
             libraries_files.append(str(path_artifact))
     sep = ":" if not get_os.getOperationSystemName()[0] == "Windows" else ";"
     libraries_files = sep.join(libraries_files)
@@ -226,9 +234,9 @@ def generate_launch_command(
     memory_args = f"-Xmn{str(initial_memory)} -Xmx{str(max_memory)}"
     player_name, player_uuid, player_access_token, player_type, player_has_mc = player_data
     game_jar_path = Path(minecraft_path / "versions" / version_launch / f"{version_launch}.jar")
-    assets = jsons["assets"]
-    main_class = jsons["mainClass"]
-    version_type = jsons["type"]
+    assets = jsons.get("assets")
+    main_class = jsons.get("mainClass")
+    version_type = jsons.get("type")
     launch_mode = JavaMode[launch_mode.upper()].value
     if jvm_arg_options is None:
         jvm_arg_options = {"option": "default"}

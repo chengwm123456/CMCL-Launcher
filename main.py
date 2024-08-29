@@ -69,7 +69,7 @@ if DEBUG:
     qInstallMessageHandler(log)
 
 CMCL_version = ("Alpha-24001", "Alpha-24001")
-minecraft_path = Path(r"D:\Program Files\minecraft")
+minecraft_path = Path(r"D:\Program Files\.minecraft")
 language = "zh-cn"
 
 
@@ -116,30 +116,6 @@ class ContentPanel(Panel):
 
 
 class LoadingAnimation(QFrame):
-    class LoadingTextAnimation(QThread):
-        def __init__(self, target):
-            super().__init__(target)
-            self.dotnum = 0
-            self.text = target.text()
-            self.__next = True
-        
-        def setTargetText(self, text):
-            self.text = text
-        
-        def run(self):
-            import time
-            self.dotnum = 0
-            while True:
-                self.parent().setText(self.text + ("." * (self.dotnum % 4)))
-                self.dotnum += 1
-                time.sleep(1)
-        
-        def __del__(self):
-            try:
-                self.terminate()
-            except RuntimeError:
-                pass
-    
     class HideAnimation(QThread):
         def run(self):
             import time
@@ -166,41 +142,46 @@ class LoadingAnimation(QFrame):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setStyleSheet("background: rgb(249, 249, 249);")
-        self.svgWidget = QSvgWidget(self)
-        self.svgWidget.load("CMCL_loading.svg")
-        self.svgWidget.setFixedSize(96, 96)
-        self.svgWidget.setStyleSheet("background: transparent;")
-        dsg = QGraphicsDropShadowEffect(self.svgWidget)
+        self.__svgWidget = QSvgWidget(self)
+        self.__svgWidget.load("CMCL_loading.svg")
+        self.__svgWidget.setFixedSize(96, 96)
+        self.__svgWidget.setStyleSheet("background: transparent;")
+        dsg = QGraphicsDropShadowEffect(self.__svgWidget)
         dsg.setBlurRadius(30)
         dsg.setOffset(0, 4)
         dsg.setColor(QColor(0, 0, 0, 100))
-        self.svgWidget.setGraphicsEffect(dsg)
-        self.failedSvg = QSvgWidget(self.svgWidget)
-        self.failedSvg.load("CMCL_loading_failed.svg")
-        self.failedSvg.setFixedSize(96, 96)
-        self.failedSvg.setStyleSheet("background: transparent;")
-        self.failedSvg.hide()
-        self.statusLabel = Label(self)
-        self.statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.loadingThread = self.LoadingTextAnimation(self.statusLabel)
+        self.__svgWidget.setGraphicsEffect(dsg)
+        self.__failedSvg = QSvgWidget(self.__svgWidget)
+        self.__failedSvg.load("CMCL_loading_failed.svg")
+        self.__failedSvg.setFixedSize(96, 96)
+        self.__failedSvg.setStyleSheet("background: transparent;")
+        self.__failedSvg.hide()
+        self.__statusLabel = Label(self)
+        self.__statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.__loadingTimer = QTimer(self)
+        self.__loadingTimer.timeout.connect(self.__updateText)
+        self.__counter = 0
         self.hide()
     
     def event(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setGeometry(self.parent().rect())
-        if hasattr(self, "svgWidget"):
-            self.svgWidget.setGeometry(QRect(int(self.width() / 2 - (self.svgWidget.width() / 2)),
-                                             int(self.height() / 2 - (self.svgWidget.height() / 2)),
-                                             self.svgWidget.width(),
-                                             self.svgWidget.height()))
-            if hasattr(self, "failedSvg"):
-                self.failedSvg.setGeometry(self.svgWidget.rect())
-        if hasattr(self, "statusLabel"):
-            self.statusLabel.adjustSize()
-            self.statusLabel.setGeometry(QRect(int(self.width() / 2 - (self.statusLabel.width() / 2)),
-                                               int(self.height() / 2 - (self.statusLabel.height() / 2)) + 96 + 30,
-                                               self.statusLabel.width(),
-                                               self.statusLabel.height()))
+        try:
+            self.__svgWidget.setGeometry(QRect(int(self.width() / 2 - (self.__svgWidget.width() / 2)),
+                                               int(self.height() / 2 - (self.__svgWidget.height() / 2)),
+                                               self.__svgWidget.width(),
+                                               self.__svgWidget.height()))
+            self.__failedSvg.setGeometry(self.__svgWidget.rect())
+        except AttributeError:
+            pass
+        try:
+            self.__statusLabel.adjustSize()
+            self.__statusLabel.setGeometry(QRect(int(self.width() / 2 - (self.__statusLabel.width() / 2)),
+                                                 int(self.height() / 2 - (self.__statusLabel.height() / 2)) + 96 + 30,
+                                                 self.__statusLabel.width(),
+                                                 self.__statusLabel.height()))
+        except AttributeError:
+            pass
         self.raise_()
         return super().event(e)
     
@@ -208,34 +189,41 @@ class LoadingAnimation(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         return super().paintEvent(a0)
     
+    def __updateText(self):
+        self.__counter += 1
+        self.__statusLabel.setText("加载中" + "." * (self.__counter % 4))
+    
     def start(self, ani=True):
         self.setStyleSheet("background: rgb(249, 249, 249);")
-        self.statusLabel.setText("加载中")
-        self.loadingThread.setTargetText(self.statusLabel.text())
-        self.svgWidget.load("CMCL_loading.svg")
-        self.failedSvg.load("CMCL_loading_failed.svg")
-        self.failedSvg.hide()
+        self.__statusLabel.setText("加载中")
+        self.__svgWidget.load("CMCL_loading.svg")
+        self.__failedSvg.load("CMCL_loading_failed.svg")
+        self.__failedSvg.hide()
         if ani:
             self.setStyleSheet("background: transparent")
             self.TransparencyAnimation(self, "in").start()
-        self.loadingThread.start()
+        self.__counter = 0
+        self.__loadingTimer.start(1000)
         self.show()
-        self.loadingThread.exec()
     
     def finish(self, ani=True, failed=False):
-        self.loadingThread.terminate()
+        self.__loadingTimer.stop()
         if not failed:
             if ani:
                 self.TransparencyAnimation(self, "out").start()
                 self.HideAnimation(self).start()
             else:
                 self.hide()
-            self.statusLabel.setText("已加载完成")
-            self.failedSvg.hide()
+            self.__statusLabel.setText("已加载完成")
+            self.__failedSvg.hide()
         else:
             self.setStyleSheet("background: rgb(255, 200, 200);")
-            self.statusLabel.setText("加载失败，请重试")
-            self.failedSvg.show()
+            self.__statusLabel.setText("加载失败，请重试")
+            self.__failedSvg.show()
+    
+    def destroy(self, *args, **kwargs):
+        self.__loadingTimer.stop()
+        super().destroy(*args, **kwargs)
 
 
 class LoginDialogue(RoundedDialogue):
@@ -320,7 +308,6 @@ class LoginDialogue(RoundedDialogue):
         print(token)
         thread = self.LoginThread(token)
         thread.start()
-        thread.exec()
         self.hide()
     
     def open_new_login(self):
