@@ -16,22 +16,18 @@ class LineEdit(QLineEdit):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
         painter.setOpacity(1.0 if self.hasFocus() or self.underMouse() else 0.6)
+        if not self.isEnabled():
+            painter.setOpacity(0.3)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(getBorderColour(highlight=self.hasFocus() or self.underMouse()))
         painter.setBrush(getBackgroundColour(highlight=self.hasFocus()))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         self.setStyleSheet(
             f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
+        op = QStyleOptionFrame()
+        op.initFrom(self)
+        self.initStyleOption(op)
         super().paintEvent(a0)
-    
-    def setEnabled(self, a0):
-        super().setEnabled(a0)
-        if a0:
-            self.setGraphicsEffect(None)
-        else:
-            og = QGraphicsOpacityEffect()
-            og.setOpacity(0.3)
-            self.setGraphicsEffect(og)
     
     def contextMenuEvent(self, e):
         menu = RoundedMenu(self)

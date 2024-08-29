@@ -6,9 +6,10 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 from .CWMNagivationItem import NavigationItem
+from .CWMPanel import Panel
 
 
-class NavigationPanel(QWidget):
+class NavigationPanel(Panel):
     class NavigationItemPosition(IntEnum):
         Left = 0
         Centre = 1
@@ -87,11 +88,8 @@ class NavigationPanel(QWidget):
     
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(QColor(230, 230, 230))  # Light: 255, 255, 255, 18   Light: 0, 0, 0, 18
-        painter.setBrush(QColor(249, 249, 249))  # Dark: 43, 43, 43   Light: 249, 249, 249
-        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
+        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        super().paintEvent(a0)
 
 
 class FoldableNavigationPanel(NavigationPanel):

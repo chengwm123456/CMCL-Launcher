@@ -2,6 +2,7 @@
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from .CWMThemeControl import *
 
 
 class Panel(QFrame):
@@ -10,7 +11,8 @@ class Panel(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
+        painter.setOpacity(1.0 if self.underMouse() or self.hasFocus() else 0.6)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(QColor(230, 230, 230))  # Light: 255, 255, 255, 18   Light: 0, 0, 0, 18
-        painter.setBrush(QColor(249, 249, 249))  # Dark: 43, 43, 43   Light: 249, 249, 249
+        painter.setPen(getBorderColour())
+        painter.setBrush(getBackgroundColour())
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)

@@ -10,64 +10,32 @@ from .CWMToolTip import ToolTip
 class TextEdit(QTextEdit):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setStyleSheet(f"""TextEdit{{
-    background: rgba({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-    color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-    border: 1px solid rgba({str(getBorderColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-    padding: 5px;
-    border-radius: 10px;
-}}
-TextEdit:focus, TextEdit:hover{{
-    border: 1px solid rgb({str(getBorderColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-    color: rgb({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')});
-}}
-TextEdit:hover{{
-    background: rgb({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')});
-}}
-TextEdit:focus{{
-    background: rgb({str(getBackgroundColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-}}
-        """)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.installEventFilter(ToolTip(self))
     
     def paintEvent(self, e):
-        self.setStyleSheet(f"""TextEdit{{
-            background: rgba({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-            color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-            border: 1px solid rgba({str(getBorderColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-            padding: 5px;
-            border-radius: 10px;
-        }}
-        TextEdit:focus, TextEdit:hover{{
-            border: 1px solid rgb({str(getBorderColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-            color: rgb({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')});
-        }}
-        TextEdit:hover{{
-            background: rgb({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')});
-        }}
-        TextEdit:focus{{
-            background: rgb({str(getBackgroundColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-        }}
-        """)
-        palette = self.palette()
-        colour = getForegroundColour()
-        colour.setAlpha(128)
-        palette.setColor(self.backgroundRole(), colour)
-        self.setPalette(palette)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        painter = QPainter(self.viewport())
+        painter.setOpacity(1.0 if self.hasFocus() or self.underMouse() else 0.6)
+        if not self.isEnabled():
+            painter.setOpacity(0.3)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(getBorderColour(highlight=self.hasFocus() or self.underMouse()))
+        painter.setBrush(getBackgroundColour(highlight=self.hasFocus()))
+        rect = self.contentsRect()
+        rect.setWidth(rect.width() - rect.x() - 1)
+        rect.setHeight(rect.height() - rect.y() - 1)
+        rect.setX(1)
+        rect.setY(1)
+        painter.drawRoundedRect(rect, 10, 10)
+        self.setStyleSheet(
+            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
+        op = QStyleOptionFrame()
+        op.initFrom(self)
+        self.initStyleOption(op)
         super().paintEvent(e)
-    
-    def setEnabled(self, a0):
-        super().setEnabled(a0)
-        if a0:
-            self.setGraphicsEffect(None)
-        else:
-            og = QGraphicsOpacityEffect()
-            og.setOpacity(0.3)
-            self.setGraphicsEffect(og)
     
     def contextMenuEvent(self, e):
         menu = RoundedMenu(self)
@@ -112,77 +80,36 @@ TextEdit:focus{{
         select_all.setShortcut("Ctrl+A")
         menu.addAction(select_all)
         menu.exec(self.mapToGlobal(e.pos()))
-    
-    # def paintEvent(self, a0):
-    #     self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-    #     self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-    #     self.setStyleSheet(
-    #         f"background: transparent; color: rgba(0, 0, 0, {1.0 if self.underMouse() or self.hasFocus() else 0.5}); border: none; margin: 5px;")
-    #     painter = QPainter(self)
-    #     painter.setOpacity(1.0 if self.underMouse() or self.hasFocus() else 0.5)
-    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    #     painter.setPen(
-    #         QColor(150, 150, 255) if self.hasFocus() else QColor(230, 230, 230))
-    #     painter.setBrush(QColor(173, 173, 255) if self.hasFocus() else QColor(253, 253, 253))
-    #     painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
-    #     super().paintEvent(a0)
 
 
 class PlainTextEdit(QPlainTextEdit):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setStyleSheet(f"""PlainTextEdit{{
-    background: rgba({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-    color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-    border: 1px solid rgba({str(getBorderColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-    padding: 5px;
-    border-radius: 10px;
-}}
-PlainTextEdit:focus, PlainTextEdit:hover{{
-    border: 1px solid rgb({str(getBorderColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-    color: rgb({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')});
-}}
-PlainTextEdit:hover{{
-    background: rgb({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')});
-}}
-PlainTextEdit:focus{{
-    background: rgb({str(getBackgroundColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-}}
-        """)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
     
     def paintEvent(self, e):
-        self.setStyleSheet(f"""PlainTextEdit{{
-            background: rgba({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-            color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-            border: 1px solid rgba({str(getBorderColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-            padding: 5px;
-            border-radius: 10px;
-        }}
-        PlainTextEdit:focus, PlainTextEdit:hover{{
-            border: 1px solid rgb({str(getBorderColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-            color: rgb({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')});
-        }}
-        PlainTextEdit:hover{{
-            background: rgb({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')});
-        }}
-        PlainTextEdit:focus{{
-            background: rgb({str(getBackgroundColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-        }}
-        """)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        painter = QPainter(self.viewport())
+        painter.setOpacity(1.0 if self.hasFocus() or self.underMouse() else 0.6)
+        if not self.isEnabled():
+            painter.setOpacity(0.3)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(getBorderColour(highlight=self.hasFocus() or self.underMouse()))
+        painter.setBrush(getBackgroundColour(highlight=self.hasFocus()))
+        rect = self.contentsRect()
+        rect.setWidth(rect.width() - rect.x() - 1)
+        rect.setHeight(rect.height() - rect.y() - 1)
+        rect.setX(1)
+        rect.setY(1)
+        painter.drawRoundedRect(rect, 10, 10)
+        self.setStyleSheet(
+            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
+        op = QStyleOptionFrame()
+        op.initFrom(self)
+        self.initStyleOption(op)
         super().paintEvent(e)
-    
-    def setEnabled(self, a0):
-        super().setEnabled(a0)
-        if a0:
-            self.setGraphicsEffect(None)
-        else:
-            og = QGraphicsOpacityEffect()
-            og.setOpacity(0.3)
-            self.setGraphicsEffect(og)
     
     def contextMenuEvent(self, e):
         menu = RoundedMenu(self)
@@ -227,17 +154,3 @@ PlainTextEdit:focus{{
         select_all.setShortcut("Ctrl+A")
         menu.addAction(select_all)
         menu.exec(self.mapToGlobal(e.pos()))
-    
-    # def paintEvent(self, a0):
-    #     self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-    #     self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-    #     self.setStyleSheet(
-    #         f"background: transparent; color: rgba(0, 0, 0, {1.0 if self.underMouse() or self.hasFocus() else 0.5}); border: none; margin: 5px;")
-    #     painter = QPainter(self)
-    #     painter.setOpacity(1.0 if self.underMouse() or self.hasFocus() else 0.5)
-    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    #     painter.setPen(
-    #         QColor(150, 150, 255) if self.hasFocus() else QColor(230, 230, 230))
-    #     painter.setBrush(QColor(173, 173, 255) if self.hasFocus() else QColor(253, 253, 253))
-    #     painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
-    #     super().paintEvent(a0)

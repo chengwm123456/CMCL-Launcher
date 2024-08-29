@@ -2,6 +2,7 @@
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from .CWMThemeControl import *
 
 
 class NavigationItem(QToolButton):
@@ -20,13 +21,8 @@ class NavigationItem(QToolButton):
         painter.setOpacity(1.0 if self.underMouse() or self.hasFocus() else 0.6)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(
-            QColor(135, 206,
-                   235) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else QColor(230,
-                                                                                                                 230,
-                                                                                                                 230))  # Light: 255, 255, 255, 18   Light: 0, 0, 0, 18
-        painter.setBrush(
-            QColor(176, 224, 230) if self.isDown() or self.isChecked() else QColor(253, 253,
-                                                                                   253))  # Dark: 47, 47, 47   Light: 249, 249, 249
+            getBorderColour(highlight=self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse()))
+        painter.setBrush(getBackgroundColour(highlight=self.isDown() or self.isChecked()))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         self.icon().paint(painter, QRect(5, 5, 32, 32))
     
