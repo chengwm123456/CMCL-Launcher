@@ -612,6 +612,7 @@ class DownloadPage(QFrame):
             self.lineEdit = LineEdit(self)
             self.lineEdit.setObjectName(u"lineEdit")
             self.lineEdit.setClearButtonEnabled(True)
+            self.lineEdit.textChanged.connect(self.searchVersion)
             
             self.verticalLayout.addWidget(self.lineEdit)
             
@@ -822,11 +823,7 @@ class DownloadPage(QFrame):
                             i += 1
                     except re.error:
                         pass
-            self.versionModel.setHorizontalHeaderLabels(
-                [app.translate("DownloadPage.DownloadMinecraft", "DownloadPage.DownloadMinecraft.TabelHeader.1"),
-                 app.translate("DownloadPage.DownloadMinecraft", "DownloadPage.DownloadMinecraft.TabelHeader.2"),
-                 app.translate("DownloadPage.DownloadMinecraft",
-                               "DownloadPage.DownloadMinecraft.TabelHeader.3")])
+            self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
             self.tableView.setModel(self.versionModel)
             self.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
             self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
