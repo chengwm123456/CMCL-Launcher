@@ -181,6 +181,16 @@ class RoundedFramelessWindow(QWidget):
             raise TypeError(f"cannot set property \"maximizeEnabled\" to type {type(value)}")
         self.__updateWindowFrameless()
     
+    def setWindowFlags(self, type):
+        super().setWindowFlags(type)
+        super().setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
+        super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)
+    
+    def setWindowFlag(self, a0, on=True):
+        super().setWindowFlag(a0, on)
+        super().setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
+        super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)
+    
     def childEvent(self, *args, **kwargs):
         super().childEvent(*args, **kwargs)
         self.__updateWindowFrameless()
