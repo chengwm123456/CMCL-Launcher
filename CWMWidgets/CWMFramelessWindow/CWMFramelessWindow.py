@@ -39,7 +39,7 @@ class RoundedFramelessWindow(QWidget):
     
     def __updateWindowFrameless(self):
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowMinMaxButtonsHint)
+            self.windowFlags() | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowMinMaxButtonsHint)
         match platform.system():
             case "Windows":
                 self.__user32.SetWindowLongPtrW(

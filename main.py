@@ -546,6 +546,7 @@ class MainPage(QFrame):
         self.select_version_btn.setMenu(menu)
         self.horizontalLayout.addWidget(self.select_version_btn)
         self.change_dir_btn = PushButton(self.bottomPanel)
+        self.change_dir_btn.pressed.connect(self.setMinecraftDir)
         self.horizontalLayout.addWidget(self.change_dir_btn)
         spacer2 = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.horizontalLayout.addItem(spacer2)
@@ -567,6 +568,11 @@ class MainPage(QFrame):
                         CMCL_version[0], None, None, None, "", None, None,
                         player)
         print(result)
+    
+    def setMinecraftDir(self):
+        global minecraft_path
+        path = QFileDialog(self).getExistingDirectory(self, "选择文件夹", str(minecraft_path))
+        print(path)
     
     def resizeEvent(self, *args, **kwargs):
         super().resizeEvent(*args, **kwargs)
@@ -1045,6 +1051,7 @@ class LoggingWindow(RoundedWindow):
         timer.start(100)
         self.inputtext = LineEdit(self)
         self.inputtext.returnPressed.connect(self.process_command)
+        # self.inputtext.setCompleter(QCompleter(dir(__builtins__)))
         self.canOutput = True
         self.retranslateUI()
         self.cmd = self.Executer()

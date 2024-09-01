@@ -4,17 +4,13 @@ from .CWMWindows import RoundedMenu
 from .CWMThemeControl import *
 
 
-class CompleterMenu(RoundedMenu):
-    def __init__(self, parent):
-        super().__init__(parent)
-
-
 class LineEdit(QLineEdit):
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.installEventFilter(ToolTip(self))
+        self.installEventFilter(self)
     
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -40,3 +36,18 @@ class LineEdit(QLineEdit):
         for i in default.actions():
             menu.addAction(i)
         menu.exec(self.mapToGlobal(e.pos()))
+    
+    def eventFilter(self, a0, a1):
+        if a1.type() != QEvent.Type.KeyPress:
+            return super().eventFilter(a0, a1)
+        
+        for i in self.children():
+            if isinstance(i, RoundedMenu):
+                i.deleteLater()
+        if self.hasFocus():
+            menu = RoundedMenu(self)
+            print(dir(self.completer().popup))
+            menu.popup(self.mapToGlobal(QPoint(self.cursorRect().x(), self.height())))
+            self.setFocus()
+            return self.completer().eventFilter(a0, a1)
+        return super().eventFilter(a0, a1)
