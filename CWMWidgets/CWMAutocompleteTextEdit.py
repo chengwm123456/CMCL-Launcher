@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+import re
+
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
-from PyQt6.QtWidgets import *
+
 from .CWMTextEdit import TextEdit
 from .CWMWindows import RoundedMenu
-import re
 
 
 class AutocompleteTextEdit(TextEdit):
@@ -25,7 +26,6 @@ class AutocompleteTextEdit(TextEdit):
     
     def keyPressEvent(self, e):
         super().keyPressEvent(e)
-        self.__complete_panel.view.setFont(self.font())
         cursor = self.textCursor()
         possibilities = []
         for i in self.Complete_List:

@@ -41,13 +41,13 @@ class LineEdit(QLineEdit):
         if a1.type() != QEvent.Type.KeyPress:
             return super().eventFilter(a0, a1)
         
-        for i in self.children():
-            if isinstance(i, RoundedMenu):
-                i.deleteLater()
-        if self.hasFocus():
-            menu = RoundedMenu(self)
-            print(dir(self.completer().popup))
-            menu.popup(self.mapToGlobal(QPoint(self.cursorRect().x(), self.height())))
-            self.setFocus()
-            return self.completer().eventFilter(a0, a1)
+        if self.completer():
+            for i in self.children():
+                if isinstance(i, RoundedMenu):
+                    i.deleteLater()
+            if self.hasFocus():
+                menu = RoundedMenu(self)
+                menu.popup(self.mapToGlobal(QPoint(self.cursorRect().x(), self.height())))
+                self.setFocus()
+                return self.completer().eventFilter(a0, a1)
         return super().eventFilter(a0, a1)

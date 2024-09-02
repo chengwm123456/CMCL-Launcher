@@ -35,11 +35,11 @@ def getForegroundColour(primary=True, tuple=False):
     match currentTheme:
         case Theme.Light:
             if tuple:
-                return (0, 0, 0)
+                return 0, 0, 0
             else:
                 return QColor(0, 0, 0)
         case Theme.Dark:
             if tuple:
-                return (255, 255, 255)
+                return 255, 255, 255
             else:
                 return QColor(0, 0, 0)

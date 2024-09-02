@@ -68,6 +68,6 @@ class LineNumberTextEdit(TextEdit):
                                              self.viewport().y(),
                                              self.__lineNumberBar.width(),
                                              self.viewport().height())
-        except:
+        except AttributeError:
             pass
         return super().event(e)

@@ -20,13 +20,3 @@ class NCCALCSIZE_PARAMS(Structure):
         ('rgrc', RECT * 3),
         ('lppos', POINTER(PWINDOWPOS))
     ]
-
-
-class MINMAXINFO_PARAMS(Structure):
-    _fields_ = [
-        ("ptReserved", POINT),
-        ("ptMaxSize", POINT),
-        ("ptMaxPosition", POINT),
-        ("ptMinTrackSize", POINT),
-        ("ptMaxTrackSize", POINT)
-    ]

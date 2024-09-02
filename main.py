@@ -535,15 +535,7 @@ class MainPage(QFrame):
         self.horizontalLayout.addWidget(self.launch_btn)
         self.select_version_btn = ToolButton(self.bottomPanel)
         self.select_version_btn.setPopupMode(ToolButton.ToolButtonPopupMode.InstantPopup)
-        menu = RoundedMenu()
-        versions = get_version_by_scan_dir(minecraft_path=minecraft_path)
-        if isinstance(versions, list):
-            for version in versions:
-                action = QAction(menu)
-                action.setText(version)
-                action.triggered.connect(lambda _, v=version: self.select_version(v))
-                menu.addAction(action)
-        self.select_version_btn.setMenu(menu)
+        self.update_menu()
         self.horizontalLayout.addWidget(self.select_version_btn)
         self.change_dir_btn = PushButton(self.bottomPanel)
         self.change_dir_btn.pressed.connect(self.setMinecraftDir)
@@ -572,7 +564,20 @@ class MainPage(QFrame):
     def setMinecraftDir(self):
         global minecraft_path
         path = QFileDialog(self).getExistingDirectory(self, "选择文件夹", str(minecraft_path))
-        print(path)
+        if path:
+            minecraft_path = Path(path)
+            self.update_menu()
+    
+    def update_menu(self):
+        menu = RoundedMenu()
+        versions = get_version_by_scan_dir(minecraft_path=minecraft_path)
+        if isinstance(versions, list):
+            for version in versions:
+                action = QAction(menu)
+                action.setText(version)
+                action.triggered.connect(lambda _, v=version: self.select_version(v))
+                menu.addAction(action)
+        self.select_version_btn.setMenu(menu)
     
     def resizeEvent(self, *args, **kwargs):
         super().resizeEvent(*args, **kwargs)
