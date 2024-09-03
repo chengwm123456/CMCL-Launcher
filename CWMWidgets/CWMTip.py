@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtCore import *
-from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
 
@@ -21,7 +20,7 @@ class TipBase(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(getBorderColour())
         painter.setBrush(getBackgroundColour())
-        painter.drawRoundedRect(self.rect(), 10, 10)
+        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         super().paintEvent(a0)
     
     def setEnabled(self, a0):
@@ -38,12 +37,24 @@ class Tip(TipBase):
     pass
 
 
-class PopoutTip(TipBase):
-    def tip(self):
+class PopupTip(TipBase):
+    class PopupPosition(Enum):
+        LEFT = "left"
+        RIGHT = "right"
+    
+    def tip(self, position=PopupPosition.RIGHT):
         self.show()
-        animation = QPropertyAnimation(self, b"geometry", parent=self.parent())
+        point_size = QPoint(self.width(), self.height())
+        pos = QPoint(self.parent().width(), 0)
+        match position:
+            case self.PopupPosition.LEFT:
+                pos = QPoint(0, 0)
+            case self.PopupPosition.RIGHT:
+                pos = QPoint(self.parent().width(), 0)
+        animation = QPropertyAnimation(self, b"geometry")
         animation.setDuration(1000)
-        animation.setStartValue(QRect(self.parent().width() - self.width(), 0, self.width(), self.height()))
-        animation.setEndValue(QRect(0, 0, self.width(), self.height()))
+        animation.setStartValue(
+            QRect(QPoint(self.parent().width() - self.width(), 0), QPoint(self.width(), self.height())))
+        animation.setEndValue(QRect(pos, point_size))
         animation.setEasingCurve(QEasingCurve.Type.OutQuad)
         animation.start()

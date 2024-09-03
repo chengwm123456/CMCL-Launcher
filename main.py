@@ -19,6 +19,8 @@ from io import StringIO
 import logging
 import time
 
+from PyQt6.QtCore import *
+
 from CWMWidgets import *
 from PyQt6.QtSvgWidgets import QSvgWidget
 from PyQt6.QtWebEngineWidgets import QWebEngineView
@@ -919,8 +921,8 @@ class MainWindow(RoundedWindow):
         self.topWidget.setContentWidget(self.content)
         # tip = Tip(self)
         # self.horizontalLayout.addWidget(tip)
-        # popoutTip = PopoutTip(self)
-        # popoutTip.tip()
+        popoutTip = PopupTip(self)
+        popoutTip.tip()
         self.centralwidget.setLayout(self.horizontalLayout)
         self.setCentralWidget(self.centralwidget)
     

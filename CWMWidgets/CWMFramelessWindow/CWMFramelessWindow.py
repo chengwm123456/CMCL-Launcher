@@ -18,10 +18,13 @@ class RoundedFramelessWindow(QWidget):
         super().__init__(parent)
         self.__gdi32 = None
         self.__user32 = None
+        self.__nsWindow = None
         match platform.system():
             case "Windows":
                 self.__gdi32 = WinDLL("gdi32")
                 self.__user32 = WinDLL("user32")
+            case "Darwin":
+                self.__nsWindow = None
         self.__resizeEnabled = True
         self.__maximizeEnabled = True
         # self.w = WindowEffect(self)
@@ -58,25 +61,29 @@ class RoundedFramelessWindow(QWidget):
         self.windowHandle().screenChanged.connect(self.__onScreenChanged)
     
     def __updateWindowRegion(self):
-        match platform.system():
-            case "Windows":
-                rect = win32gui.GetWindowRect(int(self.winId()))
-                dpiScaleRate = self.__getCurrentDpiScaleRate()
-                self.__user32.SetWindowRgn(int(self.winId()),
-                                           self.__gdi32.CreateRoundRectRgn(
-                                               0,
-                                               0,
-                                               (rect[2] - rect[0]),
-                                               (rect[3] - rect[1]),
-                                               int(self.BORDER_RADIUS * dpiScaleRate),
-                                               int(self.BORDER_RADIUS * dpiScaleRate)
-                                           ),
-                                           False)
-            case "Darwin":
-                pass
-            case "Linux":
-                pass
-        self.update()
+        try:
+            match platform.system():
+                case "Windows":
+                    rect = win32gui.GetWindowRect(int(self.winId()))
+                    dpiScaleRate = self.__getCurrentDpiScaleRate()
+                    self.__user32.SetWindowRgn(int(self.winId()),
+                                               self.__gdi32.CreateRoundRectRgn(
+                                                   0,
+                                                   0,
+                                                   (rect[2] - rect[0]),
+                                                   (rect[3] - rect[1]),
+                                                   int(self.BORDER_RADIUS * dpiScaleRate),
+                                                   int(self.BORDER_RADIUS * dpiScaleRate)
+                                               ),
+                                               False)
+                case "Darwin":
+                    pass
+                case "Linux":
+                    pass
+        finally:
+            super().setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
+            super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)
+            self.update()
     
     def __onScreenChanged(self):
         self.__user32.SetWindowPos(int(self.windowHandle().winId()), None, 0, 0, 0, 0,
@@ -87,14 +94,14 @@ class RoundedFramelessWindow(QWidget):
     
     def resizeEvent(self, *args, **kwargs):
         self.__updateWindowRegion()
+        self.repaint()
         super().resizeEvent(*args, **kwargs)
         self.__updateWindowRegion()
+        self.repaint()
     
     def event(self, a0):
-        try:
-            self.__updateWindowRegion()
-        finally:
-            return super().event(a0)
+        self.__updateWindowRegion()
+        return super().event(a0)
     
     def nativeEvent(self, eventType, message):
         msg = MSG.from_address(message.__int__())
@@ -182,11 +189,15 @@ class RoundedFramelessWindow(QWidget):
         self.__updateWindowFrameless()
     
     def setWindowFlags(self, type):
+        super().setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
+        super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)
         super().setWindowFlags(type)
         super().setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
         super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)
     
     def setWindowFlag(self, a0, on=True):
+        super().setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
+        super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)
         super().setWindowFlag(a0, on)
         super().setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
         super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)

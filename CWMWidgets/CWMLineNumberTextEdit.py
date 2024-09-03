@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtCore import *
-from PyQt6.QtGui import *
-from PyQt6.QtWidgets import *
 from .CWMTextEdit import TextEdit
+from .CWMPanel import Panel
 from .CWMThemeControl import *
 
 
 class LineNumberTextEdit(TextEdit):
-    class LineNumberBar(QWidget):
+    class LineNumberBar(Panel):
         def __init__(self, parent):
             super().__init__(parent)
             self.__codeEditor = parent
@@ -26,14 +25,15 @@ class LineNumberTextEdit(TextEdit):
             self.__codeEditor.setViewportMargins(width, 0, 0, 0)
         
         def paintEvent(self, event):
+            super().paintEvent(event)
             self.setFont(self.__codeEditor.font())
             painter = QPainter(self)
             painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
             pp = QPainterPath()
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(self.rect(), 10, 10)
-            pp.addRoundedRect(QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5), 10, 10)
+            # painter.drawRoundedRect(self.rect(), 10, 10)
+            pp.addRoundedRect(QRectF(self.rect()).adjusted(1.625, 1.625, -1.625, -1.625), 10, 10)
             painter.setClipPath(pp)
             painter.setPen(Qt.GlobalColor.black)
             painter.setBrush(Qt.GlobalColor.transparent)
@@ -49,7 +49,7 @@ class LineNumberTextEdit(TextEdit):
                 else:
                     painter.setPen(getForegroundColour())
                 painter.setFont(self.font())
-                painter.drawText(QRectF(0, y, self.width(), font_height), Qt.AlignmentFlag.AlignRight,
+                painter.drawText(QRectF(0, y, self.width() - 1.5, font_height), Qt.AlignmentFlag.AlignRight,
                                  str(block.blockNumber() + 1))
                 y += block.layout().boundingRect().height()
                 block = block.next()
@@ -64,7 +64,7 @@ class LineNumberTextEdit(TextEdit):
         try:
             self.__lineNumberBar.updateLineNumberBar()
             self.setViewportMargins(self.__lineNumberBar.width(), 0, 0, 0)
-            self.__lineNumberBar.setGeometry(0,
+            self.__lineNumberBar.setGeometry(3,
                                              self.viewport().y(),
                                              self.__lineNumberBar.width(),
                                              self.viewport().height())

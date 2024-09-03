@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
 from .CWMToolTip import ToolTip
 

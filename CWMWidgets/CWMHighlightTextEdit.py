@@ -2,7 +2,6 @@
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from .CWMTextEdit import TextEdit
-from .CWMThemeControl import getForegroundColour
 
 
 class HighlightTextEdit(TextEdit):

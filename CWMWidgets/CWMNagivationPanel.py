@@ -2,7 +2,6 @@
 from enum import IntEnum
 
 from PyQt6.QtCore import *
-from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 from .CWMNagivationItem import NavigationItem

@@ -13,6 +13,6 @@ from .CWMTextEdit import TextEdit, PlainTextEdit
 from .CWMTableView import HeaderView, TableView, TableWidget
 from .CWMNagivationItem import NavigationItem
 from .CWMNagivationPanel import NavigationPanel, FoldableNavigationPanel
-from .CWMTip import Tip, PopoutTip
+from .CWMTip import Tip, PopupTip
 from .CWMPanel import Panel
 from .CWMThemeControl import getBorderColour, getBackgroundColour, getForegroundColour
