@@ -19,14 +19,19 @@ class RoundedFramelessWindow(QWidget):
         self.__gdi32 = None
         self.__user32 = None
         self.__nsWindow = None
+        self.__objc = None
+        self.__cocoa = None
         match platform.system():
             case "Windows":
                 self.__gdi32 = WinDLL("gdi32")
                 self.__user32 = WinDLL("user32")
             case "Darwin":
-                self.__nsWindow = None
+                self.__objc = __import__("objc")
+                self.__cocoa = __import__("Cocoa")
+                self.__nsWindow = self.__objc.objc_object(c_void_p=self.winId().__int__()).view()
         self.__resizeEnabled = True
         self.__maximizeEnabled = True
+        self.__systemTitleBarButtonVisible = False
         # self.w = WindowEffect(self)
         self.__updateWindowFrameless()
     
@@ -41,10 +46,10 @@ class RoundedFramelessWindow(QWidget):
                 return 1
     
     def __updateWindowFrameless(self):
-        self.setWindowFlags(
-            self.windowFlags() | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowMinMaxButtonsHint)
         match platform.system():
             case "Windows":
+                self.setWindowFlags(
+                    self.windowFlags() | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowMinMaxButtonsHint)
                 self.__user32.SetWindowLongPtrW(
                     int(self.winId()),
                     -16,
@@ -54,24 +59,26 @@ class RoundedFramelessWindow(QWidget):
                     | (0x00040000 if self.__resizeEnabled else 0x00000000),
                 )
             case "Darwin":
-                pass
+                self.__updateNSWindow()
             case "Linux":
                 pass
         self.__updateWindowRegion()
+        self.__updateWindowShadow()
         self.windowHandle().screenChanged.connect(self.__onScreenChanged)
     
     def __updateWindowRegion(self):
         try:
             match platform.system():
                 case "Windows":
-                    rect = win32gui.GetWindowRect(int(self.winId()))
+                    rect = RECT()
+                    self.__user32.GetWindowRect(int(self.winId()), pointer(rect))
                     dpiScaleRate = self.__getCurrentDpiScaleRate()
                     self.__user32.SetWindowRgn(int(self.winId()),
                                                self.__gdi32.CreateRoundRectRgn(
                                                    0,
                                                    0,
-                                                   (rect[2] - rect[0]),
-                                                   (rect[3] - rect[1]),
+                                                   (rect.right - rect.left),
+                                                   (rect.bottom - rect.top),
                                                    int(self.BORDER_RADIUS * dpiScaleRate),
                                                    int(self.BORDER_RADIUS * dpiScaleRate)
                                                ),
@@ -85,19 +92,105 @@ class RoundedFramelessWindow(QWidget):
             super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)
             self.update()
     
+    def __updateWindowShadow(self):
+        try:
+            match platform.system():
+                case "Windows":
+                    pass
+                case "Darwin":
+                    self.__nsWindow.setHasShadow_(True)
+                case "Linux":
+                    pass
+        finally:
+            super().setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
+            super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)
+            self.update()
+    
+    def __updateNSWindow(self):
+        if platform.system() == "Darwin":
+            self.__nsWindow.setStyleMask_(
+                self.__nsWindow.styleMask() | self.__cocoa.NSFullSizeContentViewWindowMask
+            )
+            self.__nsWindow.setTitleBarAppearsTransparent_(True)
+            
+            self.__nsWindow.setMovableByWindowBackground_(False)
+            self.__nsWindow.setMovable_(False)
+            
+            self.__nsWindow.setTitleVisibility(self.__cocoa.NSWindowTitleHidden)
+            self.__updateSystemTitleBarButton()
+        self.update()
+    
+    def __updateSystemTitleBarButton(self):
+        if platform.system() == "Darwin":
+            self.__nsWindow.setShowsToolbarButton_(self.__systemTitleBarButtonVisible)
+            
+            self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowCloseButton).setHidden_(
+                not self.__systemTitleBarButtonVisible)
+            self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowZoomButton).setHidden_(
+                not self.__systemTitleBarButtonVisible)
+            self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowMiniaturizeButton).setHidden_(
+                not self.__systemTitleBarButtonVisible)
+            self.__updateSystemTitleBarButtonRect()
+        self.update()
+    
+    def __updateSystemTitleBarButtonRect(self):
+        if platform.system() == "Darwin":
+            if self.__systemTitleBarButtonVisible:
+                leftButton = self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowCloseButton)
+                middleButton = self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowMiniaturizeButton)
+                rightButton = self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowZoomButton)
+                
+                titleBar = rightButton.superview()
+                titleBarHeight = titleBar.frame().size.height
+                
+                spacing = middleButton.frame().origin.x - leftButton.frame().origin.x
+                width = middleButton.frame().size.width
+                height = middleButton.frame().size.height
+                
+                centre = QRectF(0, 0, 75, titleBarHeight).center()
+                centre.setY(titleBarHeight - centre.y())
+                
+                centreOrigin = self.__cocoa.NSPoint(centre.x() - width // 2, centre.y() - height // 2)
+                leftOrigin = self.__cocoa.NSPoint(centreOrigin.x - spacing, centreOrigin.y)
+                rightOrigin = self.__cocoa.NSPoint(centreOrigin.x + spacing, centreOrigin.y)
+                
+                middleButton.setFrameOrigin_(centreOrigin)
+                leftButton.setFrameOrigin_(leftOrigin)
+                rightButton.setFrameOrigin_(rightOrigin)
+        self.update()
+    
     def __onScreenChanged(self):
-        self.__user32.SetWindowPos(int(self.windowHandle().winId()), None, 0, 0, 0, 0,
-                                   win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_FRAMECHANGED)
+        match platform.system():
+            case "Windows":
+                self.__user32.SetWindowPos(int(self.windowHandle().winId()), None, 0, 0, 0, 0,
+                                           win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_FRAMECHANGED)
+            case "Darwin":
+                pass
+            case "Linux":
+                pass
     
     def paintEvent(self, a0):
+        self.__updateNSWindow()
         self.__updateWindowRegion()
     
     def resizeEvent(self, *args, **kwargs):
         self.__updateWindowRegion()
+        self.__updateSystemTitleBarButtonRect()
         self.repaint()
         super().resizeEvent(*args, **kwargs)
         self.__updateWindowRegion()
+        self.__updateSystemTitleBarButtonRect()
         self.repaint()
+    
+    def changeEvent(self, a0):
+        if platform.system() == "Darwin":
+            match a0.type():
+                case QEvent.Type.WindowStateChange:
+                    self.__updateNSWindow()
+                    
+                    QTimer.singleShot(1, self.__updateSystemTitleBarButtonRect)
+                case QEvent.Type.Resize:
+                    self.__updateSystemTitleBarButtonRect()
     
     def event(self, a0):
         self.__updateWindowRegion()
@@ -186,6 +279,19 @@ class RoundedFramelessWindow(QWidget):
             self.__maximizeEnabled = bool(value)
         else:
             raise TypeError(f"cannot set property \"maximizeEnabled\" to type {type(value)}")
+        self.__updateWindowFrameless()
+    
+    def systemTitleBarButtonVisible(self):
+        if platform.system() == "Darwin":
+            return self.__systemTitleBarButtonVisible
+        return False
+    
+    def setSystemTitleBarButtonVisible(self, value):
+        if platform.system() == "Darwin":
+            if value in [True, False, 1, 0]:
+                self.__systemTitleBarButtonVisible = bool(value)
+            else:
+                raise TypeError(f"cannot set property \"systemTitleBarButtonVisible\" to type {type(value)}")
         self.__updateWindowFrameless()
     
     def setWindowFlags(self, type):

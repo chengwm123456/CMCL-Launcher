@@ -921,8 +921,8 @@ class MainWindow(RoundedWindow):
         self.topWidget.setContentWidget(self.content)
         # tip = Tip(self)
         # self.horizontalLayout.addWidget(tip)
-        popoutTip = PopupTip(self)
-        popoutTip.tip()
+        # popoutTip = PopupTip(self)
+        # popoutTip.tip()
         self.centralwidget.setLayout(self.horizontalLayout)
         self.setCentralWidget(self.centralwidget)
     
@@ -1058,6 +1058,8 @@ class LoggingWindow(RoundedWindow):
         timer.start(100)
         self.inputtext = LineEdit(self)
         self.inputtext.returnPressed.connect(self.process_command)
+        self.inputtext.setToolTip("This is a Tooltip")
+        self.inputtext.setToolTipDuration(0)
         # self.inputtext.setCompleter(QCompleter(dir(__builtins__)))
         self.canOutput = True
         self.retranslateUI()

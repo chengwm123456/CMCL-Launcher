@@ -38,28 +38,29 @@ class ToolTip(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.__tooltip = ToolTipBase(self.parent().parent())
-        self.__tooltip.hide()
+        pos = self.mapTo(self.parent(), QPoint(0, 0))
+        x = pos.x() + self.parent().width() // 2 - self.__tooltip.width() // 2
+        y = pos.y() - 5 - self.__tooltip.height()
+        x = min(max(5, x), self.parent().width() - self.__tooltip.width() - 5)
+        y = min(max(5, y), self.parent().height() - self.__tooltip.height() - 5)
+        self.__tooltip.move(x, y)
     
     def eventFilter(self, a0, a1):
         if a0.toolTip():
-            if a1.type() == QEvent.Type.Enter:
-                self.__tooltip.setText(a0.toolTip())
-                pos = a0.mapTo(a0.parent(), QPoint(0, 0))
-                x = pos.x() + a0.parent().width() // 2 - self.__tooltip.width() // 2
-                y = pos.y() - 5 - self.__tooltip.height()
-                x = min(max(5, x), a0.parent().width() - self.__tooltip.width() - 5)
-                y = min(max(5, y), a0.parent().height() - self.__tooltip.height() - 5)
-                self.__tooltip.move(x, y)
-                self.__tooltip.show()
-                if a0.toolTipDuration() >= 0:
-                    t = QTimer(self.__tooltip)
-                    t.setInterval(a0.toolTipDuration())
-                    t.setSingleShot(True)
-                    t.timeout.connect(self.__tooltip.hide)
-                    t.start()
-            if a1.type() == QEvent.Type.Leave:
-                if not self.__tooltip.underMouse():
-                    self.__tooltip.hide()
-            if a1.type() == QEvent.Type.ToolTip:
-                return True
+            match a1.type():
+                case QEvent.Type.ToolTip:
+                    self.__tooltip.setText(a0.toolTip())
+                    pos = a0.mapTo(a0.parent(), QPoint(0, 0))
+                    x = pos.x() + a0.parent().width() // 2 - self.__tooltip.width() // 2
+                    y = pos.y() - 5 - self.__tooltip.height()
+                    x = min(max(5, x), a0.parent().width() - self.__tooltip.width() - 5)
+                    y = min(max(5, y), a0.parent().height() - self.__tooltip.height() - 5)
+                    self.__tooltip.move(x, y)
+                    self.__tooltip.show()
+                    if a0.toolTipDuration() > 0:
+                        QTimer.singleShot(a0.toolTipDuration(), self.__tooltip.hide)
+                    return True
+                case QEvent.Type.Leave:
+                    if not self.__tooltip.underMouse():
+                        self.__tooltip.hide()
         return super().eventFilter(a0, a1)
