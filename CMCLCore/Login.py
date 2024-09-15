@@ -11,6 +11,9 @@ logging.basicConfig(
 
 
 def get_user_data(token="", is_refresh_login=False):
+    user_name = None
+    uuid = None
+    minecraft_access_token = None
     has_mc = False
     if is_refresh_login:
         params = {
@@ -21,11 +24,13 @@ def get_user_data(token="", is_refresh_login=False):
             "scope": "service::user.auth.xboxlive.com::MBI_SSL"
         }
     else:
-        params = {"client_id": "00000000402b5328",
-                  "code": token,
-                  "grant_type": "authorization_code",
-                  "redirect_uri": "https://login.live.com/oauth20_desktop.srf",
-                  "scope": "service::user.auth.xboxlive.com::MBI_SSL"}
+        params = {
+            "client_id": "00000000402b5328",
+            "code": token,
+            "grant_type": "authorization_code",
+            "redirect_uri": "https://login.live.com/oauth20_desktop.srf",
+            "scope": "service::user.auth.xboxlive.com::MBI_SSL  "
+        }
     response = requests.get(
         "https://login.live.com/oauth20_token.srf",
         params=params,
@@ -73,25 +78,24 @@ def get_user_data(token="", is_refresh_login=False):
     uhs2 = response_3.json()["DisplayClaims"]["xui"][0]["uhs"]
     if uhs != uhs2:
         return "Unsuccessfully", None, None, None, None, False
-    else:
-        response_4 = requests.post(
-            "https://api.minecraftservices.com/authentication/login_with_xbox",
-            json={"identityToken": f"XBL3.0 x={uhs};{xsts_token}"},
-            verify=True
-        )
-        minecraft_access_token = response_4.json()["access_token"]
-        response_profile = requests.get(
-            "https://api.minecraftservices.com/minecraft/profile",
-            headers={"Authorization": f"Bearer {minecraft_access_token}"},
-            verify=True
-        )
-        if response_profile.json().get("error", None) is None:
-            uuid = response_profile.json()["id"]
-            user_name = response_profile.json()["name"]
-            response_mc = requests.get("https://api.minecraftservices.com/entitlements/mcstore",
-                                       headers={"Authorization": f"Bearer {minecraft_access_token}"},
-                                       verify=True
-                                       )
-            if not response_mc.text == "" and response_mc.text is not None:
-                has_mc = True
-            return "Successfully", user_name, uuid, minecraft_access_token, refresh_token, has_mc
+    response_4 = requests.post(
+        "https://api.minecraftservices.com/authentication/login_with_xbox",
+        json={"identityToken": f"XBL3.0 x={uhs};{xsts_token}"},
+        verify=True
+    )
+    minecraft_access_token = response_4.json().get("access_token")
+    response_profile = requests.get(
+        "https://api.minecraftservices.com/minecraft/profile",
+        headers={"Authorization": f"Bearer {minecraft_access_token}"},
+        verify=True
+    )
+    if response_profile.json().get("id") is not None and response_profile.json().get("name") is not None:
+        uuid = response_profile.json()["id"]
+        user_name = response_profile.json()["name"]
+    response_mc = requests.get("https://api.minecraftservices.com/entitlements/mcstore",
+                               headers={"Authorization": f"Bearer {minecraft_access_token}"},
+                               verify=True
+                               )
+    if response_mc.text:
+        has_mc = True
+    return "Successfully", user_name, uuid, minecraft_access_token, refresh_token, has_mc

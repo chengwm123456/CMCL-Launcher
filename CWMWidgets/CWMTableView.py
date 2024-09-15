@@ -3,6 +3,8 @@ from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
 from .CWMToolTip import ToolTip
+from .CWMItemView import ItemDelegate
+from .CWMScrollBar import ScrollBar
 
 
 class HeaderView(QHeaderView):
@@ -16,6 +18,8 @@ class HeaderView(QHeaderView):
             self.setFixedWidth(int(self.fontMetrics().maxWidth() * 1.5))
         if orientation == Qt.Orientation.Horizontal:
             self.setFixedHeight(int(self.fontMetrics().height() * 2))
+        self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
+        self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))
     
     def paintEvent(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -53,6 +57,10 @@ class TableView(QTableView):
         self.installEventFilter(ToolTip(self))
         self.setVerticalHeader(HeaderView(Qt.Orientation.Vertical, self))
         self.setHorizontalHeader(HeaderView(Qt.Orientation.Horizontal, self))
+        self.setItemDelegate(ItemDelegate(self))
+        self.setShowGrid(False)
+        self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
+        self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))
     
     def paintEvent(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -73,6 +81,7 @@ class TableView(QTableView):
         rect.setX(1)
         rect.setY(1)
         painter.drawRoundedRect(rect, 10, 10)
+        self.setShowGrid(False)
         op = QStyleOptionFrame()
         op.initFrom(self)
         self.initStyleOption(op)
@@ -90,6 +99,10 @@ class TableWidget(QTableWidget):
         self.installEventFilter(ToolTip(self))
         self.setVerticalHeader(HeaderView(Qt.Orientation.Vertical, self))
         self.setHorizontalHeader(HeaderView(Qt.Orientation.Horizontal, self))
+        self.setItemDelegate(ItemDelegate(self))
+        self.setShowGrid(False)
+        self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
+        self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))
     
     def paintEvent(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -110,6 +123,7 @@ class TableWidget(QTableWidget):
         rect.setX(1)
         rect.setY(1)
         painter.drawRoundedRect(rect, 10, 10)
+        self.setShowGrid(False)
         op = QStyleOptionFrame()
         op.initFrom(self)
         self.initStyleOption(op)

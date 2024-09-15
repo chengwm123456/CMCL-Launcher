@@ -14,12 +14,9 @@ class PlayerState(Enum):
 
 
 class Player:
-    def __init__(self, user_name, user_uuid, user_type, access_token, has_mc):
+    def __init__(self, user_name, user_uuid, access_token, has_mc):
         self.__player_name = user_name
         self.__player_uuid = user_uuid
-        if not isinstance(user_type, tuple) or len(user_type) != 3:
-            raise ValueError()
-        self.__player_accountType = user_type
         self.__player_accessToken = access_token
         self.__player_hasMC = has_mc
     
@@ -51,10 +48,6 @@ class Player:
     
     @player_name.setter
     def player_name(self, value):
-        if value is not None:
-            self.__player_accountType = (self.__player_accountType[2].value, "msa", self.__player_accountType[2])
-        else:
-            self.__player_accountType = (None, None, self.__player_accountType[2])
         self.__player_name = value
     
     @property
@@ -63,15 +56,7 @@ class Player:
     
     @player_uuid.setter
     def player_uuid(self, value):
-        if value is not None:
-            self.__player_accountType = (self.__player_accountType[2].value, "msa", self.__player_accountType[2])
-        else:
-            self.__player_accountType = (None, None, self.__player_accountType[2])
         self.__player_uuid = value
-    
-    @property
-    def player_accountType(self):
-        return self.__player_accountType
     
     @property
     def player_accessToken(self):
@@ -79,10 +64,6 @@ class Player:
     
     @player_accessToken.setter
     def player_accessToken(self, value):
-        if value is not None:
-            self.__player_accountType = (self.__player_accountType[2].value, "msa", self.__player_accountType[2])
-        else:
-            self.__player_accountType = (None, None, self.__player_accountType[2])
         self.__player_accessToken = value
     
     @property
@@ -91,13 +72,32 @@ class Player:
     
     @player_hasMC.setter
     def player_hasMC(self, value):
-        if value is not None and value:
-            self.__player_accountType = (self.__player_accountType[2].value, "msa", self.__player_accountType[2])
-        else:
-            if value is None:
-                self.__player_accountType = (None, None, self.__player_accountType[2])
         self.__player_hasMC = value
     
+    @classmethod
+    def create_offline_player(cls, *args, **kwargs):
+        return OfflinePlayer.create_offline_player(*args, **kwargs)
+    
+    @classmethod
+    def create_online_player(cls, *args, **kwargs):
+        return MicrosoftPlayer.create_online_player(*args, **kwargs)
+
+
+class OnlinePlayer(Player):
+    pass
+
+
+class MicrosoftPlayer(OnlinePlayer):
+    @classmethod
+    def create_online_player(cls, user_name, user_uuid, access_token, has_mc, is_empty=False):
+        return cls(user_name, user_uuid, access_token, has_mc)
+    
+    @property
+    def player_accountType(self):
+        return ("online", "msa", PlayerState.ONLINE)
+
+
+class OfflinePlayer(Player):
     @classmethod
     def create_offline_player(cls, user_name, has_mc):
         user_uuid = str(uuid.uuid4()).replace("-", "")
@@ -122,10 +122,8 @@ class Player:
             },
             key=secret_key
         )
-        user_type = ("offline", "msa", PlayerState.OFFLINE)
-        return cls(user_name, user_uuid, user_type, access_token, has_mc)
+        return cls(user_name, user_uuid, access_token, has_mc)
     
-    @classmethod
-    def create_online_player(cls, user_name, user_uuid, access_token, has_mc, is_empty=False):
-        user_type = ("online", "msa", PlayerState.ONLINE) if not is_empty else (None, None, PlayerState.ONLINE)
-        return cls(user_name, user_uuid, user_type, access_token, has_mc)
+    @property
+    def player_accountType(self):
+        return ("offline", "msa", PlayerState.OFFLINE)

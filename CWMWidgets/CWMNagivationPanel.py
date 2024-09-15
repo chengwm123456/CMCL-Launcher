@@ -73,12 +73,19 @@ class NavigationPanel(Panel):
             i.hide()
         page.setParent(self.__content_widget)
         page.show()
+        if isinstance(self.__content_widget, QStackedWidget):
+            self.__content_widget.setCurrentWidget(page)
     
     def setContentWidget(self, widget):
+        b4_widget = self.__content_widget
         self.__content_widget = widget
         show = False
         for i in self.items.values():
+            if isinstance(b4_widget, QStackedWidget):
+                b4_widget.removeWidget(i)
             i.setParent(self.__content_widget)
+            if isinstance(self.__content_widget, QStackedWidget):
+                self.__content_widget.addWidget(i)
             if i.isVisible():
                 show = True
         if not show and len(self.items):

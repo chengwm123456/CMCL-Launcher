@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtCore import *
-from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from .CWMThemeControl import *
 from .CWMWindows import RoundedMenu
 from .CWMToolTip import ToolTip
 
@@ -9,8 +9,14 @@ from .CWMToolTip import ToolTip
 class LabelBase(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setStyleSheet("background: transparent; color: black")
+        self.setStyleSheet(
+            f"background: transparent; color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {1.0 if self.underMouse() else 0.6 if self.isEnabled() else 0.3})")
         self.installEventFilter(ToolTip(self))
+    
+    def paintEvent(self, a0):
+        self.setStyleSheet(
+            f"background: transparent; color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {1.0 if self.underMouse() else 0.6 if self.isEnabled() else 0.3})")
+        super().paintEvent(a0)
     
     def contextMenuEvent(self, e):
         if self.textInteractionFlags():
@@ -60,4 +66,12 @@ class LabelBase(QLabel):
 
 
 class Label(LabelBase):
+    pass
+
+
+class StrongLabel(LabelBase):
+    pass
+
+
+class TitleLabel(LabelBase):
     pass

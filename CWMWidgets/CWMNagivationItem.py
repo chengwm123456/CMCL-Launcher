@@ -18,21 +18,14 @@ class NavigationItem(QToolButton):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         painter = QPainter(self)
         painter.setOpacity(1.0 if self.underMouse() or self.hasFocus() else 0.6)
+        if not self.isEnabled():
+            painter.setOpacity(0.3)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(
             getBorderColour(highlight=self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse()))
         painter.setBrush(getBackgroundColour(highlight=self.isDown() or self.isChecked()))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         self.icon().paint(painter, QRect(5, 5, 32, 32))
-    
-    def setEnabled(self, a0):
-        super().setEnabled(a0)
-        if a0:
-            self.setGraphicsEffect(None)
-        else:
-            og = QGraphicsOpacityEffect()
-            og.setOpacity(0.3)
-            self.setGraphicsEffect(og)
     
     def keyPressEvent(self, *args, **kwargs):
         super().keyPressEvent(*args, **kwargs)

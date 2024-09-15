@@ -11,10 +11,10 @@ import subprocess
 import shlex
 from enum import Enum
 
-import download_file
-import download_version
-import getversion
-import get_os
+from . import Downloader
+from . import DownloadVersion
+from . import GetVersion
+from . import GetOperationSystem
 
 
 class JavaMode(Enum):
@@ -34,10 +34,11 @@ report_description_lists = {
 }
 
 
-def get_java_path(version):
-    where_out = subprocess.run(["which" if get_os.getOperationSystemName()[0] != "Windows" else "where", "java"],
-                               capture_output=True,
-                               check=False).stdout
+def GetJavaPath(version):
+    where_out = subprocess.run(
+        ["which" if GetOperationSystem.GetOperationSystemName()[0] != "Windows" else "where", "java"],
+        capture_output=True,
+        check=False).stdout
     java_path = where_out.decode(errors="ignore").splitlines()
     if len(java_path) >= 2 and not java_path[-1]:
         del java_path[-1]
@@ -87,12 +88,12 @@ def get_java_path(version):
     return None
 
 
-def fix_minecraft_files(minecraft_path, version_fix):
+def FixMinecraftFiles(minecraft_path, version_fix):
     if not Path(minecraft_path).exists():
         os.makedirs(minecraft_path)
     os.chdir(minecraft_path)
     if not Path(minecraft_path / "versions" / version_fix / f"{version_fix}.json").exists():
-        download_version.download_version_json(version=version_fix, minecraft_path=minecraft_path)
+        DownloadVersion.DownloadVersionJson(version=version_fix, minecraft_path=minecraft_path)
     file = Path(minecraft_path / "versions" / version_fix / f"{version_fix}.json")
     jsons = json.loads(file.read_text(encoding="utf-8"))
     file = Path(minecraft_path / "assets" / "indexes" / f"{jsons['assets']}.json")
@@ -100,10 +101,10 @@ def fix_minecraft_files(minecraft_path, version_fix):
     data = bytes(str(data).replace("'", '"'), "utf-8")
     sha1 = hashlib.sha1(data)
     if sha1.hexdigest() != jsons['assetIndex']['sha1']:
-        download_version.download_asset_index_file(json_path=os.path.join(minecraft_path, "versions",
-                                                                          version_fix,
-                                                                          f"{version_fix}.json"),
-                                                   minecraft_path=minecraft_path)
+        DownloadVersion.DownloadAssetIndexFile(json_path=os.path.join(minecraft_path, "versions",
+                                                                      version_fix,
+                                                                      f"{version_fix}.json"),
+                                               minecraft_path=minecraft_path)
     assets = json.loads(file.read_text(encoding="utf-8"))
     for i in assets["objects"]:
         filedata = assets["objects"][i]
@@ -113,10 +114,10 @@ def fix_minecraft_files(minecraft_path, version_fix):
         if file.exists():
             sha1 = hashlib.sha1(file.read_bytes())
             if sha1.hexdigest() != filehash:
-                download_version.download_assets_objects_file(os.path.join(minecraft_path, "assets", "objects"),
-                                                              filehash)
+                DownloadVersion.DownloadAssetObjectFiles(os.path.join(minecraft_path, "assets", "objects"),
+                                                         filehash)
         else:
-            download_version.download_assets_objects_file(os.path.join(minecraft_path, "assets", "objects"), filehash)
+            DownloadVersion.DownloadAssetObjectFiles(os.path.join(minecraft_path, "assets", "objects"), filehash)
     libraries_file_data = jsons["libraries"]
     for i in range(0, len(libraries_file_data)):
         is_changed = False
@@ -124,7 +125,7 @@ def fix_minecraft_files(minecraft_path, version_fix):
         try:
             data_of_file = data["artifact"]
         except KeyError:
-            data_of_file = data["classifiers"][f"natives-{get_os.getOperationSystemInMojangApi()[0]}"]
+            data_of_file = data["classifiers"][f"natives-{GetOperationSystem.GetOperationSystemInMojangApi()[0]}"]
         libraries_dir_path = os.path.join(minecraft_path, "libraries")
         path = os.path.join(libraries_dir_path, data_of_file["path"].replace("/", os.sep))
         if Path(path).exists():
@@ -140,21 +141,21 @@ def fix_minecraft_files(minecraft_path, version_fix):
                     rule_of_os = libraries_file_data[i]["rules"][0]["os"]["name"]
                 except KeyError:
                     rule_of_os = libraries_file_data[i]["rules"][1]["os"]["name"]
-                if get_os.getOperationSystemInMojangApi()[0].lower() != rule_of_os:
+                if GetOperationSystem.GetOperationSystemInMojangApi()[0].lower() != rule_of_os:
                     continue
-            downloader = download_file.Downloader(data_of_file["url"], path)
+            downloader = Downloader.Downloader(data_of_file["url"], path)
             downloader.download()
     game_jar_path = os.path.join(minecraft_path, "versions", version_fix, f"{version_fix}.jar")
     file = Path(str(game_jar_path))
     sha1 = hashlib.sha1(file.read_bytes())
     if sha1.hexdigest() != jsons["downloads"]["client"]["sha1"]:
-        url = getversion.get_download_url(version=version_fix)
-        downloader = download_file.Downloader(url, os.path.join(minecraft_path, "versions", version_fix,
-                                                                f"{version_fix}.jar"))
+        url = GetVersion.GetMinecraftClientDownloadUrl(version=version_fix)
+        downloader = Downloader.Downloader(url, os.path.join(minecraft_path, "versions", version_fix,
+                                                             f"{version_fix}.jar"))
         downloader.download()
 
 
-def unpack_natives_files(
+def UnpackMinecraftNativeFiles(
         minecraft_path,
         version_launch
 ):
@@ -162,7 +163,8 @@ def unpack_natives_files(
         Path(minecraft_path / "versions" / version_launch / f"{version_launch}.json").read_text(encoding="utf-8"))
     libraries_file_data = jsons["libraries"]
     for lib in libraries_file_data:
-        unpack = bool(lib.get("downloads", {}).get("classifiers")) and get_os.getOperationSystemInMojangApi()[0] in \
+        unpack = bool(lib.get("downloads", {}).get("classifiers")) and \
+                 GetOperationSystem.GetOperationSystemInMojangApi()[0] in \
                  lib[
                      "natives"]
         data = lib.get("downloads", {})
@@ -170,11 +172,11 @@ def unpack_natives_files(
         path_artifact = None
         if data.get("artifact"):
             path_artifact = Path(libraries_dir_path / data["artifact"]["path"])
-        if data.get("classifiers") and get_os.getOperationSystemInMojangApi()[0] in lib[
-            "natives"] and f"natives-{get_os.getOperationSystemInMojangApi()[0]}" in data.get(
+        if data.get("classifiers") and GetOperationSystem.GetOperationSystemInMojangApi()[0] in lib[
+            "natives"] and f"natives-{GetOperationSystem.GetOperationSystemInMojangApi()[0]}" in data.get(
             "classifiers").keys() and unpack:
             path_classifiers = Path(libraries_dir_path / data["classifiers"].get(
-                f"natives-{get_os.getOperationSystemInMojangApi()[0]}")["path"])
+                f"natives-{GetOperationSystem.GetOperationSystemInMojangApi()[0]}")["path"])
             if not path_classifiers:
                 path_classifiers = path_artifact
             try:
@@ -185,7 +187,7 @@ def unpack_natives_files(
                 pass
 
 
-def generate_launch_command(
+def GenerateMinecraftLaunchCommand(
         minecraft_path,
         java_path,
         version_launch,
@@ -207,8 +209,8 @@ def generate_launch_command(
             if lib.get("rules"):
                 action = "disallow"
                 for rule in lib.get("rules", []):
-                    rule_of_os = rule.get("os", {}).get("name", get_os.getOperationSystemInMojangApi()[0])
-                    if rule_of_os != get_os.getOperationSystemInMojangApi()[0]:
+                    rule_of_os = rule.get("os", {}).get("name", GetOperationSystem.GetOperationSystemInMojangApi()[0])
+                    if rule_of_os != GetOperationSystem.GetOperationSystemInMojangApi()[0]:
                         continue
                     action = rule.get("action", action)
                 allow = bool(lib.get("downloads", {}).get("artifact", {})) and action == "allow"
@@ -228,7 +230,7 @@ def generate_launch_command(
             path = Path(basepath / secondpath)
             path_artifact = Path(libraries_dir_path / path)
             libraries_files.append(str(path_artifact))
-    sep = ":" if not get_os.getOperationSystemName()[0] == "Windows" else ";"
+    sep = ":" if not GetOperationSystem.GetOperationSystemName()[0] == "Windows" else ";"
     libraries_files = sep.join(libraries_files)
     if initial_memory is None or max_memory is None:
         initial_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))
@@ -242,9 +244,7 @@ def generate_launch_command(
     launch_mode = JavaMode[launch_mode.upper()].value
     if jvm_arg_options is None:
         jvm_arg_options = {"option": "default"}
-    match jvm_arg_options["option"]:
-        case "default":
-            jvmcommand = [f'-{launch_mode}',
+    default_jvmcommand = [f'-{launch_mode}',
                           '-XX:+UseG1GC',
                           '-XX:+UseAdaptiveSizePolicy',
                           '-XX:MaxInlineSize=420',
@@ -275,72 +275,15 @@ def generate_launch_command(
                           '-Dfml.ignoreInvalidMinecraftCertificates=True',
                           '-Dfml.ignorePatchDiscrepancies=True',
                           '-Dlog4j2.formatMsgNoLookups=true']
+    match jvm_arg_options["option"]:
+        case "default":
+            jvmcommand = default_jvmcommand.copy()
         case "append":
-            jvmcommand = [f'-{launch_mode}',
-                          '-XX:+UseG1GC',
-                          '-XX:+UseAdaptiveSizePolicy',
-                          '-XX:MaxInlineSize=420',
-                          '-XX:+TieredCompilation',
-                          '-XX:+ParallelRefProcEnabled',
-                          '-XX:MaxGCPauseMillis=152',
-                          '-XX:+UnlockExperimentalVMOptions',
-                          '-XX:+UnlockDiagnosticVMOptions',
-                          '-XX:+Inline',
-                          # '-XX:+UseJVMCICompiler',
-                          # '-XX:+EnableJVMCI',
-                          '-XX:+DisableExplicitGC',
-                          '-XX:+AlwaysPreTouch',
-                          '-XX:G1NewSizePercent=30',
-                          '-XX:G1MaxNewSizePercent=40',
-                          '-XX:G1HeapRegionSize=8M',
-                          '-XX:G1ReservePercent=20',
-                          '-XX:G1HeapWastePercent=5',
-                          '-XX:G1MixedGCCountTarget=4',
-                          '-XX:InitiatingHeapOccupancyPercent=15',
-                          '-XX:G1MixedGCLiveThresholdPercent=90',
-                          '-XX:G1RSetUpdatingPauseTimePercent=5',
-                          '-XX:SurvivorRatio=31',
-                          '-XX:+PerfDisableSharedMem',
-                          f'-XX:ParallelGCThreads={psutil.cpu_count()}',
-                          f'-XX:ConcGCThreads={psutil.cpu_count()}',
-                          '-XX:MaxTenuringThreshold=1',
-                          '-Dfml.ignoreInvalidMinecraftCertificates=True',
-                          '-Dfml.ignorePatchDiscrepancies=True',
-                          '-Dlog4j2.formatMsgNoLookups=true'].extend(jvm_arg_options["args"].split(" "))
+            jvmcommand = default_jvmcommand.copy().extend(jvm_arg_options["args"].split(" "))
         case "override":
             jvmcommand = jvm_arg_options["args"].split(" ")
         case _:
-            jvmcommand = [f'-{launch_mode}',
-                          '-XX:+UseG1GC',
-                          '-XX:+UseAdaptiveSizePolicy',
-                          '-XX:MaxInlineSize=420',
-                          '-XX:+TieredCompilation',
-                          '-XX:+ParallelRefProcEnabled',
-                          '-XX:MaxGCPauseMillis=152',
-                          '-XX:+UnlockExperimentalVMOptions',
-                          '-XX:+UnlockDiagnosticVMOptions',
-                          '-XX:+Inline',
-                          # '-XX:+UseJVMCICompiler',
-                          # '-XX:+EnableJVMCI',
-                          '-XX:+DisableExplicitGC',
-                          '-XX:+AlwaysPreTouch',
-                          '-XX:G1NewSizePercent=30',
-                          '-XX:G1MaxNewSizePercent=40',
-                          '-XX:G1HeapRegionSize=8M',
-                          '-XX:G1ReservePercent=20',
-                          '-XX:G1HeapWastePercent=5',
-                          '-XX:G1MixedGCCountTarget=4',
-                          '-XX:InitiatingHeapOccupancyPercent=15',
-                          '-XX:G1MixedGCLiveThresholdPercent=90',
-                          '-XX:G1RSetUpdatingPauseTimePercent=5',
-                          '-XX:SurvivorRatio=31',
-                          '-XX:+PerfDisableSharedMem',
-                          f'-XX:ParallelGCThreads={psutil.cpu_count()}',
-                          f'-XX:ConcGCThreads={psutil.cpu_count()}',
-                          '-XX:MaxTenuringThreshold=1',
-                          '-Dfml.ignoreInvalidMinecraftCertificates=True',
-                          '-Dfml.ignorePatchDiscrepancies=True',
-                          '-Dlog4j2.formatMsgNoLookups=true']
+            jvmcommand = default_jvmcommand.copy()
     if jsons.get("arguments"):
         quick_started = False
         arguments = jsons["arguments"]
@@ -395,7 +338,7 @@ def generate_launch_command(
         for a in jvmarguments:
             if isinstance(a, dict):
                 rules = a["rules"][0]
-                os_data = get_os.getOperationSystemInMojangApi()
+                os_data = GetOperationSystem.GetOperationSystemInMojangApi()
                 os_rules = rules["os"]
                 if os_rules.get("name") and os_rules["name"] != os_data[0]:
                     continue
@@ -419,7 +362,7 @@ def generate_launch_command(
                 c = c.replace("${natives_directory}", f'"{natives_dir}"')
                 c = c.replace("${launcher_name}", u'"CMCL"')
                 c = c.replace("${launcher_version}", f'"{launcher_version}"')
-                sep = ":" if get_os.getOperationSystemName()[0] != "Windows" else ";"
+                sep = ":" if GetOperationSystem.GetOperationSystemName()[0] != "Windows" else ";"
                 c = c.replace("${classpath}", f'"{libraries_files}{sep}{game_jar_path}"')
                 jvmcommand.append(c)
         jvmcommand.append(memory_args)
@@ -447,14 +390,14 @@ def generate_launch_command(
             gamecommand = gamecommand.split(" ")
             gamecommand.append(extra_game_command.strip(" "))
             gamecommand = " ".join(gamecommand)
-        jvmcommand = f"{' '.join(jvmcommand)} -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{str(Path(minecraft_path / 'versions' / version_launch / f'{version_launch}-natives'))}\" -cp \"{libraries_files}{':' if get_os.getOperationSystemName()[0] != 'Windows' else ';'}{game_jar_path}\" {memory_args} -Xmixed {main_class}"
+        jvmcommand = f"{' '.join(jvmcommand)} -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{str(Path(minecraft_path / 'versions' / version_launch / f'{version_launch}-natives'))}\" -cp \"{libraries_files}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{game_jar_path}\" {memory_args} -Xmixed {main_class}"
     else:
         jvmcommand = gamecommand = ""
     command = f'"{java_path.strip(chr(34))}" {jvmcommand} {gamecommand}'
     return command
 
 
-def launch(
+def LaunchMinecraft(
         minecraft_path=None,
         version_launch=None,
         java_path=None,
@@ -501,7 +444,7 @@ def launch(
         return "Unsuccessfully", "cannot launch without asset file"
     if not java_path:
         for i in range(int(jsons["javaVersion"]["majorVersion"]), 999):
-            java_path = get_java_path(str(i))
+            java_path = GetJavaPath(str(i))
             if java_path is not None:
                 break
         else:
@@ -522,11 +465,11 @@ def launch(
     # info = os.linesep.join(info)
     # with open(os.path.join(minecraft_path, "options.txt"), "w", encoding="utf-8") as file:
     #     file.write(info)
-    command = generate_launch_command(minecraft_path, java_path, version_launch, player_data, launch_mode,
-                                      jvm_arg_options, extra_game_command, quickplay_command, initial_memory,
-                                      max_memory, launcher_version)
+    command = GenerateMinecraftLaunchCommand(minecraft_path, java_path, version_launch, player_data, launch_mode,
+                                             jvm_arg_options, extra_game_command, quickplay_command, initial_memory,
+                                             max_memory, launcher_version)
     print(command)
-    unpack_natives_files(minecraft_path, version_launch)
+    UnpackMinecraftNativeFiles(minecraft_path, version_launch)
     game = subprocess.Popen(
         shlex.split(command),
         stdout=stdout,

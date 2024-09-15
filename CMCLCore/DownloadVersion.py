@@ -2,12 +2,12 @@
 import hashlib
 import json
 
-import get_os
-from download_file import Downloader
-from getversion import *
+from . import GetOperationSystem
+from .Downloader import Downloader
+from .GetVersion import *
 
 
-def download_version_json(version=None, minecraft_path="."):
+def DownloadVersionJson(version=None, minecraft_path="."):
     minecraft_path = Path(minecraft_path)
     if version is not None:
         response = requests.get('https://launchermeta.mojang.com/mc/game/version_manifest.json')
@@ -34,7 +34,7 @@ def download_version_json(version=None, minecraft_path="."):
         pass
 
 
-def _download_library_file(url, path):
+def _DownloadLibraryFile(url, path):
     path, file_name = os.path.splitext(path)
     if not os.path.exists(path):
         os.makedirs(path)
@@ -44,7 +44,7 @@ def _download_library_file(url, path):
         downloader.download()
 
 
-def download_asset_index_file(minecraft_path=".", json_path="."):
+def DownloadAssetIndexFile(minecraft_path=".", json_path="."):
     minecraft_path = Path(minecraft_path)
     assets_file_data = json.loads(Path(json_path).read_text(encoding="utf-8"))["assetIndex"]
     if not Path(minecraft_path / "assets" / "indexes").exists():
@@ -76,7 +76,7 @@ def download_asset_index_file(minecraft_path=".", json_path="."):
             )
 
 
-def download_assets_objects_file(path, hash_value):
+def DownloadAssetObjectFiles(path, hash_value):
     path = Path(path)
     Path(path / hash_value[0:2]).mkdir(parents=True, exist_ok=True)
     file_path = Path(path / hash_value[0:2] / hash_value)
@@ -92,7 +92,7 @@ def download_assets_objects_file(path, hash_value):
             Path(path).write_bytes(response.content)
 
 
-def download_library_files(version=None, minecraft_path="."):
+def DownloadLibraryFiles(version=None, minecraft_path="."):
     if not version:
         return
     minecraft_path = Path(minecraft_path)
@@ -113,34 +113,34 @@ def download_library_files(version=None, minecraft_path="."):
                 rule_of_os = libraries_file_data[i]["rules"][0]["os"]["name"]
             except KeyError:
                 rule_of_os = libraries_file_data[i]["rules"][1]["os"]["name"]
-            if get_os.getOperationSystemInMojangApi()[0].lower() != rule_of_os:
+            if GetOperationSystem.GetOperationSystemInMojangApi()[0].lower() != rule_of_os:
                 continue
         data = libraries_file_data[i]["downloads"]
         try:
             data_of_file = data["artifact"]
         except KeyError:
-            data_of_file = data["classifiers"][f"natives-{get_os.getOperationSystemInMojangApi()[0]}"]
+            data_of_file = data["classifiers"][f"natives-{GetOperationSystem.GetOperationSystemInMojangApi()[0]}"]
         libraries_dir_path = Path(minecraft_path / "libraries")
         path = Path(libraries_dir_path / Path(data_of_file["path"]))
         url = data_of_file["url"]
         if not Path(path).exists():
-            _download_library_file(url, path)
+            _DownloadLibraryFile(url, path)
 
 
 def download_game(minecraft_path=".", version=None):
     minecraft_path = Path(minecraft_path)
     Path(minecraft_path / "versions" / version).mkdir(parents=True, exist_ok=True)
     if not Path(minecraft_path / "versions" / version / f"{version}.json").exists():
-        download_version_json(version, minecraft_path)
+        DownloadVersionJson(version, minecraft_path)
     if not Path(minecraft_path / "versions" / version / f"{version}.jar").exists():
-        client_url = get_download_url(version=version)
+        client_url = GetMinecraftClientDownloadUrl(version=version)
         downloader = Downloader(client_url, f"{version}.jar", Path(minecraft_path / "versions" / version))
         downloader.download()
-    download_library_files(minecraft_path=minecraft_path, version=version)
-    download_asset_index_file(minecraft_path=minecraft_path,
-                              json_path=Path(minecraft_path / "versions" / version / f"{version}.json"))
+    DownloadLibraryFiles(minecraft_path=minecraft_path, version=version)
+    DownloadAssetIndexFile(minecraft_path=minecraft_path,
+                           json_path=Path(minecraft_path / "versions" / version / f"{version}.json"))
     asset_id = json.loads(Path(minecraft_path / "versions" / version / f"{version}.json").read_text(encoding="utf-8"))[
         "assetIndex"]["id"]
     for i in json.loads(Path(minecraft_path / "assets" / "indexes" / f"{asset_id}.json").read_text(encoding="utf-8"))[
         "objects"].values():
-        download_assets_objects_file(Path(minecraft_path / "assets" / "objects"), i["hash"])
+        DownloadAssetObjectFiles(Path(minecraft_path / "assets" / "objects"), i["hash"])

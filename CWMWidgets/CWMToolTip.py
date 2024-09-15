@@ -24,13 +24,14 @@ class ToolTipBase(QLabel):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.adjustSize()
         self.raise_()
-        self.setStyleSheet(
-            f"background: transparent; color: rgb({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')});")
         painter = QPainter(self)
+        painter.setOpacity(1.0)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(getBorderColour())
         painter.setBrush(getBackgroundColour())
         painter.drawRoundedRect(self.rect(), 10, 10)
+        self.setStyleSheet(
+            f"background: transparent; color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {painter.opacity()});")
         super().paintEvent(a0)
 
 

@@ -41,7 +41,6 @@ class ComboBox(QComboBox):
         self.initStyleOption(op)
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
         op.palette.setColor(self.backgroundRole(), Qt.GlobalColor.transparent)
-        self.setStyleSheet("color: black")
         self.style().drawControl(QStyle.ControlElement.CE_ComboBoxLabel, op, painter, self)
     
     def contextMenuEvent(self, e):

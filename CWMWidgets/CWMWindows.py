@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
+from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from qframelesswindow import TitleBar
 from .CWMThemeControl import *
 from .CWMFramelessWindow import *
-from ctypes import WinDLL
+from ctypes import WinDLL, pointer, windll
+from ctypes.wintypes import RECT
+import platform
 
 
-class RoundedWindow(RoundedFramelessMainWindow):
+class RoundedWindow(FramelessMainWindow):
+    BORDER_RADIUS = 10
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.titleBar = TitleBar(self)
@@ -16,9 +21,46 @@ class RoundedWindow(RoundedFramelessMainWindow):
         super().resizeEvent(a0)
         self.titleBar.resize(self.width(), self.titleBar.height())
         self.titleBar.raise_()
+    
+    def __getCurrentDpiScaleRate(self):
+        match platform.system():
+            case "Windows":
+                windll.user32.SetProcessDPIAware()
+                return windll.user32.GetDpiForWindow(int(self.winId())) / 96.0
+            case "Darwin":
+                return 1
+            case "Linux":
+                return 1
+    
+    def __updateWindowRegion(self):
+        match platform.system():
+            case "Windows":
+                rect = RECT()
+                windll.user32.GetWindowRect(int(self.winId()), pointer(rect))
+                dpiScaleRate = self.__getCurrentDpiScaleRate()
+                windll.user32.SetWindowRgn(int(self.winId()),
+                                           windll.gdi32.CreateRoundRectRgn(
+                                               0,
+                                               0,
+                                               (rect.right - rect.left),
+                                               (rect.bottom - rect.top),
+                                               int(self.BORDER_RADIUS * dpiScaleRate),
+                                               int(self.BORDER_RADIUS * dpiScaleRate)
+                                           ),
+                                           False)
+            case "Darwin":
+                pass
+            case "Linux":
+                pass
+    
+    def event(self, event):
+        self.__updateWindowRegion()
+        return super().event(event)
 
 
-class RoundedDialogue(QDialog, RoundedFramelessWindow):
+class RoundedDialogue(QDialog, FramelessWindow):
+    BORDER_RADIUS = 10
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.titleBar = TitleBar(self)
@@ -34,6 +76,41 @@ class RoundedDialogue(QDialog, RoundedFramelessWindow):
         super().resizeEvent(a0)
         self.titleBar.resize(self.width(), self.titleBar.height())
         self.titleBar.raise_()
+    
+    def __getCurrentDpiScaleRate(self):
+        match platform.system():
+            case "Windows":
+                windll.user32.SetProcessDPIAware()
+                return windll.user32.GetDpiForWindow(int(self.winId())) / 96.0
+            case "Darwin":
+                return 1
+            case "Linux":
+                return 1
+    
+    def __updateWindowRegion(self):
+        match platform.system():
+            case "Windows":
+                rect = RECT()
+                windll.user32.GetWindowRect(int(self.winId()), pointer(rect))
+                dpiScaleRate = self.__getCurrentDpiScaleRate()
+                windll.user32.SetWindowRgn(int(self.winId()),
+                                           windll.gdi32.CreateRoundRectRgn(
+                                               0,
+                                               0,
+                                               (rect.right - rect.left),
+                                               (rect.bottom - rect.top),
+                                               int(self.BORDER_RADIUS * dpiScaleRate),
+                                               int(self.BORDER_RADIUS * dpiScaleRate)
+                                           ),
+                                           False)
+            case "Darwin":
+                pass
+            case "Linux":
+                pass
+    
+    def event(self, event):
+        self.__updateWindowRegion()
+        return super().event(event)
 
 
 class RoundedMenu(QMenu):
@@ -42,7 +119,7 @@ class RoundedMenu(QMenu):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet(f"""RoundedMenu{{
-    background: white;
+    background: {"dark" if getTheme() == Theme.Dark else "white"};
 }}
 RoundedMenu::item{{
     background: rgba({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
@@ -58,7 +135,7 @@ RoundedMenu::item:selected{{
 }}
 RoundedMenu::item:selected, RoundedMenu::item:pressed{{
     border: 1px solid rgb({str(getBorderColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-    color: rgb(0, 0, 0);
+    color: rgb({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')});
 }}
 RoundedMenu::item:pressed{{
     background: rgb({str(getBackgroundColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});

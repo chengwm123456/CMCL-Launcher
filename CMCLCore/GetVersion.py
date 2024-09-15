@@ -8,7 +8,7 @@ import requests
 # from curl_cffi import requests
 
 
-def get_version_by_api(returns="RETURN_DATA"):
+def GetVersionByMojangApi(returns="RETURN_DATA"):
     mojang_api_url = "https://launchermeta.mojang.com"
     
     versions_url = f"{mojang_api_url}/mc/game/version_manifest.json"
@@ -40,7 +40,7 @@ def get_version_by_api(returns="RETURN_DATA"):
             return versions
 
 
-def get_version_by_scan_dir(minecraft_path=None):
+def GetVersionByScanDirectory(minecraft_path=None):
     if minecraft_path is None:
         minecraft_path = "."
     minecraft_path = Path(minecraft_path)
@@ -55,10 +55,10 @@ def get_version_by_scan_dir(minecraft_path=None):
     return "No matched versions"
 
 
-def get_download_url(**kw):
+def GetMinecraftClientDownloadUrl(**kw):
     response = requests.get('https://launchermeta.mojang.com/mc/game/version_manifest.json')
     version_manifest = response.json()
-    version_id = kw.get("version", get_version_by_api(returns="RETURN_LATEST_DATA"))
+    version_id = kw.get("version", GetVersionByMojangApi(returns="RETURN_LATEST_DATA"))
     version_info = None
     for version in version_manifest['versions']:
         if version['id'] == version_id:

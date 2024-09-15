@@ -1,2 +1,2 @@
 # -*- coding: utf-8 -*-
-from .CWMFramelessWindow import RoundedFramelessWindow, RoundedFramelessMainWindow
+from .CWMFramelessWindow import FramelessWindow, FramelessMainWindow

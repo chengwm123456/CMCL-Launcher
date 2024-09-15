@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import *
 from .CWMWindows import RoundedMenu
 from .CWMThemeControl import *
 from .CWMToolTip import ToolTip
+from .CWMScrollBar import ScrollBar
 
 
 class TextEdit(QTextEdit):
@@ -12,6 +13,8 @@ class TextEdit(QTextEdit):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.installEventFilter(ToolTip(self))
+        self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
+        self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))
     
     def paintEvent(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -49,6 +52,9 @@ class PlainTextEdit(QPlainTextEdit):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        self.installEventFilter(ToolTip(self))
+        self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
+        self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))
     
     def paintEvent(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
