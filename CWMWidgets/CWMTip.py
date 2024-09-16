@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import overload
+
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
@@ -9,30 +11,33 @@ from .CWMPanel import Panel
 class TipBase(Panel):
     windowClosed = pyqtSignal()
     
-    def __init__(self, parent, close_enabled=True):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, parent=None, close_enabled=True):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(__args[0])
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setFixedHeight(64)
-        self.closeEnabled = lambda: close_enabled
+        self.setProperty("closeEnabled", __args[1] if len(__args) > 1 else True)
         self._closeButton = CloseButton(self)
         self._closeButton.setVisible(self.closeEnabled())
         self._closeButton.move(QPoint(self.width() - self._closeButton.width() - 16, 16))
         self._closeButton.pressed.connect(self.close)
     
+    def closeEnabled(self):
+        return self.property("closeEnabled")
+    
     def setCloseEnabled(self, value):
         if value in [True, False, 1, 0]:
-            self.closeEnabled = lambda: value
+            self.setProperty("closeEnabled", value)
         else:
             raise TypeError(f"'{type(value)}' object cannot be interpreted as a bool.")
         self._closeButton.setVisible(self.closeEnabled())
-    
-    def paintEvent(self, a0):
-        opacity = 1.0 if self.hasFocus() or self.underMouse() else 0.6
-        if not self.isEnabled():
-            opacity = 0.3
-        self.setStyleSheet(
-            f"background: transparent; color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {opacity});")
-        super().paintEvent(a0)
     
     def resizeEvent(self, a0):
         self._closeButton.move(QPoint(self.width() - self._closeButton.width() - 16, 16))
@@ -45,18 +50,34 @@ class TipBase(Panel):
 
 
 class Tip(TipBase):
-    def __init__(self, parent, close_enabled=True):
-        super().__init__(parent, close_enabled)
-        self.centralWidget = lambda: None
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, parent=None, close_enabled=True):
+        ...
+    
+    @overload
+    def __init__(self, parent=None, close_enabled=True, central_widget=None):
+        ...
+    
+    def __init__(self, *args):
+        super().__init__(*args[:2])
+        self.setProperty("centralWidget", args[3] if len(args) > 2 else None)
+    
+    def centralWidget(self):
+        return self.property("centralWidget")
     
     def setCentralWidget(self, widget):
         if isinstance(widget, QWidget):
-            self.centralWidget = lambda: widget
+            self.setProperty("centralWidget", widget)
     
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         if hasattr(self.centralWidget(), "setGeometry"):
-            self.centralWidget().setGeometry(5, 5, self.width() - self._closeButton.width() - 32, self.height() - 10)
+            self.centralWidget().setGeometry(5, 5, self.width() - (
+                (self._closeButton.width() - 32) if self._closeButton.isVisible() else 0), self.height() - 10)
 
 
 class PopupTip(Tip):

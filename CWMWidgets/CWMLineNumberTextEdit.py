@@ -24,7 +24,7 @@ class LineNumberTextEdit(TextEdit):
             self.setFixedWidth(width)
             self.__codeEditor.setViewportMargins(width, 0, 0, 0)
         
-        def paintEvent(self, event):
+        def paintEvent(self, a0, **kwargs):
             super().paintEvent(event)
             self.setFont(self.__codeEditor.font())
             painter = QPainter(self)

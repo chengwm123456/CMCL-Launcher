@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import overload
+
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
@@ -7,8 +9,16 @@ from .CWMToolTip import ToolTip
 
 
 class LabelBase(QLabel):
-    def __init__(self, parent):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, text="", parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setStyleSheet(
             f"background: transparent; color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {1.0 if self.underMouse() else 0.6 if self.isEnabled() else 0.3})")
         self.installEventFilter(ToolTip(self))

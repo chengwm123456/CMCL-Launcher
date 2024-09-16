@@ -27,7 +27,7 @@ from qframelesswindow import StandardTitleBar
 
 from CMCLCore.Launch import LaunchMinecraft
 from CMCLCore.Login import get_user_data
-from CMCLCore.Player import Player
+from CMCLCore.Player import create_online_player, create_offline_player
 from CMCLCore.GetVersion import GetVersionByScanDirectory, GetVersionByMojangApi
 
 DEBUG = True
@@ -336,7 +336,7 @@ class LoginDialogue(RoundedDialogue):
         w = LoginWindow()
         w.exec()
     
-    def paintEvent(self, *args, **kwargs):
+    def paintEvent(self, a0, **kwargs):
         painter = QPainter(self)
         painter.fillRect(
             QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
@@ -410,11 +410,11 @@ class LoginWindow(RoundedDialogue):
     def loadFinished(self):
         self.progress.finish()
     
-    def resizeEvent(self, a0):
+    def resizeEvent(self, a0, **kwargs):
         super().resizeEvent(a0)
         self.view.setGeometry(self.rect())
     
-    def paintEvent(self, *args, **kwargs):
+    def paintEvent(self, a0, **kwargs):
         painter = QPainter(self)
         painter.fillRect(
             QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
@@ -483,13 +483,28 @@ class MainPage(QFrame):
         self.verticalLayout.addWidget(self.scrollArea)
         self.scrollAreaContentWidget = QWidget()
         self.verticalLayout_2 = QVBoxLayout(self.scrollAreaContentWidget)
-        tip = Tip(self, close_enabled=False)
-        label = Label(tip)
-        label.setText('''<a href="https://www.bilibili.com/v/topic/detail/?topic_id=53624&topic_name=2233%E7%94%9F%E6%97%A5%E5%BF%AB%E4%B9%90&spm_id_from=333.999.list.card_topic.click" style="text-decoration: none">#2233生日快乐#</a><br/>
+        tip = Tip(self, False)
+        self.tlabel = Label(tip)
+        self.tlabel.setText('''<a href="https://www.bilibili.com/v/topic/detail/?topic_id=53624&topic_name=2233%E7%94%9F%E6%97%A5%E5%BF%AB%E4%B9%90&spm_id_from=333.999.list.card_topic.click" style="text-decoration: none">#2233生日快乐#</a><br/>
                                 (都说了全网带话题 <a href="https://www.bilibili.com/v/topic/detail/?topic_id=53624&topic_name=2233%E7%94%9F%E6%97%A5%E5%BF%AB%E4%B9%90&spm_id_from=333.999.list.card_topic.click" style="text-decoration: none">#2233生日快乐#</a>。这不，<small style="font-size: xx-small"><del style='text-decoration: line-through'>{}</del></small>的我也带了这个话题了。都别针对我呀，<small style="font-size: xx-small"><del style='text-decoration: line-through'>我是无辜的</del></small>。)'''.format(
-            "远在地球另一边无法赶回来") if time.localtime().tm_mon == 8 and time.localtime().tm_mday == 16 else f"敬请等待{time.localtime().tm_year + 1}年8月16号")
+            "远在地球另一边无法赶回来") if time.localtime().tm_mon == 8 and time.localtime().tm_mday == 16 else f"敬请等待{time.localtime().tm_year + 1}年8月16号<br/>{time.strftime('还有%M个月%d天', time.gmtime(time.mktime((time.gmtime().tm_year + 1, 9, 16, 19, 30, 0, 0, 0, 0)) - time.time()))}")
         # 2024: 远在地球另一边无法赶回来
-        tip.setCentralWidget(label)
+        tip.setCentralWidget(self.tlabel)
+        
+        def updateTime(self):
+            year = time.localtime().tm_year if time.localtime().tm_mon < 8 or (
+                    time.localtime().tm_mon == 8 and time.localtime().tm_mday < 16) else (
+                    time.localtime().tm_year + 1)
+            time_s = time.gmtime(time.mktime((year, 8, 16, 0, 0, 0, 0, 0, 0)) - time.time())
+            time_text = f"还有{time_s.tm_mon - 1}个月{time_s.tm_mday}天"
+            wait_text = f"敬请等待{year}年8月16号<br/>{time_text}"
+            topic_text = f'<a href="{"https://www.bilibili.com/v/topic/detail/?topic_id=53624"}" style="text-decoration: none">#{"2233生日快乐"}#</a><br/>(都说了全网带话题 <a href="{"https://www.bilibili.com/v/topic/detail/?topic_id=53624"}" style="text-decoration: none">#{"2233生日快乐"}#</a>。这不，<small style="font-size: xx-small"><del style="text-decoration: line-through">{"远在地球另一边无法赶回来"}</del></small>的我也带了这个话题了。都别针对我呀，<small style="font-size: xx-small"><del style="text-decoration: line-through">我是无辜的</del></small>。)'
+            self.tlabel.setText(
+                topic_text if time.localtime().tm_mon == 8 and time.localtime().tm_mday == 16 else wait_text)
+        
+        t = QTimer(self)
+        t.timeout.connect(lambda: updateTime(self))
+        t.start(1000)
         self.verticalLayout_2.addWidget(tip)
         # popupTip = PopupTip(self, close_enabled=False)
         # label2 = Label(tip)
@@ -507,10 +522,12 @@ class MainPage(QFrame):
                                 ---------<br/>
                                 你知道 22 和 33 吗？<br/>
                                 <small style="font-size: xx-small"><del style='text-decoration: line-through'>我知道你不知道她们</del></small>(并不) <br/>
-                                22 和 33: ？？？ 你在说啥？ 你号没了！ <br/>
+                                22 和 33: 给你一次重新组织语言的机会，你知不知道我们？<br/>
                                 <a href='https://space.bilibili.com/68559'>她们的官方账号(https://space.bilibili.com/68559)</a><br/>
-                                然后呢？<br/><span style="font-weight: bold">她们的生日在 8 月 16 号！！！(请牢牢记住，或者提防你的账号，因为忘掉她们生日容易被封)</span><br/>由此可得知她们都是狮子座。<br/>
-                                再然后呢？？？ <br/>
+                                然后呢？<br/>
+                                她们的生日在8月多少日来着？？？<br/>
+                                22 和 33: 你号没了！去小黑屋罚抄“2233生日在8月16号*100遍！！！”<br/>
+                                由此可得知她们都是狮子座。<br/>
                                 <h2>设定</h2>
                                 ---------<br/>
                                 让我们先说 22 吧 <br/>
@@ -573,6 +590,18 @@ class MainPage(QFrame):
                                     <li style="display: list-item;">22娘是闪电型呆毛，33是月牙形呆毛，因为“bilibili”一名的来源为“电击使”御坂美琴，于是22的呆毛形状被设计成与电相关(见<a href="https://mzh.moegirl.org.cn/File:2233%E5%91%86%E6%AF%9B.jpg">https://mzh.moegirl.org.cn/File:2233%E5%91%86%E6%AF%9B.jpg</a>)</li>
                                     <li style="display: list-item;">两姐妹头发上都夹着个一样的小电视发夹（有时在左边有时在右边，并不是一般的发夹，小电视发夹上的表情是与2233同步变化）。(见<a href="https://mzh.moegirl.org.cn/File:%E5%8F%91%E5%A4%B9%E7%9A%84%E7%A7%98%E5%AF%86.jpg">https://mzh.moegirl.org.cn/File:%E5%8F%91%E5%A4%B9%E7%9A%84%E7%A7%98%E5%AF%86.jpg</a>)</li>
                                     <li style="display: list-item;">有时候33娘没有小电视发夹，只有播放按钮发夹，而且发夹自称是精灵球。(见<a href="https://mzh.moegirl.org.cn/File:%E7%B2%BE%E7%81%B5%E7%90%83%E5%8F%91%E5%A4%B9.jpg">https://mzh.moegirl.org.cn/File:%E7%B2%BE%E7%81%B5%E7%90%83%E5%8F%91%E5%A4%B9.jpg</a>)</li>
+                                    <li style="display: list-item;">33在工作时喜欢穿白大褂，额头上有投影装置，还可以扫描解析，使用AR眼镜或额头上的投影装置都可以让33浮现操作面板，以更改自身设置以及浏览互联网等操作。(见<a href="https://mzh.moegirl.org.cn/File:%E5%85%B3%E4%BA%8E33%E5%A8%98.jpg">https://mzh.moegirl.org.cn/File:%E5%85%B3%E4%BA%8E33%E5%A8%98.jpg</a>)</li>
+                                    <li style="display: list-item;">两姐妹都是ACG爱好者，也会追新番，也喜欢看各种神技术搞笑带弹幕吐槽的视频。（两人审核时，偶尔会被特别喜好的视频吸引住眼球，而忘记正在审核……）</li>
+                                    <li style="display: list-item;">两姐妹都会审核视频，姐姐对着宠物小电视审核；妹妹则是从自己额头的成像仪投影出视频来审核。由于，网站视频的投稿量大，两人常常忙得不亦乐乎。其他方面，网站服务器维护以及各种程序基本都是由妹妹来完成，姐姐则多处理各种BILI众的意见或BUG的反馈。(PS：根据B站视频<a href="https://mzh.moegirl.org.cn/%E5%B9%B8%E7%A6%8F%E5%B0%B1%E5%9C%A8%E4%BD%A0%E8%BA%AB%E8%BE%B9">《Bilibili耶》</a>中，可以看出妹妹略带攻属性。)</li>
+                                    <li style="display: list-item;">33左臂装有能量炮，可以向任意物体发射。(见<a href="https://mzh.moegirl.org.cn/File:Bilibili%E6%BC%AB%E7%94%BB%E5%AE%B3%E6%80%95.webp">https://mzh.moegirl.org.cn/File:Bilibili%E6%BC%AB%E7%94%BB%E5%AE%B3%E6%80%95.webp</a>)</li>
+                                    <li style="display: list-item;">据说33的右臂是爱心飞拳？可以分离？还可以抓住物体？(见<a href="https://manga.bilibili.com/mc28173/455648">https://manga.bilibili.com/mc28173/455648</a>)</li>
+                                </ul>
+                                <br/>
+                                <h2>趣闻</h2>
+                                ---------<br/>
+                                <ul>
+                                    <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>22有一次审核恐怖视频时被吓到了，晚上不敢去洗手间，结果第二天一早醒来发现自己尿床了(⊙o⊙)。结果晒床单时被妹妹33娘看见……</del></small>(都懂的......)</li>
+                                    <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>22近期迷上了哲♂学、兄♂贵、摔♂跤以及FA♂乐器，用33的手机看了之后留下了喜好推荐被33发现，结果亲身体♂验了一番。</del></small>(仅供娱乐)</li>
                                 </ul>
                                 <br/>
                                 <h2>一些不好说的东西</h2>
@@ -587,7 +616,7 @@ class MainPage(QFrame):
                                 以上为测试文本，为启动器测试文本显示、HTML样式测试、模板填空测试以及排版测试文本。著作权归原编辑者所有。<br/>
                                 还有，很多地方我瞎说的，别信！<br/>
                               </p>
-                              <p>此文本较多内容引自萌娘百科(mzh.moegirl.org.cn)，具体链接：<a href="https://mzh.moegirl.org.cn/Bilibili%E5%A8%98">*</a>，<strong>内容不可商用，著作权归原编辑者所有</strong></p>
+                              <p>此文本介绍部分内容及数据引自萌娘百科(mzh.moegirl.org.cn)，具体链接：<a href="https://mzh.moegirl.org.cn/Bilibili%E5%A8%98">*</a>，<strong>内容不可商用，著作权归原编辑者所有</strong></p>
                             </body>
                         </html>""" if time.localtime().tm_year != 2017 or time.localtime().tm_mon != 1 or time.localtime().tm_mday != 23 else "没有 98 亿还想知道 2233？") if time.localtime().tm_year > 2010 or (
                 time.localtime().tm_year == 2010 and time.localtime().tm_mon > 8 or (
@@ -603,13 +632,6 @@ class MainPage(QFrame):
         self.verticalLayout_2.addItem(self.bottom_space)
         self.scrollArea.setWidget(self.scrollAreaContentWidget)
         self.scrollAreaContentWidget.adjustSize()
-        height = 180
-        for i in self.scrollAreaContentWidget.children():
-            if hasattr(i, "adjustSize"):
-                i.adjustSize()
-            if hasattr(i, "rect"):
-                height += i.rect().height() + 5
-        self.scrollAreaContentWidget.setFixedHeight(height)
         self.scrollArea.setWidgetResizable(True)
         self.bottomPanel = Panel(self)
         self.bottomPanel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -670,16 +692,20 @@ class MainPage(QFrame):
         super().resizeEvent(*args, **kwargs)
         self.bottomPanel.setGeometry(
             QRect(5, (self.height() - 80 if self.bottomPanelIsShow else self.height() + 62), self.width() - 10, 62))
-        if self.bottomPanelIsShow and not self.bottom_space in self.verticalLayout_2.children():
-            self.verticalLayout_2.addItem(self.bottom_space)
+        if self.bottomPanelIsShow:
+            if self.verticalLayout_2.indexOf(self.bottom_space) == -1:
+                self.verticalLayout_2.addItem(self.bottom_space)
         else:
-            if self.bottom_space in self.verticalLayout_2.children():
+            if self.verticalLayout_2.indexOf(self.bottom_space) != -1:
                 self.verticalLayout_2.removeItem(self.bottom_space)
-        self.label2.adjustSize()
 
 
 class DownloadPage(QFrame):
     class DownloadVanilla(QFrame):
+        class DownloadOptions(QFrame):
+            def __init__(self, parent):
+                super().__init__(parent)
+        
         class GetVersionThread(QThread):
             gotVersion = pyqtSignal(dict)
             
@@ -977,6 +1003,99 @@ class DownloadPage(QFrame):
 class UserPage(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.user_datas = []
+        self.current_user = 0
+        
+        # DEBUG: ON#
+        self.user_datas.append(create_online_player("2233", "68559", "TheFengHaoDouLuoOfBiZhan", True))
+        self.user_datas.append(create_online_player("22和33", "68559", "TheSameAsAbove", True))
+        self.user_datas.append(player)
+        self.user_datas.append(create_online_player("chengwm_CMCL", "100000000", "NoAccessToken", False))
+        self.current_user = 2
+        # DEBUG: END#
+        
+        self.verticalLayout = QVBoxLayout(self)
+        self.topPanel = Panel(self)
+        self.horizontalLayout = QHBoxLayout(self.topPanel)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.leftUserIcon = ToolButton(self.topPanel)
+        self.leftUserIcon.setIcon(QIcon("user_icon-black.svg"))
+        self.leftUserIcon.setIconSize(QSize(32, 32))
+        left_user = self.user_datas[min(max(self.current_user - 1, 0), len(self.user_datas) - 1)]
+        self.leftUserIcon.setToolTip(
+            f"用户名称：{left_user.player_name}\n类型：{left_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {left_user.player_hasMC}")
+        self.leftUserIcon.pressed.connect(lambda: self.select_new_user(self.current_user - 1))
+        self.horizontalLayout.addWidget(self.leftUserIcon)
+        spacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.horizontalLayout.addItem(spacer)
+        self.UserIcon = ToolButton(self.topPanel)
+        self.UserIcon.setIcon(QIcon("user_icon-black.svg"))
+        self.UserIcon.setIconSize(QSize(32, 32))
+        current_user = self.user_datas[self.current_user]
+        self.UserIcon.setText(
+            f"用户名称：{current_user.player_name}\n类型：{current_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {current_user.player_hasMC}")
+        self.UserIcon.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.horizontalLayout.addWidget(self.UserIcon)
+        spacer2 = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.horizontalLayout.addItem(spacer2)
+        self.rightUserIcon = ToolButton(self.topPanel)
+        self.rightUserIcon.setIcon(QIcon("user_icon-black.svg"))
+        self.rightUserIcon.setIconSize(QSize(32, 32))
+        right_user = self.user_datas[min(max(self.current_user + 1, 0), len(self.user_datas) - 1)]
+        self.rightUserIcon.setToolTip(
+            f"用户名称：{right_user.player_name}\n类型：{right_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {right_user.player_hasMC}")
+        self.rightUserIcon.pressed.connect(lambda: self.select_new_user(self.current_user + 1))
+        self.horizontalLayout.addWidget(self.rightUserIcon)
+        self.verticalLayout.addWidget(self.topPanel)
+        
+        self.userTabel = TableView(self)
+        self.verticalLayout.addWidget(self.userTabel)
+        self.userTabel.setSelectionMode(QTableView.SelectionMode.SingleSelection)
+        self.userTabel.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.userTabel.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.userTabel.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.userTabel.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.userTabel.horizontalHeader().setVisible(True)
+        self.userTabel.verticalHeader().setVisible(False)
+        self.userModel = QStandardItemModel()
+        self.userModel.setHorizontalHeaderLabels(["用户名", "类型"])
+        self.userTabel.setModel(self.userModel)
+        self.userModel.clear()
+        self.userModel.setHorizontalHeaderLabels(["用户名", "类型"])
+        for e, i in enumerate(self.user_datas):
+            self.userModel.setItem(e, 0, QStandardItem(i.player_name))
+            self.userModel.setItem(e, 1, QStandardItem(i.player_accountType[1]))
+        # self.userModel.setItem(0, 0, QStandardItem("22&33"))
+        # self.userModel.setItem(0, 1, QStandardItem("Bilibili账户"))
+        # self.userModel.setItem(1, 0, QStandardItem("22和33"))
+        # self.userModel.setItem(1, 1, QStandardItem("Bilibili账户"))
+        # self.userModel.setItem(2, 0, QStandardItem("chengwm"))
+        # self.userModel.setItem(2, 1, QStandardItem("Microsoft账户"))
+        # self.userModel.setItem(3, 0, QStandardItem("chengwm_CMCL"))
+        # self.userModel.setItem(3, 1, QStandardItem("Bilibili账户"))
+        
+        self.retranslateUI()
+    
+    def retranslateUI(self):
+        left_user = self.user_datas[min(max(self.current_user - 1, 0), len(self.user_datas) - 1)]
+        self.leftUserIcon.setToolTip(
+            f"用户名称：{left_user.player_name}\n类型：{left_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {left_user.player_hasMC}")
+        current_user = self.user_datas[self.current_user]
+        self.UserIcon.setText(
+            f"用户名称：{current_user.player_name}\n类型：{current_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {current_user.player_hasMC}")
+        right_user = self.user_datas[min(max(self.current_user + 1, 0), len(self.user_datas) - 1)]
+        self.rightUserIcon.setToolTip(
+            f"用户名称：{right_user.player_name}\n类型：{right_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {right_user.player_hasMC}")
+        self.userModel.clear()
+        self.userModel.setHorizontalHeaderLabels(["用户名", "类型"])
+        for e, i in enumerate(self.user_datas):
+            self.userModel.setItem(e, 0, QStandardItem(i.player_name))
+            self.userModel.setItem(e, 1, QStandardItem(i.player_accountType[1]))
+    
+    def select_new_user(self, id):
+        self.current_user = id
+        self.current_user = max(0, min(len(self.user_datas) - 1, self.current_user))
+        self.retranslateUI()
 
 
 class MainWindow(RoundedWindow):
@@ -991,7 +1110,7 @@ class MainWindow(RoundedWindow):
         self.titleBar.show()
         self.titleBar.raise_()
         self.titleBar.iconLabel.setPixmap(self.windowIcon().pixmap(20, 20))
-        self.titleBar.titleLabel.setText(self.windowTitle())
+        self.titleBar.titleLabel.setText(self.windowTitle(), )
         self.titleBar.titleLabel.setStyleSheet(
             "background: transparent; padding: 0 4px; font: 13px 'Segoe UI'; color: black")
         self.setStyleSheet("background: transparent")
@@ -1001,11 +1120,14 @@ class MainWindow(RoundedWindow):
         self.horizontalLayout.setSpacing(10)
         self.topWidget = FoldableNavigationPanel(self.centralwidget)
         self.HomePage = MainPage(self)
-        self.topWidget.addItem(self.HomePage, "Home.svg")
+        self.topWidget.addItem(self.HomePage, "Home.svg", "主页")
         self.DownloadPage = DownloadPage(self)
-        self.topWidget.addItem(self.DownloadPage, "Download.svg")
-        self.topWidget.addButton("user_icon-black.svg", selectable=False, pressed=self.start_login)
-        self.topWidget.addButton("auto_black.svg", selectable=False)
+        self.topWidget.addItem(self.DownloadPage, "Download.svg", "下载")
+        self.UserPage = UserPage(self)
+        self.topWidget.addItem(self.UserPage, "user_icon-black.svg", "用户",
+                               pos=NavigationPanel.NavigationItemPosition.Right)
+        self.topWidget.addButton("auto_black.svg", "浅色", selectable=False,
+                                 pos=NavigationPanel.NavigationItemPosition.Right)
         self.horizontalLayout.addWidget(self.topWidget)
         self.content = ContentPanel(self.centralwidget)
         self.horizontalLayout.addWidget(self.content, 1)
@@ -1027,7 +1149,7 @@ class MainWindow(RoundedWindow):
         dialogue = LoginDialogue()
         dialogue.exec()
     
-    def paintEvent(self, *args, **kwargs):
+    def paintEvent(self, a0, **kwargs):
         painter = QPainter(self)
         painter.fillRect(
             QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
@@ -1143,7 +1265,7 @@ class LoggingWindow(RoundedWindow):
         self.titleBar.raise_()
         self.titleBar.iconLabel.setPixmap(self.windowIcon().pixmap(20, 20))
         self.titleBar.iconLabel.setStyleSheet("background: transparent;")
-        self.titleBar.titleLabel.setText(self.windowTitle())
+        self.titleBar.titleLabel.setText(self.windowTitle(), )
         self.titleBar.titleLabel.setStyleSheet(
             "background: transparent; padding: 0 4px; font: 13px 'Segoe UI'; color: black")
         self.setStyleSheet("background: white;")
@@ -1168,6 +1290,7 @@ class LoggingWindow(RoundedWindow):
         self.inputtext = LineEdit(self)
         self.inputtext.returnPressed.connect(self.process_command)
         self.inputtext.setFont(font)
+        # self.inputtext.setToolTip("Enter command below and press 'Return' to execute command.")
         self.canOutput = True
         self.retranslateUI()
         self.cmd = self.Executer({"frame": frame, "player": player})
@@ -1217,12 +1340,85 @@ class LoggingWindow(RoundedWindow):
                 self.current_history -= 1
                 self.inputtext.setText(self.history_command[int(f"-{self.current_history}")])
     
-    def paintEvent(self, *args, **kwargs):
+    def paintEvent(self, a0, **kwargs):
         painter = QPainter(self)
         painter.fillRect(
             QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
             QGradient(QGradient.Preset.PerfectWhite if getTheme() == Theme.Light else QGradient.Preset.PerfectBlue))
+
+
+# class MidAutumnMsgDialogue(RoundedDialogue):
+#     def __init__(self, parent=None):
+#         super().__init__(parent)
+#         self.verticalLayout = QVBoxLayout(self)
+#         self.verticalLayout.setContentsMargins(11, 32, 11, 11)
+#         self.scrollArea = ScrollArea(self)
+#         self.verticalLayout.addWidget(self.scrollArea)
+#         self.scrollAreaContentWidget = QWidget()
+#         self.scrollArea.setStyleSheet("background: transparent;")
+#         self.verticalLayout_2 = QVBoxLayout(self.scrollAreaContentWidget)
+#         tip = Tip(self, False)
+#         self.tlabel = Label(tip)
+#         self.tlabel.setText(
+#             "<a href=\"https://www.bilibili.com/v/topic/detail/?topic_id=1227830&topic_name=%E4%B8%AD%E7%A7%8B%E6%BC%AB%E6%B8%B8%E5%A4%9C&spm_id_from=333.1369.opus.module_topic.click\">#中秋漫游夜#</a>")
+#         tip.setCentralWidget(self.tlabel)
+#         self.verticalLayout_2.addWidget(tip)
+#         self.label = Label(self.scrollAreaContentWidget)
+#         self.label.setText(f"""<!DOCTYPE html>
+#                         <html>
+#                             <head/>
+#                             <body>
+#                                 <p>
+#                                     <hr/>
+#                                     <del style="text-decoration: line-through;">是的，我又来了</del><br/>
+#                                     <h2>开头</h2>
+#                                     ---------<br/>
+#                                     大家都知道最近要过什么节日吧。<br/>
+#                                     要过中秋了，我绝对不能缺席。<br/>
+#                                     前几天，我去看22和33她们，发现她们新发了一个动态，<br/>
+#                                     在这：<a href="https://www.bilibili.com/opus/977006529028816946?spm_id_from=333.999.0.0">https://www.bilibili.com/opus/977006529028816946?spm_id_from=333.999.0.0</a>。<br/>
+#                                     然后呢？<small style="font-size: xx-small">（又来）</small>
+#                                     <h2>内容</h2>
+#                                     ---------<br/>
+#                                     先感谢22和33送上的中秋节祝福。<br/>
+#                                     然后......<br/>
+#                                     等一下，22，你说什么？<br/>
+#                                     你说今年有中秋晚会看？？？<br/>
+#                                     (内容见这里：<a href="https://www.bilibili.com/blackboard/zhongqiu2024.html">https://www.bilibili.com/blackboard/zhongqiu2024.html</a>)<br/>
+#                                     那么......<br/>
+#                                     16日晚上19:30锁定哔哩哔哩<a href="https://search.bilibili.com/all?keyword=%E8%8A%B1%E5%A5%BD%E6%9C%88%E5%9C%86%E4%BC%9A">#花好月圆会#</a>，2233陪你过。<br/>
+#                                     不过......<br/>
+#                                     有什么问题？？？<br/>
+#                                     我会不会....一不小心....就要......<br/>
+#                                     我懂你接下来要说的话，<br/>
+#                                     那么记得19:30过来！<br/>
+#                                 </p>
+#                             </body>
+#                         </html>""")
+#         self.label.setWordWrap(True)
+#         self.verticalLayout_2.addWidget(self.label)
+#         self.scrollArea.setWidget(self.scrollAreaContentWidget)
+#         self.scrollArea.setWidgetResizable(True)
+#         timer = QTimer(self)
+#         timer.timeout.connect(self.__a)
+#         timer.start(1)
+#         self.__o = False
+#
+#     def __a(self):
+#         self.tlabel.setText(
+#             f"<a href=\"https://www.bilibili.com/v/topic/detail/?topic_id=1227830&topic_name=%E4%B8%AD%E7%A7%8B%E6%BC%AB%E6%B8%B8%E5%A4%9C&spm_id_from=333.1369.opus.module_topic.click\">#中秋漫游夜#</a><br/>{(time.strftime('距离《花好月圆会·2024Bilibili中秋漫游会》开播还有%H时%M分%S秒', time.gmtime(time.mktime((2024, 9, 16, 19, 30, 0, 0, 0, 0)) - time.time()))) if time.mktime((2024, 9, 16, 19, 30, 0, 0, 0, 0)) - time.time() > 0 else '《花好月圆会·2024Bilibili中秋漫游会》已开播。'}")
+#
+#     def resizeEvent(self, a0, **kwargs):
+#         super().resizeEvent(a0)
+#         self.scrollArea.setGeometry(0, 32, self.width(), self.height() - 32)
+#
+#     def paintEvent(self, a0, **kwargs):
+#         painter = QPainter(self)
+#         painter.fillRect(
+#             QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
+#                   QGuiApplication.primaryScreen().geometry().height()),
+#             QGradient(QGradient.Preset.PerfectWhite if getTheme() == Theme.Light else QGradient.Preset.PerfectBlue))
 
 
 def login_user(name_or_token=b"", is_refresh_login=False):
@@ -1309,15 +1505,14 @@ logging.basicConfig(
 )
 app = QApplication(sys.argv)
 app.setFont(QFont("Minecraft AE"))
-player = Player.create_online_player(None, None, None, False)
+player = create_online_player(None, None, None, False)
 # setTheme(Theme.Dark)
 frame = MainWindow()
 frame.showCentre()
 if DEBUG:
     debug = LoggingWindow()
     debug.show()
-# w = LoginWindow()
-# w.show()
+# Log Redirect Text
 # print("[2024/08/16][22:33:00 PM][INFO]:F22战斗姬！22是F！33也可以是F！\n"
 #       "[2024/08/16][22:33:00 PM][INFO]:在刚毅云音乐上，22娘这个账号有九首歌，\n"
 #       "[2024/08/16][22:33:00 PM][INFO]:33娘这个账号则有11首歌。\n"
@@ -1328,6 +1523,11 @@ if DEBUG:
 #       "[2008/??/??][??:??:?? ??][INFO]:Minecraft 前身 RubyDung 被 Markus Persson 创建！\n"
 #       "[2009/05/10][17:36:00 PM][INFO]:Minecraft 最早版本 rd-131655 的视频被上传！\n"
 #       "[2011/11/17][22:00:00 PM][INFO]:Minecraft 1.0.0 发布！")
+# END Text
+# Mid-Autumn Dialogue Test
+# dialogue = MidAutumnMsgDialogue()
+# dialogue.show()
+# END Test
 thread = LoginThread()
 thread.loginFinished.connect(update_user)
 thread.start()

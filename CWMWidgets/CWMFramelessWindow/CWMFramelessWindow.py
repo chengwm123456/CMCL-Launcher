@@ -13,8 +13,8 @@ from .CWMFrameFunctions import *
 class FramelessWindow(QWidget):
     BORDER_WIDTH = 5
     
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.__gdi32 = None
         self.__user32 = None
         self.__objc = None
@@ -32,8 +32,6 @@ class FramelessWindow(QWidget):
         self.setProperty("maximizeEnabled", True)
         self.setProperty("minimizeEnabled", True)
         self.setProperty("systemTitleBarButtonVisible", True)
-        self.__maximizeEnabled = True
-        self.__systemTitleBarButtonVisible = False
         # self.w = WindowEffect(self)
         self.__updateWindowFrameless()
     
@@ -45,12 +43,24 @@ class FramelessWindow(QWidget):
                         int(self.winId()),
                         -16,
                         self.__user32.GetWindowLongPtrW(int(self.winId()), -16)
-                        | (0x00010000 if self.property("maximizeEnabled") else 0x00000000)
-                        | (0x00020000 if self.property("minimizeEnabled") else 0x00000000)
+                        | 0x00010000
+                        | 0x00020000
                         | 0x00C00000
                         | 0x00080000
-                        | (0x00040000 if self.property("resizeEnabled") else 0x00000000),
+                        | 0x00040000
                     )
+                    if not self.property("maximizeEnabled"):
+                        self.__user32.SetWindowLongPtrW(
+                            int(self.winId()),
+                            -16,
+                            self.__user32.GetWindowLongPtrW(int(self.winId()), -16) & ~0x00010000
+                        )
+                    if not self.property("minimizeEnabled"):
+                        self.__user32.SetWindowLongPtrW(
+                            int(self.winId()),
+                            -16,
+                            self.__user32.GetWindowLongPtrW(int(self.winId()), -16) & ~0x00020000
+                        )
                 case "darwin":
                     self.__updateNSWindow()
                 case "linux":
@@ -91,14 +101,14 @@ class FramelessWindow(QWidget):
     def __updateSystemTitleBarButton(self):
         try:
             if platform.system().lower() == "darwin":
-                self.__nsWindow.setShowsToolbarButton_(self.__systemTitleBarButtonVisible)
+                self.__nsWindow.setShowsToolbarButton_(self.systemTitleBarButtonVisible())
                 
                 self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowCloseButton).setHidden_(
-                    not self.__systemTitleBarButtonVisible)
+                    not self.systemTitleBarButtonVisible())
                 self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowZoomButton).setHidden_(
-                    not self.__systemTitleBarButtonVisible)
+                    not self.systemTitleBarButtonVisible())
                 self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowMiniaturizeButton).setHidden_(
-                    not self.__systemTitleBarButtonVisible)
+                    not self.systemTitleBarButtonVisible())
                 self.__updateSystemTitleBarButtonRect()
         finally:
             self.update()
@@ -106,7 +116,7 @@ class FramelessWindow(QWidget):
     def __updateSystemTitleBarButtonRect(self):
         try:
             if platform.system().lower() == "darwin":
-                if self.__systemTitleBarButtonVisible:
+                if self.systemTitleBarButtonVisible():
                     leftButton = self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowCloseButton)
                     middleButton = self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowMiniaturizeButton)
                     rightButton = self.__nsWindow.standardWindowButton_(self.__cocoa.NSWindowZoomButton)
@@ -148,10 +158,10 @@ class FramelessWindow(QWidget):
         self.__updateNSWindow()
         self.update()
     
-    def resizeEvent(self, *args, **kwargs):
+    def resizeEvent(self, *args):
         self.__updateSystemTitleBarButtonRect()
         self.update()
-        super().resizeEvent(*args, **kwargs)
+        super().resizeEvent(*args)
         self.__updateSystemTitleBarButtonRect()
         self.update()
     
@@ -276,19 +286,19 @@ class FramelessWindow(QWidget):
     
     def systemTitleBarButtonVisible(self):
         if platform.system() == "Darwin":
-            return self.__systemTitleBarButtonVisible
+            return self.property("systemTitleBarButtonVisible")
         return False
     
     def setSystemTitleBarButtonVisible(self, value):
         if platform.system().lower() == "darwin":
             if value in [True, False, 1, 0]:
-                self.__systemTitleBarButtonVisible = bool(value)
+                self.setProperty("systemTitleBarButtonVisible", bool(value))
             else:
                 raise TypeError(f"'{type(value)}' object cannot be interpreted as a bool.")
         self.__updateWindowFrameless()
     
-    def childEvent(self, *args, **kwargs):
-        super().childEvent(*args, **kwargs)
+    def childEvent(self, *args):
+        super().childEvent(*args)
         self.__updateWindowFrameless()
 
 

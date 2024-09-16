@@ -24,8 +24,8 @@ class NavigationPanel(Panel):
         self.__verticalLayout.addItem(spacer)
         self.__content_widget = content_widget
     
-    def addItem(self, page, icon="", pos=NavigationItemPosition.Left):
-        item = NavigationItem(self, icon)
+    def addItem(self, page, icon=None, text="", pos=NavigationItemPosition.Left):
+        item = NavigationItem(self, icon, text)
         if not bool(len(self.items)):
             item.setChecked(True)
             self.selectAt(page)
@@ -55,15 +55,22 @@ class NavigationPanel(Panel):
                 widgets = {j: i for i, j in self.items.items()}
                 self.__verticalLayout.removeWidget(widgets[data])
     
-    def addButton(self, icon=None, **kwargs):
-        btn = NavigationItem(self, icon)
+    def addButton(self, icon=None, text="", pos=NavigationItemPosition.Left, **kwargs):
+        btn = NavigationItem(self, icon, text)
         btn.setCheckable(kwargs.get("selectable"))
         if kwargs.get("page"):
             self.items[btn] = kwargs.get("page")
             btn.pressed.connect(lambda: self.selectAt(kwargs.get("page")))
         if kwargs.get("pressed"):
             btn.pressed.connect(kwargs.get("pressed"))
-        self.__verticalLayout.addWidget(btn)
+        match pos:
+            case self.NavigationItemPosition.Left:
+                pos = len(self.items) - 1
+            case self.NavigationItemPosition.Right:
+                pos = -1
+            case _:
+                pos = len(self.items) - 1
+        self.__verticalLayout.insertWidget(pos, btn)
     
     def selectAt(self, page):
         if not self.__content_widget:
@@ -92,7 +99,7 @@ class NavigationPanel(Panel):
             list(self.items.keys())[0].setChecked(True)
             self.selectAt(self.items[list(self.items.keys())[0]])
     
-    def paintEvent(self, a0):
+    def paintEvent(self, a0, **kwargs):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         super().paintEvent(a0)

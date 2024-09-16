@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from pathlib import Path
+from typing import *
 
 import requests
 
@@ -8,7 +9,7 @@ import requests
 # from curl_cffi import requests
 
 
-def GetVersionByMojangApi(returns="RETURN_DATA"):
+def GetVersionByMojangApi(returns: str = "RETURN_DATA") -> Union[str, dict, list]:
     mojang_api_url = "https://launchermeta.mojang.com"
     
     versions_url = f"{mojang_api_url}/mc/game/version_manifest.json"
@@ -40,7 +41,7 @@ def GetVersionByMojangApi(returns="RETURN_DATA"):
             return versions
 
 
-def GetVersionByScanDirectory(minecraft_path=None):
+def GetVersionByScanDirectory(minecraft_path: Union[str, Path, os.PathLike] = None) -> Union[list, None]:
     if minecraft_path is None:
         minecraft_path = "."
     minecraft_path = Path(minecraft_path)
@@ -52,13 +53,13 @@ def GetVersionByScanDirectory(minecraft_path=None):
             if f"{i}.jar" in j:
                 versions.append(i)
         return versions
-    return "No matched versions"
+    return None
 
 
-def GetMinecraftClientDownloadUrl(**kw):
+def GetMinecraftClientDownloadUrl(version: Union[str, None] = None) -> str:
     response = requests.get('https://launchermeta.mojang.com/mc/game/version_manifest.json')
     version_manifest = response.json()
-    version_id = kw.get("version", GetVersionByMojangApi(returns="RETURN_LATEST_DATA"))
+    version_id = version or GetVersionByMojangApi(returns="RETURN_LATEST_DATA")
     version_info = None
     for version in version_manifest['versions']:
         if version['id'] == version_id:

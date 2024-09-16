@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from typing import *
 
 import requests
 
@@ -10,7 +11,8 @@ logging.basicConfig(
 )
 
 
-def get_user_data(token="", is_refresh_login=False):
+def get_user_data(token: str = "", is_refresh_login: bool = False) -> Tuple[
+    str, Optional[str], Optional[str], Optional[str], Optional[str], bool]:
     user_name = None
     uuid = None
     minecraft_access_token = None

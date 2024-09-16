@@ -4,6 +4,7 @@ import os
 import hashlib
 import re
 import zipfile
+from typing import *
 
 import psutil
 from pathlib import Path
@@ -15,6 +16,7 @@ from . import Downloader
 from . import DownloadVersion
 from . import GetVersion
 from . import GetOperationSystem
+from .Defines import Player
 
 
 class JavaMode(Enum):
@@ -34,7 +36,7 @@ report_description_lists = {
 }
 
 
-def GetJavaPath(version):
+def GetJavaPath(version: Union[str, int]) -> Optional[Union[str, Path]]:
     where_out = subprocess.run(
         ["which" if GetOperationSystem.GetOperationSystemName()[0] != "Windows" else "where", "java"],
         capture_output=True,
@@ -57,7 +59,7 @@ def GetJavaPath(version):
                                                 creationflags=subprocess.CREATE_NO_WINDOW).decode().splitlines()[
                             0].split(
                             " ")[2].split(".")[1].lstrip('"')
-                if version == version_data:
+                if str(version) == version_data:
                     return i
     java_home = os.getenv('JAVA_HOME')
     if java_home:
@@ -67,28 +69,12 @@ def GetJavaPath(version):
                 subprocess.check_output([java_path, "--version"], stderr=subprocess.STDOUT,
                                         creationflags=subprocess.CREATE_NO_WINDOW).decode().split("\r\n")[
                     0].split(" ")[1].split(".")[0].lstrip('"')
-            if version == version_data:
+            if str(version) == version_data:
                 return java_path
-    
-    programme_files = os.getenv('ProgramFiles')
-    if programme_files:
-        java_path = Path(Path(programme_files) / 'Java')
-        if os.path.isdir(java_path):
-            for subdir in os.listdir(java_path):
-                if subdir.startswith('jdk') and version in subdir:
-                    java_path = Path(java_path / subdir / 'bin' / 'java.exe')
-                    if Path(java_path).is_file():
-                        version_data = \
-                            subprocess.check_output([java_path, "--version"], stderr=subprocess.STDOUT,
-                                                    creationflags=subprocess.CREATE_NO_WINDOW).decode().split(
-                                "\r\n")[0].split(" ")[1].split(".")[0].lstrip('"')
-                        if version == version_data:
-                            return java_path
-    
     return None
 
 
-def FixMinecraftFiles(minecraft_path, version_fix):
+def FixMinecraftFiles(minecraft_path: Union[str, Path, os.PathLike, LiteralString], version_fix: str):
     if not Path(minecraft_path).exists():
         os.makedirs(minecraft_path)
     os.chdir(minecraft_path)
@@ -156,8 +142,8 @@ def FixMinecraftFiles(minecraft_path, version_fix):
 
 
 def UnpackMinecraftNativeFiles(
-        minecraft_path,
-        version_launch
+        minecraft_path: Union[str, Path, os.PathLike, LiteralString],
+        version_launch: str
 ):
     jsons = json.loads(
         Path(minecraft_path / "versions" / version_launch / f"{version_launch}.json").read_text(encoding="utf-8"))
@@ -188,18 +174,18 @@ def UnpackMinecraftNativeFiles(
 
 
 def GenerateMinecraftLaunchCommand(
-        minecraft_path,
-        java_path,
-        version_launch,
-        player_data,
-        launch_mode,
-        jvm_arg_options,
-        extra_game_command,
-        quickplay_command,
-        initial_memory,
-        max_memory,
-        launcher_version
-):
+        minecraft_path: Union[str, Path, os.PathLike, LiteralString],
+        java_path: Union[str, Path, os.PathLike, LiteralString],
+        version_launch: str,
+        player_data: Player,
+        launch_mode: Union[JavaMode, str],
+        jvm_arg_options: Optional[dict],
+        extra_game_command: str,
+        quickplay_command: str,
+        initial_memory: int,
+        max_memory: int,
+        launcher_version: str
+) -> str:
     jsons = json.loads(
         Path(minecraft_path / "versions" / version_launch / f"{version_launch}.json").read_text(encoding="utf-8"))
     libraries_file_data = jsons.get("libraries", [])
@@ -236,12 +222,13 @@ def GenerateMinecraftLaunchCommand(
         initial_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))
         max_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))
     memory_args = f"-Xmn{str(initial_memory)} -Xmx{str(max_memory)}"
-    player_name, player_uuid, player_access_token, player_type, player_has_mc = player_data
+    player_name, player_uuid, player_access_token, player_has_mc, player_type = player_data
     game_jar_path = Path(minecraft_path / "versions" / version_launch / f"{version_launch}.jar")
     assets = jsons.get("assets")
     main_class = jsons.get("mainClass")
     version_type = jsons.get("type")
-    launch_mode = JavaMode[launch_mode.upper()].value
+    if not isinstance(launch_mode, JavaMode):
+        launch_mode = JavaMode[launch_mode.upper()].value
     if jvm_arg_options is None:
         jvm_arg_options = {"option": "default"}
     default_jvmcommand = [f'-{launch_mode}',

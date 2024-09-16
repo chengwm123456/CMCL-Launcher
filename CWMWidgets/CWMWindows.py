@@ -17,10 +17,12 @@ class RoundedWindow(FramelessMainWindow):
         self.titleBar = TitleBar(self)
     
     def resizeEvent(self, a0):
-        self.titleBar.resize(self.width(), self.titleBar.height())
+        if hasattr(self, "titleBar"):
+            self.titleBar.resize(self.width(), self.titleBar.height())
         super().resizeEvent(a0)
-        self.titleBar.resize(self.width(), self.titleBar.height())
-        self.titleBar.raise_()
+        if hasattr(self, "titleBar"):
+            self.titleBar.resize(self.width(), self.titleBar.height())
+            self.titleBar.raise_()
     
     def __getCurrentDpiScaleRate(self):
         match platform.system():
@@ -53,9 +55,9 @@ class RoundedWindow(FramelessMainWindow):
             case "Linux":
                 pass
     
-    def event(self, event):
+    def event(self, a0, **kwargs):
         self.__updateWindowRegion()
-        return super().event(event)
+        return super().event(a0)
 
 
 class RoundedDialogue(QDialog, FramelessWindow):
@@ -71,11 +73,13 @@ class RoundedDialogue(QDialog, FramelessWindow):
         self.setMaximizeEnabled(False)
         self.setResizeEnabled(False)
     
-    def resizeEvent(self, a0):
-        self.titleBar.resize(self.width(), self.titleBar.height())
+    def resizeEvent(self, a0, **kwargs):
+        if hasattr(self, "titleBar"):
+            self.titleBar.resize(self.width(), self.titleBar.height())
         super().resizeEvent(a0)
-        self.titleBar.resize(self.width(), self.titleBar.height())
-        self.titleBar.raise_()
+        if hasattr(self, "titleBar"):
+            self.titleBar.resize(self.width(), self.titleBar.height())
+            self.titleBar.raise_()
     
     def __getCurrentDpiScaleRate(self):
         match platform.system():
@@ -108,9 +112,9 @@ class RoundedDialogue(QDialog, FramelessWindow):
             case "Linux":
                 pass
     
-    def event(self, event):
+    def event(self, a0, **kwargs):
         self.__updateWindowRegion()
-        return super().event(event)
+        return super().event(a0)
 
 
 class RoundedMenu(QMenu):

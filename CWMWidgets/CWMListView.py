@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import overload
+
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
@@ -8,8 +10,12 @@ from .CWMScrollBar import ScrollBar
 
 
 class ListView(QListView):
-    def __init__(self, parent):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
@@ -46,8 +52,12 @@ class ListView(QListView):
 
 
 class ListWidget(QListWidget):
-    def __init__(self, parent):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)

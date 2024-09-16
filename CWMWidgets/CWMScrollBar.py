@@ -1,13 +1,24 @@
 # -*- coding: utf-8 -*-
+from typing import overload
+
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
 from .CWMToolTip import ToolTip
+from .CWMWindows import RoundedMenu
 
 
 class ScrollBar(QScrollBar):
-    def __init__(self, orientation, parent):
-        super().__init__(orientation, parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, orientation, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
@@ -52,18 +63,26 @@ class ScrollBar(QScrollBar):
                 width = self.width()
                 height = min(max(100, self.height() - self.maximum()),
                              self.height() - y - self.width())
-            case _:
-                pass
         painter.drawRoundedRect(QRect(x, y, width, height).adjusted(2, 2, -2, -2), 10, 10)
+        painter.save()
+        painter.setPen(getBorderColour())
+        painter.setBrush(getBorderColour())
         match self.orientation():
             case Qt.Orientation.Horizontal:
-                painter.save()
-                p = QPen(getForegroundColour())
-                p.setCapStyle(Qt.PenCapStyle.RoundCap)
-                p.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-                painter.setPen(p)
-                del p
-                painter.setBrush(getForegroundColour())
+                painter.drawLines([QLine(QPoint(self.height(), 2), QPoint(self.height(), self.height() - 2)),
+                                   QLine(QPoint(self.width() - self.height(), 2),
+                                         QPoint(self.width() - self.height(), self.height() - 2))])
+            case Qt.Orientation.Vertical:
+                painter.drawLines([QLine(QPoint(2, self.width()), QPoint(self.width() - 2, self.width())),
+                                   QLine(QPoint(2, self.height() - self.width()),
+                                         QPoint(self.width() - 2, self.height() - self.width()))])
+        painter.restore()
+        painter.save()
+        painter.setPen(
+            QPen(getForegroundColour(), 1.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        painter.setBrush(getForegroundColour())
+        match self.orientation():
+            case Qt.Orientation.Horizontal:
                 painter.translate(QPoint(0, 0))
                 painter.drawPolygon(
                     [QPoint(3, self.height() // 2), QPoint(self.height() - 3, self.height() - 3),
@@ -72,28 +91,48 @@ class ScrollBar(QScrollBar):
                 painter.drawPolygon(
                     [QPoint(self.height() - 3, self.height() // 2), QPoint(3, self.height() - 3),
                      QPoint(3, 3)])
-                painter.restore()
             case Qt.Orientation.Vertical:
-                painter.save()
-                p = QPen(getForegroundColour())
-                p.setCapStyle(Qt.PenCapStyle.RoundCap)
-                p.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-                painter.setPen(p)
-                del p
-                painter.setBrush(getForegroundColour())
                 painter.translate(QPoint(0, 0))
                 painter.drawPolygon(
-                    [QPoint(3, self.width()), QPoint(self.width() // 2, 3), QPoint(self.width() - 3, self.width())])
+                    [QPoint(3, self.width() - 3), QPoint(self.width() // 2, 3),
+                     QPoint(self.width() - 3, self.width() - 3)])
                 painter.translate(QPoint(0, self.height() - self.width()))
                 painter.drawPolygon(
-                    [QPoint(3, 0), QPoint(self.width() // 2, self.width() - 3), QPoint(self.width() - 3, 0)])
-                painter.restore()
-            case _:
-                pass
+                    [QPoint(3, 3), QPoint(self.width() // 2, self.width() - 3), QPoint(self.width() - 3, 3)])
+        painter.restore()
+    
+    def contextMenuEvent(self, a0):
+        menu = RoundedMenu(self)
+        value = 0
+        match self.orientation():
+            case Qt.Orientation.Horizontal:
+                value = QCursor.pos().x() - self.mapToGlobal(
+                    QPoint(0, 0)).x() - self.height() * 2
+            case Qt.Orientation.Vertical:
+                value = QCursor.pos().y() - self.mapToGlobal(
+                    QPoint(0, 0)).y() - self.width() * 2
+        if value >= self.maximum():
+            value = self.maximum()
+        if value <= 0:
+            value = 0
+        menu.addAction("Scroll Here", lambda: self.setValue(value))
+        menu.addSeparator()
+        menu.addAction("Top", lambda: self.setValue(0))
+        menu.addAction("Bottom", lambda: self.setValue(self.maximum()))
+        menu.addSeparator()
+        menu.addAction("Page up", lambda: self.setValue(max(0, self.value() - self.pageStep())))
+        menu.addAction("Page down", lambda: self.setValue(min(self.maximum(), self.value() + self.pageStep())))
+        menu.addSeparator()
+        menu.addAction("Scroll up", lambda: self.setValue(max(0, self.value() - 20)))
+        menu.addAction("Scroll down", lambda: self.setValue(min(self.maximum(), self.value() + 20)))
+        menu.popup(QCursor.pos())
 
 
 class ScrollArea(QScrollArea):
     def __init__(self, parent):
         super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        self.installEventFilter(ToolTip(self))
         self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
         self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))

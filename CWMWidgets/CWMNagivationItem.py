@@ -5,16 +5,18 @@ from .CWMThemeControl import *
 
 
 class NavigationItem(QToolButton):
-    def __init__(self, parent, icon_path):
+    def __init__(self, parent, icon_path, text_data):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setContentsMargins(10, 10, 10, 10)
         self.setFixedSize(42, 42)
         self.setIcon(QIcon(icon_path))
+        self.setText(text_data)
         self.setCheckable(True)
         self.setAutoExclusive(True)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
     
-    def paintEvent(self, a0):
+    def paintEvent(self, a0, **kwargs):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         painter = QPainter(self)
         painter.setOpacity(1.0 if self.underMouse() or self.hasFocus() else 0.6)
@@ -25,7 +27,12 @@ class NavigationItem(QToolButton):
             getBorderColour(highlight=self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse()))
         painter.setBrush(getBackgroundColour(highlight=self.isDown() or self.isChecked()))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
-        self.icon().paint(painter, QRect(5, 5, 32, 32))
+        op = QStyleOptionToolButton()
+        op.initFrom(self)
+        self.initStyleOption(op)
+        op.palette.setColor(self.foregroundRole(), getForegroundColour())
+        op.palette.setColor(self.backgroundRole(), Qt.GlobalColor.transparent)
+        self.style().drawControl(QStyle.ControlElement.CE_ToolButtonLabel, op, painter, self)
     
     def keyPressEvent(self, *args, **kwargs):
         super().keyPressEvent(*args, **kwargs)

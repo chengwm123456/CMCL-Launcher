@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import overload
+
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
@@ -6,8 +8,20 @@ from .CWMToolTip import ToolTip
 
 
 class PushButton(QPushButton):
-    def __init__(self, parent):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, text, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, icon, text, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
@@ -27,12 +41,10 @@ class PushButton(QPushButton):
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         if self.menu():
             painter.save()
-            p = QPen(getBorderColour(
-                highlight=self.isEnabled()) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour())
-            p.setCapStyle(Qt.PenCapStyle.RoundCap)
-            p.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-            painter.setPen(p)
-            del p
+            painter.setPen(QPen(getBorderColour(
+                highlight=self.isEnabled()) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour(),
+                                1.0,
+                                Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             painter.setBrush(
                 getBorderColour(
                     highlight=self.isEnabled()) if self.isDown() or self.isChecked() else getForegroundColour())
@@ -47,23 +59,23 @@ class PushButton(QPushButton):
         self.style().drawControl(QStyle.ControlElement.CE_PushButtonLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
     
-    def keyPressEvent(self, *args, **kwargs):
-        super().keyPressEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyPressEvent(self, *__args):
+        super().keyPressEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.setDown(True)
             self.repaint()
     
-    def keyReleaseEvent(self, *args, **kwargs):
-        super().keyReleaseEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyReleaseEvent(self, *__args):
+        super().keyReleaseEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.setDown(False)
             self.pressed.emit()
             self.repaint()
 
 
 class ToolButton(QToolButton):
-    def __init__(self, parent):
-        super().__init__(parent)
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
@@ -83,12 +95,10 @@ class ToolButton(QToolButton):
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         if self.menu():
             painter.save()
-            p = QPen(getBorderColour(
-                highlight=self.isEnabled()) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour())
-            p.setCapStyle(Qt.PenCapStyle.RoundCap)
-            p.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-            painter.setPen(p)
-            del p
+            painter.setPen(QPen(getBorderColour(
+                highlight=self.isEnabled()) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour(),
+                                1.0,
+                                Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             painter.setBrush(
                 getBorderColour(
                     highlight=self.isEnabled()) if self.isDown() or self.isChecked() else getForegroundColour())
@@ -103,23 +113,35 @@ class ToolButton(QToolButton):
         self.style().drawControl(QStyle.ControlElement.CE_ToolButtonLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
     
-    def keyPressEvent(self, *args, **kwargs):
-        super().keyPressEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyPressEvent(self, *__args):
+        super().keyPressEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.setDown(True)
             self.repaint()
     
-    def keyReleaseEvent(self, *args, **kwargs):
-        super().keyReleaseEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyReleaseEvent(self, *__args):
+        super().keyReleaseEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.setDown(False)
             self.pressed.emit()
             self.repaint()
 
 
 class TogglePushButton(PushButton):
-    def __init__(self, parent):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, text, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, icon, text, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setCheckable(True)
     
     def toggleState(self):
@@ -128,22 +150,22 @@ class TogglePushButton(PushButton):
     def setToggleState(self, value):
         self.setChecked(value)
     
-    def keyPressEvent(self, *args, **kwargs):
-        super().keyPressEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyPressEvent(self, *__args):
+        super().keyPressEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.repaint()
     
-    def keyReleaseEvent(self, *args, **kwargs):
-        super().keyReleaseEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyReleaseEvent(self, *__args):
+        super().keyReleaseEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.setChecked(not self.isChecked())
             self.pressed.emit()
             self.repaint()
 
 
 class ToggleToolButton(ToolButton):
-    def __init__(self, parent):
-        super().__init__(parent)
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setCheckable(True)
     
     def toggleState(self):
@@ -152,22 +174,22 @@ class ToggleToolButton(ToolButton):
     def setToggleState(self, value):
         self.setChecked(value)
     
-    def keyPressEvent(self, *args, **kwargs):
-        super().keyPressEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyPressEvent(self, *__args):
+        super().keyPressEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.repaint()
     
-    def keyReleaseEvent(self, *args, **kwargs):
-        super().keyReleaseEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyReleaseEvent(self, *__args):
+        super().keyReleaseEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.setChecked(not self.isChecked())
             self.pressed.emit()
             self.repaint()
 
 
 class CloseButton(ToolButton):
-    def __init__(self, parent):
-        super().__init__(parent)
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setFixedSize(QSize(32, 32))
     
     def paintEvent(self, a0):
@@ -180,8 +202,16 @@ class CloseButton(ToolButton):
 
 
 class CheckBox(QCheckBox):
-    def __init__(self, parent):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, text, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
@@ -209,7 +239,6 @@ class CheckBox(QCheckBox):
         painter.setBrush(Qt.GlobalColor.transparent)
         match self.checkState():
             case Qt.CheckState.Checked:
-                # 3 6 12 18 21
                 painter.drawLines([QLine(
                     QPoint(6 + 1, ((self.height() - 24) // 2) + 12),
                     QPoint(12 + 1, ((self.height() - 24) // 2) + 18)),
@@ -231,22 +260,30 @@ class CheckBox(QCheckBox):
         self.style().drawControl(QStyle.ControlElement.CE_CheckBoxLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
     
-    def keyPressEvent(self, *args, **kwargs):
-        super().keyPressEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyPressEvent(self, *__args):
+        super().keyPressEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.repaint()
     
-    def keyReleaseEvent(self, *args, **kwargs):
-        super().keyReleaseEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyReleaseEvent(self, *__args):
+        super().keyReleaseEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.nextCheckState()
             self.pressed.emit()
             self.repaint()
 
 
 class RadioButton(QRadioButton):
-    def __init__(self, parent):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, text, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
@@ -278,14 +315,14 @@ class RadioButton(QRadioButton):
         self.style().drawControl(QStyle.ControlElement.CE_RadioButtonLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
     
-    def keyPressEvent(self, *args, **kwargs):
-        super().keyPressEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyPressEvent(self, *__args):
+        super().keyPressEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.repaint()
     
-    def keyReleaseEvent(self, *args, **kwargs):
-        super().keyReleaseEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyReleaseEvent(self, *__args):
+        super().keyReleaseEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.setChecked(not self.isChecked())
             self.pressed.emit()
             self.repaint()
@@ -294,22 +331,40 @@ class RadioButton(QRadioButton):
 class SwitchButton(QAbstractButton):
     switched = pyqtSignal(bool)
     
-    def __init__(self, parent):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, on, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, on, off, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(__args[-1])
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.installEventFilter(ToolTip(self))
         self.setCheckable(True)
-        self.switchOnText = lambda: "On"
-        self.switchOffText = lambda: "Off"
+        self.setProperty("switchOnText", __args[0] if len(__args) > 2 else "On")
+        self.setProperty("switchOffText", __args[1] if len(__args) > 2 else "Off")
         self.setMinimumSize(52, 24)
     
+    def switchOnText(self):
+        return self.property("switchOnText")
+    
     def setSwitchOnText(self, text):
-        self.switchOnText = lambda: str(text)
+        self.setProperty("switchOnText", text)
+    
+    def switchOffText(self):
+        return self.property("switchOffText")
     
     def setSwitchOffText(self, text):
-        self.switchOffText = lambda: str(text)
+        self.setProperty("switchOffText", text)
     
     def setText(self, text):
         if self.isChecked():
@@ -350,14 +405,14 @@ class SwitchButton(QAbstractButton):
                          self.switchOnText() if self.isChecked() else self.switchOffText())
         self.setStyleSheet("padding: 5px;")
     
-    def keyPressEvent(self, *args, **kwargs):
-        super().keyPressEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyPressEvent(self, *__args):
+        super().keyPressEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.repaint()
     
-    def keyReleaseEvent(self, *args, **kwargs):
-        super().keyReleaseEvent(*args, **kwargs)
-        if args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
+    def keyReleaseEvent(self, *__args):
+        super().keyReleaseEvent(*__args)
+        if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.setChecked(not self.isChecked())
             self.pressed.emit()
             self.switched.emit(self.isChecked())

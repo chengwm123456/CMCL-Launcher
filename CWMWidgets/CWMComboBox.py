@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import overload
+
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
@@ -7,8 +9,12 @@ from .CWMWindows import RoundedMenu
 
 
 class ComboBox(QComboBox):
-    def __init__(self, parent):
-        super().__init__(parent)
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
@@ -26,12 +32,9 @@ class ComboBox(QComboBox):
         painter.setBrush(getBackgroundColour(highlight=self.hasFocus()))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         painter.save()
-        p = QPen(getBorderColour(
-            highlight=self.isEnabled()) if self.hasFocus() or self.underMouse() else getForegroundColour())
-        p.setCapStyle(Qt.PenCapStyle.RoundCap)
-        p.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-        painter.setPen(p)
-        del p
+        painter.setPen(QPen(getBorderColour(
+            highlight=self.isEnabled()) if self.hasFocus() or self.underMouse() else getForegroundColour(), 1.0,
+                            Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
         painter.setBrush(getForegroundColour())
         painter.translate((self.width() - 8) - 3, self.height() / 2 - 4)
         painter.drawPolygon([QPoint(0, 0), QPoint(4, 8), QPoint(8, 0)])
@@ -39,8 +42,7 @@ class ComboBox(QComboBox):
         op = QStyleOptionComboBox()
         op.initFrom(self)
         self.initStyleOption(op)
-        op.palette.setColor(self.foregroundRole(), getForegroundColour())
-        op.palette.setColor(self.backgroundRole(), Qt.GlobalColor.transparent)
+        op.palette.setColor(op.palette.ColorRole.Text, getForegroundColour())
         self.style().drawControl(QStyle.ControlElement.CE_ComboBoxLabel, op, painter, self)
     
     def contextMenuEvent(self, e):

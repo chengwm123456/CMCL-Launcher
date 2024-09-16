@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import platform
+from typing import *
 
 
-def GetOperationSystemName():
+def GetOperationSystemName() -> Tuple[str, str]:
     system = platform.system()
     if system == "Darwin":
         system = "Mac OS"
     return system, platform.machine()
 
 
-def GetOperationSystemInMojangApi():
+def GetOperationSystemInMojangApi() -> Tuple[str, str]:
     system = platform.system()
     if system == "Darwin":
         system = "Mac OS"
