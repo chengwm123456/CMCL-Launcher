@@ -54,6 +54,7 @@ class RoundedWindow(FramelessMainWindow):
                 pass
             case "Linux":
                 pass
+        # self.update()
     
     def event(self, a0, **kwargs):
         self.__updateWindowRegion()
@@ -126,23 +127,23 @@ class RoundedMenu(QMenu):
     background: {"dark" if getTheme() == Theme.Dark else "white"};
 }}
 RoundedMenu::item{{
-    background: rgba({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-    color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
+    background: rgba({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, 0.6);
+    color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, 0.6);
     border-radius: 6px;
-    border: 1px solid rgba({str(getBorderColour(tuple=True)).replace('(', '').replace(')', '')}, 0.6);
+    border: 1px solid rgba({str(getBorderColour(is_tuple=True)).replace('(', '').replace(')', '')}, 0.6);
     padding: 4px, 2px;
     margin: 3px;
     height: 30px;
 }}
 RoundedMenu::item:selected{{
-    background: rgb({str(getBackgroundColour(tuple=True)).replace('(', '').replace(')', '')});
+    background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});
 }}
 RoundedMenu::item:selected, RoundedMenu::item:pressed{{
-    border: 1px solid rgb({str(getBorderColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
-    color: rgb({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')});
+    border: 1px solid rgb({str(getBorderColour(highlight=True, is_tuple=True)).replace('(', '').replace(')', '')});
+    color: rgb({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')});
 }}
 RoundedMenu::item:pressed{{
-    background: rgb({str(getBackgroundColour(highlight=True, tuple=True)).replace('(', '').replace(')', '')});
+    background: rgb({str(getBackgroundColour(highlight=True, is_tuple=True)).replace('(', '').replace(')', '')});
 }}
 """)
     

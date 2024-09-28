@@ -47,7 +47,7 @@ class ListView(QListView):
         op.initFrom(self)
         self.initStyleOption(op)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
         super().paintEvent(e)
 
 
@@ -89,5 +89,5 @@ class ListWidget(QListWidget):
         op.initFrom(self)
         self.initStyleOption(op)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
         super().paintEvent(e)

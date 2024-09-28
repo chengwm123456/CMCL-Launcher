@@ -20,12 +20,12 @@ class LabelBase(QLabel):
     def __init__(self, *__args):
         super().__init__(*__args)
         self.setStyleSheet(
-            f"background: transparent; color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {1.0 if self.underMouse() else 0.6 if self.isEnabled() else 0.3})")
+            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {1.0 if self.underMouse() else 0.6 if self.isEnabled() else 0.3})")
         self.installEventFilter(ToolTip(self))
     
     def paintEvent(self, a0):
         self.setStyleSheet(
-            f"background: transparent; color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {1.0 if self.underMouse() else 0.6 if self.isEnabled() else 0.3})")
+            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {1.0 if self.underMouse() else 0.6 if self.isEnabled() else 0.3})")
         super().paintEvent(a0)
     
     def contextMenuEvent(self, e):

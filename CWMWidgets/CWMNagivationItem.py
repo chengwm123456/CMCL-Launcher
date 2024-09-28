@@ -31,7 +31,6 @@ class NavigationItem(QToolButton):
         op.initFrom(self)
         self.initStyleOption(op)
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
-        op.palette.setColor(self.backgroundRole(), Qt.GlobalColor.transparent)
         self.style().drawControl(QStyle.ControlElement.CE_ToolButtonLabel, op, painter, self)
     
     def keyPressEvent(self, *args, **kwargs):

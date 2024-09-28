@@ -19,19 +19,22 @@ class NavigationPanel(Panel):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setContentsMargins(5, 5, 5, 5)
         self.items = {}
+        self.roles = {}
         self.__verticalLayout = QHBoxLayout(self)
         spacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.__verticalLayout.addItem(spacer)
         self.__content_widget = content_widget
     
-    def addItem(self, page, icon=None, text="", pos=NavigationItemPosition.Left):
+    def addItem(self, page, icon=None, text="", role=None, pos=NavigationItemPosition.Left):
         item = NavigationItem(self, icon, text)
         if not bool(len(self.items)):
             item.setChecked(True)
             self.selectAt(page)
         page.setParent(self.__content_widget)
         item.pressed.connect(lambda: self.selectAt(page))
+        role = role or str(self.__verticalLayout.count())
         self.items[item] = page
+        self.roles[role] = item
         page.hide()
         match pos:
             case self.NavigationItemPosition.Left:
@@ -46,6 +49,9 @@ class NavigationPanel(Panel):
         if isinstance(data, int):
             if data < len(self.items):
                 self.__verticalLayout.removeWidget(self.items[list(self.items.keys())[data]])
+        elif isinstance(data, str):
+            if data in self.roles.keys():
+                self.__verticalLayout.removeWidget(self.roles[data])
         else:
             if data in self.__verticalLayout.children():
                 self.__verticalLayout.removeWidget(data)
@@ -55,7 +61,7 @@ class NavigationPanel(Panel):
                 widgets = {j: i for i, j in self.items.items()}
                 self.__verticalLayout.removeWidget(widgets[data])
     
-    def addButton(self, icon=None, text="", pos=NavigationItemPosition.Left, **kwargs):
+    def addButton(self, icon=None, text="", role=None, pos=NavigationItemPosition.Left, **kwargs):
         btn = NavigationItem(self, icon, text)
         btn.setCheckable(kwargs.get("selectable"))
         if kwargs.get("page"):
@@ -71,6 +77,27 @@ class NavigationPanel(Panel):
             case _:
                 pos = len(self.items) - 1
         self.__verticalLayout.insertWidget(pos, btn)
+        role = role or str(self.__verticalLayout.count())
+        self.roles[role] = btn
+    
+    def button(self, data):
+        if isinstance(data, int):
+            if data < len(self.items):
+                return self.items[list(self.items.keys())[data]]
+        elif isinstance(data, str):
+            if data in self.roles.keys():
+                return self.roles[data]
+        else:
+            if data in self.__verticalLayout.children():
+                return data
+            if data in self.items.keys():
+                return data
+            if data in self.items.values():
+                widgets = {j: i for i, j in self.items.items()}
+                return widgets[data]
+    
+    def removeButton(self, data):
+        self.removeItem(data)
     
     def selectAt(self, page):
         if not self.__content_widget:

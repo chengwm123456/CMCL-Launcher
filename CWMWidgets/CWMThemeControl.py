@@ -19,43 +19,49 @@ def getTheme():
 setTheme(Theme.Light)
 
 
-def getBorderColour(primary=False, highlight=False, tuple=False):
+def getBorderColour(primary=False, highlight=False, is_tuple=False):
     match getTheme():
         case Theme.Light:
-            if tuple:
-                return (135, 206, 235) if highlight else (230, 230, 230)
+            result = (135, 206, 250) if highlight else (230, 230, 230)
+            if is_tuple:
+                return result
             else:
-                return QColor(135, 206, 235) if highlight else QColor(230, 230, 230)
+                return QColor(*result)
         case Theme.Dark:
-            if tuple:
-                return (79, 172, 254) if highlight else (134, 143, 150)
+            result = (79, 172, 254) if highlight else (134, 143, 150)
+            if is_tuple:
+                return result
             else:
-                return QColor(79, 172, 254) if highlight else QColor(134, 143, 150)
+                return QColor(*result)
 
 
-def getBackgroundColour(primary=False, highlight=False, tuple=False):
+def getBackgroundColour(primary=False, highlight=False, is_tuple=False):
     match getTheme():
         case Theme.Light:
-            if tuple:
-                return (176, 224, 230) if highlight else (253, 253, 253)
+            result = (176, 224, 250) if highlight else (253, 253, 253)
+            if is_tuple:
+                return result
             else:
-                return QColor(176, 224, 230) if highlight else QColor(253, 253, 253)
+                return QColor(*result)
         case Theme.Dark:
-            if tuple:
-                return (142, 197, 252) if highlight else (67, 67, 67)
+            result = (142, 197, 252) if highlight else (67, 67, 67)
+            if is_tuple:
+                return result
             else:
-                return QColor(142, 197, 252) if highlight else QColor(67, 67, 67)
+                return QColor(*result)
 
 
-def getForegroundColour(primary=True, tuple=False):
+def getForegroundColour(primary=False, is_tuple=False):
     match getTheme():
         case Theme.Light:
-            if tuple:
-                return 0, 0, 0
+            result = (0, 0, 0)
+            if is_tuple:
+                return result
             else:
-                return QColor(0, 0, 0)
+                return QColor(*result)
         case Theme.Dark:
-            if tuple:
-                return 255, 255, 255
+            result = (255, 255, 255)
+            if is_tuple:
+                return result
             else:
-                return QColor(255, 255, 255)
+                return QColor(*result)

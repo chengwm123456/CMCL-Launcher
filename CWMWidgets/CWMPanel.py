@@ -2,9 +2,14 @@
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
+from .CWMToolTip import ToolTip
 
 
 class Panel(QFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.installEventFilter(ToolTip(self))
+    
     def paintEvent(self, a0):
         self.setStyleSheet("padding: 3px;")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)

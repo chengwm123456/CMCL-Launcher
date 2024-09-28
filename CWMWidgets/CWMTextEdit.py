@@ -43,7 +43,7 @@ class TextEdit(QTextEdit):
         rect.setY(1)
         painter.drawRoundedRect(rect, 10, 10)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
         op = QStyleOptionFrame()
         op.initFrom(self)
         self.initStyleOption(op)
@@ -91,7 +91,7 @@ class PlainTextEdit(QPlainTextEdit):
         rect.setY(1)
         painter.drawRoundedRect(rect, 10, 10)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
         op = QStyleOptionFrame()
         op.initFrom(self)
         self.initStyleOption(op)

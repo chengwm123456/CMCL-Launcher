@@ -35,38 +35,6 @@ class ScrollBar(QScrollBar):
         painter.setPen(getBorderColour())
         painter.setBrush(getBackgroundColour())
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
-        painter.setPen(getBorderColour(highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled()))
-        painter.setBrush(getBackgroundColour(
-            highlight=self.isEnabled()))
-        x = 0
-        y = 0
-        width = 0
-        height = 0
-        match self.orientation():
-            case Qt.Orientation.Horizontal:
-                x = max(min(self.width() - 100 - self.height(),
-                            int((self.value() / (self.maximum() or 1)) * (
-                                    self.width() - self.height() - max((self.width() - self.maximum()), 100)) + (
-                                        self.height() * (1.0 - (self.value() / (self.maximum() or 1)))))),
-                        self.height())
-                y = 0
-                width = min(max(100, self.width() - self.maximum()),
-                            self.width() - x - self.height())
-                height = self.height()
-            case Qt.Orientation.Vertical:
-                x = 0
-                y = max(min(self.height() - 100 - self.width(),
-                            int((self.value() / (self.maximum() or 1)) * (
-                                    self.height() - self.width() - max((self.height() - self.maximum()), 100)) + (
-                                        self.width() * (1.0 - (self.value() / (self.maximum() or 1)))))),
-                        self.width())
-                width = self.width()
-                height = min(max(100, self.height() - self.maximum()),
-                             self.height() - y - self.width())
-        painter.drawRoundedRect(QRect(x, y, width, height).adjusted(2, 2, -2, -2), 10, 10)
-        painter.save()
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBorderColour())
         match self.orientation():
             case Qt.Orientation.Horizontal:
                 painter.drawLines([QLine(QPoint(self.height(), 2), QPoint(self.height(), self.height() - 2)),
@@ -76,11 +44,19 @@ class ScrollBar(QScrollBar):
                 painter.drawLines([QLine(QPoint(2, self.width()), QPoint(self.width() - 2, self.width())),
                                    QLine(QPoint(2, self.height() - self.width()),
                                          QPoint(self.width() - 2, self.height() - self.width()))])
-        painter.restore()
-        painter.save()
         painter.setPen(
-            QPen(getForegroundColour(), 1.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+            QPen(
+                getBorderColour(highlight=True) \
+                    if (self.underMouse() or self.hasFocus()) and self.isEnabled() \
+                    else getForegroundColour(),
+                1.0,
+                Qt.PenStyle.SolidLine,
+                Qt.PenCapStyle.RoundCap,
+                Qt.PenJoinStyle.RoundJoin
+            )
+        )
         painter.setBrush(getForegroundColour())
+        painter.save()
         match self.orientation():
             case Qt.Orientation.Horizontal:
                 painter.translate(QPoint(0, 0))
@@ -100,6 +76,35 @@ class ScrollBar(QScrollBar):
                 painter.drawPolygon(
                     [QPoint(3, 3), QPoint(self.width() // 2, self.width() - 3), QPoint(self.width() - 3, 3)])
         painter.restore()
+        painter.setPen(getBorderColour(highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled()))
+        painter.setBrush(getBackgroundColour(
+            highlight=self.isEnabled()))
+        x = 0
+        y = 0
+        width = 0
+        height = 0
+        match self.orientation():
+            case Qt.Orientation.Horizontal:
+                x = max(min(self.width() - 50 - self.height(),
+                            int((self.value() / (self.maximum() or 1)) * (
+                                    self.width() - self.height() - max((self.width() - self.maximum()), 50)) + (
+                                        self.height() * (1.0 - (self.value() / (self.maximum() or 1)))))),
+                        self.height())
+                y = 0
+                width = min(max(50, self.width() - self.maximum()),
+                            self.width() - x - self.height())
+                height = self.height()
+            case Qt.Orientation.Vertical:
+                x = 0
+                y = max(min(self.height() - 50 - self.width(),
+                            int((self.value() / (self.maximum() or 1)) * (
+                                    self.height() - self.width() - max((self.height() - self.maximum()), 50)) + (
+                                        self.width() * (1.0 - (self.value() / (self.maximum() or 1)))))),
+                        self.width())
+                width = self.width()
+                height = min(max(50, self.height() - self.maximum()),
+                             self.height() - y - self.width())
+        painter.drawRoundedRect(QRect(x, y, width, height).adjusted(2, 2, -2, -2), 10, 10)
     
     def contextMenuEvent(self, a0):
         menu = RoundedMenu(self)
@@ -107,15 +112,17 @@ class ScrollBar(QScrollBar):
         match self.orientation():
             case Qt.Orientation.Horizontal:
                 value = QCursor.pos().x() - self.mapToGlobal(
-                    QPoint(0, 0)).x() - self.height() * 2
+                    QPoint(0, 0)).x()
             case Qt.Orientation.Vertical:
                 value = QCursor.pos().y() - self.mapToGlobal(
-                    QPoint(0, 0)).y() - self.width() * 2
+                    QPoint(0, 0)).y() * self.height()
         if value >= self.maximum():
             value = self.maximum()
         if value <= 0:
             value = 0
-        menu.addAction("Scroll Here", lambda: self.setValue(value))
+        print(value, QCursor.pos().y() - self.mapToGlobal(QPoint(0, 0)).y(), self.height(), self.maximum(),
+              self.height() / self.maximum(), value / (self.height() / self.maximum()))
+        menu.addAction("Scroll Here", lambda: self.setValue(int(value)))
         menu.addSeparator()
         menu.addAction("Top", lambda: self.setValue(0))
         menu.addAction("Bottom", lambda: self.setValue(self.maximum()))

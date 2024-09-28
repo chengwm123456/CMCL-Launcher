@@ -15,9 +15,7 @@ class ItemDelegate(QStyledItemDelegate):
         super().paint(painter, option, index)
         
         painter.save()
-        painter.setClipRegion(
-            QRegion(self.parent().rect().adjusted(2, 2, -2, -40),
-                    QRegion.RegionType.Rectangle))
+        painter.setClipRect(self.parent().rect().adjusted(2, 2, -2, -40))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(getBorderColour())
         painter.drawRoundedRect(option.rect.adjusted(1, 1, -1, -1), 10, 10)
@@ -62,5 +60,5 @@ class ItemView(QAbstractItemView):
         op.initFrom(self)
         self.initStyleOption(op)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
         super().paintEvent(e)

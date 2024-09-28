@@ -40,11 +40,10 @@ class HeaderView(QHeaderView):
         op = QStyleOptionHeader()
         op.initFrom(self)
         self.initStyleOption(op)
-        op.palette.setColor(self.foregroundRole(), getForegroundColour())
-        op.palette.setColor(self.backgroundRole(), Qt.GlobalColor.transparent)
+        op.palette.setColor(op.palette.ColorRole.Text, getForegroundColour())
         self.style().drawControl(QStyle.ControlElement.CE_Header, op, painter, self)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
         super().paintEvent(e)
 
 
@@ -86,7 +85,7 @@ class TableView(QTableView):
         op.initFrom(self)
         self.initStyleOption(op)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
         super().paintEvent(e)
 
 
@@ -128,5 +127,5 @@ class TableWidget(QTableWidget):
         op.initFrom(self)
         self.initStyleOption(op)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
         super().paintEvent(e)

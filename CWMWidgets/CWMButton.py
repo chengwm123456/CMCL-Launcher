@@ -55,7 +55,6 @@ class PushButton(QPushButton):
         op.initFrom(self)
         self.initStyleOption(op)
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
-        op.palette.setColor(self.backgroundRole(), Qt.GlobalColor.transparent)
         self.style().drawControl(QStyle.ControlElement.CE_PushButtonLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
     
@@ -109,7 +108,6 @@ class ToolButton(QToolButton):
         op.initFrom(self)
         self.initStyleOption(op)
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
-        op.palette.setColor(self.backgroundRole(), Qt.GlobalColor.transparent)
         self.style().drawControl(QStyle.ControlElement.CE_ToolButtonLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
     
@@ -255,7 +253,6 @@ class CheckBox(QCheckBox):
         op.initFrom(self)
         self.initStyleOption(op)
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
-        op.palette.setColor(self.backgroundRole(), Qt.GlobalColor.transparent)
         op.rect.setX(28)
         self.style().drawControl(QStyle.ControlElement.CE_CheckBoxLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
@@ -310,7 +307,6 @@ class RadioButton(QRadioButton):
         op.initFrom(self)
         self.initStyleOption(op)
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
-        op.palette.setColor(self.backgroundRole(), Qt.GlobalColor.transparent)
         op.rect.setX(28)
         self.style().drawControl(QStyle.ControlElement.CE_RadioButtonLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
@@ -389,7 +385,7 @@ class SwitchButton(QAbstractButton):
         if not self.isEnabled():
             painter.setOpacity(0.3)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(getBorderColour(highlight=self.underMouse() and self.isEnabled()))
+        painter.setPen(getBorderColour())
         painter.setBrush(getBackgroundColour())
         painter.drawRoundedRect(QRect(1, (self.height() - 22) // 2, 50, 21),
                                 self.height() // 2 - 1, self.height() // 2 - 1)
@@ -398,7 +394,7 @@ class SwitchButton(QAbstractButton):
                                                                       self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus()) and self.isEnabled())))
         painter.setBrush(getBackgroundColour(highlight=(self.isDown() or self.isChecked()) or (
                 (self.isDown() or self.isChecked()) and self.isEnabled())))
-        painter.drawEllipse(QRect(3 if not self.isChecked() else 49 - 19, (self.height() - 22) // 2 + 1, 19, 19))
+        painter.drawEllipse(QRect(3 if not self.isChecked() else 49 - 17, (self.height() - 22) // 2 + 2, 17, 17))
         painter.setPen(getForegroundColour())
         painter.setBrush(Qt.GlobalColor.transparent)
         painter.drawText(QRect(54, 0, self.width() - 52, self.height()), Qt.AlignmentFlag.AlignCenter,
