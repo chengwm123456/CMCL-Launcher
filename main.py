@@ -4,6 +4,10 @@ project start time:1693310592
 |-time.struct_time(tm_year=2023, tm_mon=8, tm_mday=29, tm_hour=20, tm_min=3, tm_sec=12, tm_wday=1, tm_yday=241, tm_isdst=0)
 |-2023/08/29 20:03:12, Tuesday, August, Zone:中国标准时间(UTC+8), 一年的第241天
 """
+import io
+import json
+import platform
+import subprocess
 import random
 import sqlite3
 import base64
@@ -27,9 +31,11 @@ from CWMWidgets.CWMWindows import *
 from qframelesswindow import StandardTitleBar
 
 from CMCLCore.Launch import LaunchMinecraft
-from CMCLCore.Login import get_user_data
-from CMCLCore.Player import create_online_player, create_offline_player
+from CMCLCore.Login import MicrosoftPlayerLogin
+from CMCLCore.Player import create_online_player, create_offline_player, MicrosoftPlayer
 from CMCLCore.GetVersion import GetVersionByScanDirectory, GetVersionByMojangApi
+from CMCLCore.DownloadVersion import DownloadMinecraft
+from CMCLCore.GetOperationSystem import GetOperationSystemName
 
 DEBUG = True
 
@@ -193,6 +199,11 @@ class LoadingAnimation(QFrame):
     
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        if not self.__failedSvg.isVisible():
+            self.setStyleSheet(
+                f"background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});")
+        else:
+            self.setStyleSheet(f"background: rgb({'255, 200, 200' if getTheme() == Theme.Light else '100, 50, 50'});")
         return super().paintEvent(a0)
     
     def __updateText(self):
@@ -258,10 +269,7 @@ class LoginDialogue(RoundedDialogue):
             try:
                 datas = login_user(bytes(self.token, encoding="utf-8"))
                 if datas is not None:
-                    player.player_uuid = datas[1]
-                    player.player_name = datas[0]
-                    player.player_accessToken = datas[2]
-                    player.player_hasMC = datas[3]
+                    update_user(datas)
             except:
                 traceback.print_exc()
             self.loginFinished.emit()
@@ -354,11 +362,7 @@ class LoginWindow(RoundedDialogue):
         def run(self):
             try:
                 datas = login_user(bytes(self.token, encoding="utf-8"))
-                if datas is not None:
-                    player.player_uuid = datas[1]
-                    player.player_name = datas[0]
-                    player.player_accessToken = datas[2]
-                    player.player_hasMC = datas[3]
+                update_user(datas)
             except:
                 traceback.print_exc()
             self.loginFinished.emit()
@@ -437,11 +441,14 @@ class LoginWindow(RoundedDialogue):
 #         self.frame = Panel(self)
 #         self.horizontalLayout = QHBoxLayout(self.frame)
 #         self.horizontalLayout.setObjectName(u"horizontalLayout")
+#         self.pages = {}
+#
 #         self.pushButton = PushButton(self.frame)
 #         self.pushButton.setObjectName(u"pushButton")
 #         self.pushButton.setCheckable(True)
 #         self.pushButton.setChecked(True)
 #         self.pushButton.setAutoExclusive(True)
+#         self.pushButton.pressed.connect(lambda: self.update_page(self.pushButton))
 #
 #         self.horizontalLayout.addWidget(self.pushButton)
 #
@@ -449,6 +456,7 @@ class LoginWindow(RoundedDialogue):
 #         self.pushButton_2.setObjectName(u"pushButton_2")
 #         self.pushButton_2.setCheckable(True)
 #         self.pushButton_2.setAutoExclusive(True)
+#         self.pushButton_2.pressed.connect(lambda: self.update_page(self.pushButton_2))
 #
 #         self.horizontalLayout.addWidget(self.pushButton_2)
 #
@@ -463,9 +471,11 @@ class LoginWindow(RoundedDialogue):
 #         self.page = QWidget()
 #         self.page.setObjectName(u"page")
 #         self.stackedWidget.addWidget(self.page)
+#         self.pages[self.pushButton] = self.page
 #         self.page_2 = QWidget()
 #         self.page_2.setObjectName(u"page_2")
 #         self.stackedWidget.addWidget(self.page_2)
+#         self.pages[self.pushButton_2] = self.page_2
 #
 #         self.verticalLayout.addWidget(self.stackedWidget)
 #
@@ -476,22 +486,31 @@ class LoginWindow(RoundedDialogue):
 #     # setupUi
 #
 #     def retranslateUi(self):
-#         self.pushButton.setText("Page2")
+#         self.pushButton.setText("Page1")
 #         self.pushButton_2.setText("Page2")
 #     # retranslateUi
+#
+#     def update_page(self, btn):
+#         self.stackedWidget.setCurrentWidget(self.pages[btn])
 
 
-def testtextof2233(parent):
-    self = parent
-    tip = Tip(self, False)
-    self.tlabel = Label(tip)
-    self.tlabel.setText('''<a href="https://www.bilibili.com/v/topic/detail/?topic_id=53624&topic_name=2233%E7%94%9F%E6%97%A5%E5%BF%AB%E4%B9%90&spm_id_from=333.999.list.card_topic.click" style="text-decoration: none">#2233生日快乐#</a><br/>
+def testtextof2233(parent=None, layout=None, attr_parent=None):
+    if not parent:
+        parent = QWidget()
+        parent.show()
+    layout = parent.layout() or QVBoxLayout(parent)
+    if not attr_parent:
+        attr_parent = parent
+    print(parent, layout, parent.layout(), attr_parent)
+    attr_parent.tip = Tip(parent, False)
+    attr_parent.label = Label(attr_parent.tip)
+    attr_parent.label.setText('''<a href="https://www.bilibili.com/v/topic/detail/?topic_id=53624&topic_name=2233%E7%94%9F%E6%97%A5%E5%BF%AB%E4%B9%90&spm_id_from=333.999.list.card_topic.click" style="text-decoration: none">#2233生日快乐#</a><br/>
                             (都说了全网带话题 <a href="https://www.bilibili.com/v/topic/detail/?topic_id=53624&topic_name=2233%E7%94%9F%E6%97%A5%E5%BF%AB%E4%B9%90&spm_id_from=333.999.list.card_topic.click" style="text-decoration: none">#2233生日快乐#</a>。这不，<small style="font-size: xx-small"><del style='text-decoration: line-through'>{}</del></small>的我也带了这个话题了。都别针对我呀，<small style="font-size: xx-small"><del style='text-decoration: line-through'>我是无辜的</del></small>。)'''.format(
         "远在地球另一边无法赶回来") if time.localtime().tm_mon == 8 and time.localtime().tm_mday == 16 else f"敬请等待{time.localtime().tm_year + 1}年8月16号<br/>{time.strftime('还有%M个月%d天', time.gmtime(time.mktime((time.gmtime().tm_year + 1, 9, 16, 19, 30, 0, 0, 0, 0)) - time.time()))}")
     # 2024: 远在地球另一边无法赶回来
-    tip.setCentralWidget(self.tlabel)
+    attr_parent.tip.setCentralWidget(attr_parent.label)
     
-    def updateTime(self):
+    def updateTime(label):
         year = time.localtime().tm_year if time.localtime().tm_mon < 8 or (
                 time.localtime().tm_mon == 8 and time.localtime().tm_mday < 16) else (
                 time.localtime().tm_year + 1)
@@ -499,132 +518,134 @@ def testtextof2233(parent):
         time_text = f"还有{time_s.tm_mon - 1}个月{time_s.tm_mday}天"
         wait_text = f"敬请等待{year}年8月16号<br/>{time_text}"
         topic_text = f'<a href="{"https://www.bilibili.com/v/topic/detail/?topic_id=53624"}" style="text-decoration: none">#{"2233生日快乐"}#</a><br/>(都说了全网带话题 <a href="{"https://www.bilibili.com/v/topic/detail/?topic_id=53624"}" style="text-decoration: none">#{"2233生日快乐"}#</a>。这不，<small style="font-size: xx-small"><del style="text-decoration: line-through">{"远在地球另一边无法赶回来"}</del></small>的我也带了这个话题了。都别针对我呀，<small style="font-size: xx-small"><del style="text-decoration: line-through">我是无辜的</del></small>。)'
-        self.tlabel.setText(
+        label.setText(
             topic_text if time.localtime().tm_mon == 8 and time.localtime().tm_mday == 16 else wait_text)
     
-    t = QTimer(self)
-    t.timeout.connect(lambda: updateTime(self))
+    t = QTimer(parent)
+    t.timeout.connect(lambda: updateTime(attr_parent.label))
     t.start(1000)
-    self.verticalLayout_2.addWidget(tip)
-    self.label2 = Label(self.scrollAreaContentWidget)
-    self.label2.setText((f"""<!DOCTYPE html>
-                    <html>
-                        <head/>
-                        <body>
-                            <p>
-                            <hr/>
-                            <h2>开头</h2>
-                            ---------<br/>
-                            你知道 22 和 33 吗？<br/>
-                            <small style="font-size: xx-small"><del style='text-decoration: line-through'>我知道你不知道她们</del></small>(并不) <br/>
-                            22 和 33: 给你一次重新组织语言的机会，你知不知道我们？<br/>
-                            <small style="font-size: xx-small"><del style='text-decoration: line-through'>她们的生日在8月多少号来着？？？</del></small><br/>
-                            22 和 33: 你号没了！去小黑屋罚抄“2233生日在8月16号*100遍”！！！<br/>
-                            由此可得知她们都是狮子座。<br/>
-                            ---------<br/>
-                            上面的纯粹是在娱乐<br/>
-                            <a href='https://space.bilibili.com/68559'>这里是她们的官方账号(https://space.bilibili.com/68559)</a><br/>
-                            当然，设定也要讲的了。<br/>
-                            <h2>设定</h2>
-                            ---------<br/>
-                            让我们先说 22 吧 <br/>
-                            <h3>22 的设定</h3>
-                            身高：160cm <br/>
-                            体重：48KG<br/>
-                            生日：8月16日<br/>
-                            <small style="font-size: xx-small"><del style='text-decoration: line-through'>绰号：F22<br/>想知道更多可以去<a href="https://www.bilibili.com/video/BV1wJ411J7JK/">https://www.bilibili.com/video/BV1wJ411J7JK/</a>一探究竟。</del></small><br/>
-                            声优：{{ <br/>
-                                柴刀娘木木（2015）<br/>
-                                幽舞越山（2016--）<br/>
-                                <del style='text-decoration: line-through'>AI（2024年唱歌）</del><br/>
-                            }}<br/>
-                            <br/><br/>
-                            再来说 33 吧 <br/>
-                            <h3>33 的设定</h3>
-                            身高：148cm <br/>
-                            体重：？？？（怕 33 咬我，可以告诉你们 2 开头）<br/>
-                            生日：8月16日<br/>
-                            声优：{{<br/>
-                                柴刀娘木木（2015）<br/>
-                                少愿愿（2016-2018）<br/>
-                                李姗姗（2019--）<br/>
-                                Hanser（部分歌曲？）<br/>
-                                <del style='text-decoration: line-through'>AI（2024年唱歌）</del><br/>
-                            }}<br/>
-                            <br/><br/>
-                            <h2>概述</h2>
-                            ---------<br/>
-                            22娘为姐姐，33娘为妹妹，于2010年8月16日由Bilibili站娘投票结果产生。<br/>
-                            <h2>属性</h2>
-                            ---------<br/>
-                            <h3>22娘的属性</h3>
-                            <ul>
-                                <li style="display: list-item;">姐姐是个阳光元气娘，非常活泼有精神，对人热情，热心帮忙。但有些冒冒失失。</li>
-                                <li style="display: list-item;">偶尔还会心血来潮做点发明改造，有时改进下播放器等等，<small style="font-size: xx-small"><del style='text-decoration: line-through'>但是她做出来东西经常是会有BUG的，往往需要妹妹二次修复，而且因为姐姐的冒失，妹妹经常腹黑的吐槽。<br/>(感兴趣的，可以去 <a href="https://mzh.moegirl.org.cn/File:%E8%A6%81%E5%B8%AE%E5%BF%99%E5%90%97.jpg">https://mzh.moegirl.org.cn/File:%E8%A6%81%E5%B8%AE%E5%BF%99%E5%90%97.jpg</a> 看一下)</del></small><br/>(仅供娱乐，请勿当真)</li>
-                                <li style="display: list-item;">姐姐充满干劲，而且这种表现常常会感染到周遭的人，妹妹最喜欢姐姐这点了。</li>
-                                <li style="display: list-item;">性格上很乐观，<small style="font-size: xx-small"><del style='text-decoration: line-through'>但也会因某些事儿消极</del></small>(就当刚才那句我胡说)，偶尔傲娇一下，比较喜欢跟妹妹傲娇。</li>
-                                <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>姐姐很害怕猎奇、恐怖类事物，每每审核到这类型视频，都会被吓哭，结果这部分视频都是交由妹妹帮忙审核。</del></small>(这条我编的，都别信，我号还要)</li>
-                                <li style="display: list-item;">毕竟是姐姐，常常有保护妹妹的欲望，<small style="font-size: xx-small"><del style='text-decoration: line-through'>但往往需要被保护的都是自己。</del></small>(刚才那句我瞎说)</li>
-                            </ul>
-                            <br/>
-                            <h3>33娘的属性</h3>
-                            <ul>
-                                <li style="display: list-item;">妹妹是个机娘，个性沉默寡言，情感冷静少起伏且表情缺乏变化。</li>
-                                <li style="display: list-item;">别看是妹妹，平时都是她来给网站维护服务器和鼓弄网站各种程序。有着惊人的知识量，记忆力。<small style="font-size: xx-small"><del style='text-decoration: line-through'>(chengwm（CMCL启动器作者）： 33，请问我能......)</del></small></li>
-                                <li style="display: list-item;">爱发明和创造物品，<small style="font-size: xx-small"><del style='text-decoration: line-through'>但大多数都是奇奇怪怪的，就比如<a href="https://mzh.moegirl.org.cn/File:%E5%A5%87%E5%A5%87%E6%80%AA%E6%80%AA.jpg">https://mzh.moegirl.org.cn/File:%E5%A5%87%E5%A5%87%E6%80%AA%E6%80%AA.jpg</a>这张图片。</del></small>(仅供娱乐，请勿当真)</li>
-                                <li style="display: list-item;">妹妹需要充电，在身后（臀部）插入插头形状的“尾巴”，连上插座即可充电,当然也可以吃电池来充电。<del style='text-decoration: line-through'>(难道这就是呆毛事故的原因吗？)</del></li>
-                                <li style="display: list-item;">妹妹有两个怪癖，一是平时没事喜欢啃插座<del style='text-decoration: line-through'>(22: 啊疼疼疼疼疼)</del>；二是虽说是个机娘，但是睡觉的时候不抱着东西，就无法入睡。</li>
-                                <li style="display: list-item;">妹妹虽然经常会因为姐姐的冒失而吐槽，但是心里还是很十分喜欢姐姐的。妹妹虽然经常会因为姐姐的冒失而吐槽，但是心里还是很十分喜欢姐姐的。</li>
-                                <li style="display: list-item;">据说33不会被蚊子咬？</li>
-                            </ul>
-                            <br/>
-                            <h2>目前为止可以公开(或者不会被封号)的情报</h2>
-                            ---------<br/>
-                            <ul>
-                                <li style="display: list-item;">22的腰包有好几种，四次元腰包可以装的下任何东西（类似于哆啦A梦的口袋）。(见<a href="https://mzh.moegirl.org.cn/File:22%E7%9A%84%E8%85%B0%E5%8C%85.jpg">https://mzh.moegirl.org.cn/File:22%E7%9A%84%E8%85%B0%E5%8C%85.jpg</a>)</li>
-                                <li style="display: list-item;">22身高160cm，33身高146cm，这个身高极其萌。(见<a href="https://mzh.moegirl.org.cn/File:2233%E8%BA%AB%E9%AB%98%E5%B7%AE.jpg">https://mzh.moegirl.org.cn/File:2233%E8%BA%AB%E9%AB%98%E5%B7%AE.jpg</a>)</li>
-                                <li style="display: list-item;">两位都有呆毛，貌似可当天线使用，但没有验证过。</li>
-                                <li style="display: list-item;">22娘是闪电型呆毛，33是月牙形呆毛，因为“bilibili”一名的来源为“电击使”御坂美琴，于是22的呆毛形状被设计成与电相关(见<a href="https://mzh.moegirl.org.cn/File:2233%E5%91%86%E6%AF%9B.jpg">https://mzh.moegirl.org.cn/File:2233%E5%91%86%E6%AF%9B.jpg</a>)</li>
-                                <li style="display: list-item;">两姐妹头发上都夹着个一样的小电视发夹（有时在左边有时在右边，并不是一般的发夹，小电视发夹上的表情是与2233同步变化）。(见<a href="https://mzh.moegirl.org.cn/File:%E5%8F%91%E5%A4%B9%E7%9A%84%E7%A7%98%E5%AF%86.jpg">https://mzh.moegirl.org.cn/File:%E5%8F%91%E5%A4%B9%E7%9A%84%E7%A7%98%E5%AF%86.jpg</a>)</li>
-                                <li style="display: list-item;">有时候33娘没有小电视发夹，只有播放按钮发夹，而且发夹自称是精灵球。(见<a href="https://mzh.moegirl.org.cn/File:%E7%B2%BE%E7%81%B5%E7%90%83%E5%8F%91%E5%A4%B9.jpg">https://mzh.moegirl.org.cn/File:%E7%B2%BE%E7%81%B5%E7%90%83%E5%8F%91%E5%A4%B9.jpg</a>)</li>
-                                <li style="display: list-item;">33在工作时喜欢穿白大褂，额头上有投影装置，还可以扫描解析，使用AR眼镜或额头上的投影装置都可以让33浮现操作面板，以更改自身设置以及浏览互联网等操作。(见<a href="https://mzh.moegirl.org.cn/File:%E5%85%B3%E4%BA%8E33%E5%A8%98.jpg">https://mzh.moegirl.org.cn/File:%E5%85%B3%E4%BA%8E33%E5%A8%98.jpg</a>)</li>
-                                <li style="display: list-item;">两姐妹都是ACG爱好者，也会追新番，也喜欢看各种神技术搞笑带弹幕吐槽的视频。（两人审核时，偶尔会被特别喜好的视频吸引住眼球，而忘记正在审核……）</li>
-                                <li style="display: list-item;">两姐妹都会审核视频，姐姐对着宠物小电视审核；妹妹则是从自己额头的成像仪投影出视频来审核。由于，网站视频的投稿量大，两人常常忙得不亦乐乎。其他方面，网站服务器维护以及各种程序基本都是由妹妹来完成，姐姐则多处理各种BILI众的意见或BUG的反馈。(PS：根据B站视频<a href="https://mzh.moegirl.org.cn/%E5%B9%B8%E7%A6%8F%E5%B0%B1%E5%9C%A8%E4%BD%A0%E8%BA%AB%E8%BE%B9">《Bilibili耶》</a>中，可以看出妹妹略带攻属性。)</li>
-                                <li style="display: list-item;">33左臂装有能量炮，可以向任意物体发射。(见<a href="https://mzh.moegirl.org.cn/File:Bilibili%E6%BC%AB%E7%94%BB%E5%AE%B3%E6%80%95.webp">https://mzh.moegirl.org.cn/File:Bilibili%E6%BC%AB%E7%94%BB%E5%AE%B3%E6%80%95.webp</a>)</li>
-                                <li style="display: list-item;">据说33的右臂是爱心飞拳？可以分离？还可以抓住物体？(见<a href="https://manga.bilibili.com/mc28173/455648">https://manga.bilibili.com/mc28173/455648</a>)</li>
-                            </ul>
-                            <br/>
-                            <h2>趣闻</h2>
-                            ---------<br/>
-                            <ul>
-                                <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>22有一次审核恐怖视频时被吓到了，晚上不敢去洗手间，结果第二天一早醒来发现自己尿床了(⊙o⊙)。结果晒床单时被妹妹33娘看见……</del></small>(都懂的......)</li>
-                                <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>22近期迷上了哲♂学、兄♂贵、摔♂跤以及FA♂乐器，用33的手机看了之后留下了喜好推荐被33发现，结果亲身体♂验了一番。(见<a href="https://mzh.moegirl.org.cn/File:%E4%BA%B2%E8%BA%AB%E4%BD%93%E9%AA%8C.jpg">https://mzh.moegirl.org.cn/File:%E4%BA%B2%E8%BA%AB%E4%BD%93%E9%AA%8C.jpg</a>)</del></small>(仅供娱乐)</li>
-                                <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>万圣节时22穿上十分可怕（十分可爱）的南瓜头进行万圣节传统活动去吓唬33讨糖，结果被踢了出来。(见<a href="https://mzh.moegirl.org.cn/File:%E4%B8%87%E5%9C%A3%E8%8A%82%E6%83%8A%E9%AD%82.jpg">https://mzh.moegirl.org.cn/File:%E4%B8%87%E5%9C%A3%E8%8A%82%E6%83%8A%E9%AD%82.jpg</a>)</del></small></li>
-                            </ul>
-                            <br/>
-                            <h2>一些不好说的东西</h2>
-                            ---------<br/>
-                            <small style="font-size: xx-small"><del style='text-decoration: line-through'>热知识：在2017年，2233 以 98 亿（9876547210.33元）被卖身。（雾）</del></small><br/>
-                            <small style="font-size: xx-small"><del style='text-decoration: line-through'>震惊，Bilibili的98亿竟被两个员工花完。（2021年拜年纪）</del></small>
-                          </p>
-                          <p>更多信息请前往<a href="https://mzh.moegirl.org.cn/Bilibili%E5%A8%98">此处</a>了解。<br/>
-                            ———— 2024年9月17日写于小黑屋<br/>
-                          </p>
-                          <h2>版权声明</h2>
-                          <p>---------</p>
-                          <p>
-                            此文本为CMCL启动器测试文本，为CMCL启动器测试文本显示、HTML样式测试、模板填空测试以及排版测试文本，不具有任何意义。著作权归原编辑者所有。<br/>
-                            还有，很多地方我瞎说的，别信！<br/>
-                          </p>
-                          <p>此文本介绍部分内容及数据引自萌娘百科(mzh.moegirl.org.cn)，具体链接：<a href="https://mzh.moegirl.org.cn/Bilibili%E5%A8%98">*</a>，<strong>内容不可商用，著作权归原编辑者所有</strong></p>
-                        </body>
-                    </html>""" if time.localtime().tm_year != 2017 or time.localtime().tm_mon != 1 or time.localtime().tm_mday != 23 else "没有 98 亿还想知道 2233？") if time.localtime().tm_year > 2010 or (
+    layout.addWidget(attr_parent.tip)
+    attr_parent.label2 = Label(parent)
+    attr_parent.label2.setText((f"""<!DOCTYPE html>
+                                <html>
+                                    <head/>
+                                    <body>
+                                        <p>
+                                        <hr/>
+                                        <h2>开头</h2>
+                                        ---------<br/>
+                                        你知道 Bilibili 的站娘 22 和 33 吗？<br/>
+                                        <small style="font-size: xx-small"><del style='text-decoration: line-through'>我知道你不知道她们</del></small>(bushi)<br/>
+                                        22 和 33: 给你一次重新组织语言的机会，你知不知道我们？<br/>
+                                        <small style="font-size: xx-small"><del style='text-decoration: line-through'>她们的生日在8月多少号来着？？？</del></small><br/>
+                                        22 和 33: 你号没了！去小黑屋罚抄“2233生日在8月16号*100遍”！！！<br/>
+                                        由此可得知她们都是狮子座。<br/>
+                                        ---------<br/>
+                                        上面的纯粹是在娱乐<br/>
+                                        <a href='https://space.bilibili.com/68559'>这里是她们的官方账号(https://space.bilibili.com/68559)</a><br/>
+                                        当然，设定也要讲的了。<br/>
+                                        <h2>设定</h2>
+                                        ---------<br/>
+                                        让我们先说 22 吧 <br/>
+                                        <h3>22 的设定</h3>
+                                        身高：160cm <br/>
+                                        体重：48KG<br/>
+                                        生日：8月16日<br/>
+                                        <small style="font-size: xx-small"><del style='text-decoration: line-through'>绰号：F22<br/>想知道更多可以去<a href="https://www.bilibili.com/video/BV1wJ411J7JK/">https://www.bilibili.com/video/BV1wJ411J7JK/</a>一探究竟。</del></small><br/>
+                                        声优：
+                                        <ul>
+                                            <li style="display: list-item;">柴刀娘木木（2015）</li>
+                                            <li style="display: list-item;">幽舞越山（2016--）</li>
+                                            <li style="display: list-item;"><del style='text-decoration: line-through'>AI（2024年唱歌）</del><li/>
+                                        </ul>
+                                        <br/>
+                                        再来说 33 吧 <br/>
+                                        <h3>33 的设定</h3>
+                                        身高：148cm <br/>
+                                        体重：？？？（怕 33 咬我，可以告诉你们 2 开头）<br/>
+                                        生日：8月16日<br/>
+                                        声优：
+                                        <ul>
+                                            <li style="display: list-item;">柴刀娘木木（2015）</li>
+                                            <li style="display: list-item;">少愿愿（2016-2018）</li>
+                                            <li style="display: list-item;">李姗姗（2019--）</li>
+                                            <li style="display: list-item;">Hanser（部分歌曲？）</li>
+                                            <li style="display: list-item;"><del style='text-decoration: line-through'>AI（2024年唱歌）</del></li>
+                                        </ul>
+                                        <br/>
+                                        <h2>概述</h2>
+                                        ---------<br/>
+                                        22娘为姐姐，33娘为妹妹，于2010年8月16日由Bilibili站娘投票结果产生。<br/>
+                                        <h2>属性</h2>
+                                        ---------<br/>
+                                        <h3>22娘的属性</h3>
+                                        <ul>
+                                            <li style="display: list-item;">姐姐是个阳光元气娘，非常活泼有精神，对人热情，热心帮忙。但有些冒冒失失。</li>
+                                            <li style="display: list-item;">偶尔还会心血来潮做点发明改造，有时改进下播放器等等，<small style="font-size: xx-small"><del style='text-decoration: line-through'>但是她做出来东西经常是会有BUG的，往往需要妹妹二次修复，而且因为姐姐的冒失，妹妹经常腹黑的吐槽。<br/>(感兴趣的，可以去 <a href="https://mzh.moegirl.org.cn/File:%E8%A6%81%E5%B8%AE%E5%BF%99%E5%90%97.jpg">https://mzh.moegirl.org.cn/File:%E8%A6%81%E5%B8%AE%E5%BF%99%E5%90%97.jpg</a> 看一下)</del></small><br/>(仅供娱乐，请勿当真)</li>
+                                            <li style="display: list-item;">姐姐充满干劲，而且这种表现常常会感染到周遭的人，妹妹最喜欢姐姐这点了。</li>
+                                            <li style="display: list-item;">性格上很乐观，<small style="font-size: xx-small"><del style='text-decoration: line-through'>但也会因某些事儿消极</del></small>(就当刚才那句我胡说)，偶尔傲娇一下，比较喜欢跟妹妹傲娇。</li>
+                                            <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>姐姐很害怕猎奇、恐怖类事物，每每审核到这类型视频，都会被吓哭，结果这部分视频都是交由妹妹帮忙审核。</del></small>(这条我编的，都别信，我号还要)</li>
+                                            <li style="display: list-item;">毕竟是姐姐，常常有保护妹妹的欲望，<small style="font-size: xx-small"><del style='text-decoration: line-through'>但往往需要被保护的都是自己。</del></small>(刚才那句我瞎说)</li>
+                                        </ul>
+                                        <br/>
+                                        <h3>33娘的属性</h3>
+                                        <ul>
+                                            <li style="display: list-item;">妹妹是个机娘，个性沉默寡言，情感冷静少起伏且表情缺乏变化。</li>
+                                            <li style="display: list-item;">别看是妹妹，平时都是她来给网站维护服务器和鼓弄网站各种程序。有着惊人的知识量，记忆力。<small style="font-size: xx-small"><del style='text-decoration: line-through'>(chengwm（CMCL启动器作者）： 33，请问我能......)</del></small></li>
+                                            <li style="display: list-item;">爱发明和创造物品，<small style="font-size: xx-small"><del style='text-decoration: line-through'>但大多数都是奇奇怪怪的，就比如<a href="https://mzh.moegirl.org.cn/File:%E5%A5%87%E5%A5%87%E6%80%AA%E6%80%AA.jpg">https://mzh.moegirl.org.cn/File:%E5%A5%87%E5%A5%87%E6%80%AA%E6%80%AA.jpg</a>这张图片。</del></small>(仅供娱乐，请勿当真)</li>
+                                            <li style="display: list-item;">妹妹需要充电，在身后（臀部）插入插头形状的“尾巴”，连上插座即可充电,当然也可以吃电池来充电。<del style='text-decoration: line-through'>(难道这就是呆毛事故的原因吗？)</del></li>
+                                            <li style="display: list-item;">妹妹有两个怪癖，一是平时没事喜欢啃插座<del style='text-decoration: line-through'>(22: 啊疼疼疼疼疼)</del>；二是虽说是个机娘，但是睡觉的时候不抱着东西，就无法入睡。</li>
+                                            <li style="display: list-item;">妹妹虽然经常会因为姐姐的冒失而吐槽，但是心里还是很十分喜欢姐姐的。妹妹虽然经常会因为姐姐的冒失而吐槽，但是心里还是很十分喜欢姐姐的。</li>
+                                            <li style="display: list-item;">据说33不会被蚊子咬？</li>
+                                        </ul>
+                                        <br/>
+                                        <h2>目前为止可以公开(或者不会被封号)的情报</h2>
+                                        ---------<br/>
+                                        <ul>
+                                            <li style="display: list-item;">22的腰包有好几种，四次元腰包可以装的下任何东西（类似于哆啦A梦的口袋）。(见<a href="https://mzh.moegirl.org.cn/File:22%E7%9A%84%E8%85%B0%E5%8C%85.jpg">https://mzh.moegirl.org.cn/File:22%E7%9A%84%E8%85%B0%E5%8C%85.jpg</a>)</li>
+                                            <li style="display: list-item;">22身高160cm，33身高146cm，这个身高极其萌。(见<a href="https://mzh.moegirl.org.cn/File:2233%E8%BA%AB%E9%AB%98%E5%B7%AE.jpg">https://mzh.moegirl.org.cn/File:2233%E8%BA%AB%E9%AB%98%E5%B7%AE.jpg</a>)</li>
+                                            <li style="display: list-item;">两位都有呆毛，貌似可当天线使用，但没有验证过。</li>
+                                            <li style="display: list-item;">22娘是闪电型呆毛，33是月牙形呆毛，因为“bilibili”一名的来源为“电击使”御坂美琴，于是22的呆毛形状被设计成与电相关(见<a href="https://mzh.moegirl.org.cn/File:2233%E5%91%86%E6%AF%9B.jpg">https://mzh.moegirl.org.cn/File:2233%E5%91%86%E6%AF%9B.jpg</a>)</li>
+                                            <li style="display: list-item;">两姐妹头发上都夹着个一样的小电视发夹（有时在左边有时在右边，并不是一般的发夹，小电视发夹上的表情是与2233同步变化）。(见<a href="https://mzh.moegirl.org.cn/File:%E5%8F%91%E5%A4%B9%E7%9A%84%E7%A7%98%E5%AF%86.jpg">https://mzh.moegirl.org.cn/File:%E5%8F%91%E5%A4%B9%E7%9A%84%E7%A7%98%E5%AF%86.jpg</a>)</li>
+                                            <li style="display: list-item;">有时候33娘没有小电视发夹，只有播放按钮发夹，而且发夹自称是精灵球。(见<a href="https://mzh.moegirl.org.cn/File:%E7%B2%BE%E7%81%B5%E7%90%83%E5%8F%91%E5%A4%B9.jpg">https://mzh.moegirl.org.cn/File:%E7%B2%BE%E7%81%B5%E7%90%83%E5%8F%91%E5%A4%B9.jpg</a>)</li>
+                                            <li style="display: list-item;">33在工作时喜欢穿白大褂，额头上有投影装置，还可以扫描解析，使用AR眼镜或额头上的投影装置都可以让33浮现操作面板，以更改自身设置以及浏览互联网等操作。(见<a href="https://mzh.moegirl.org.cn/File:%E5%85%B3%E4%BA%8E33%E5%A8%98.jpg">https://mzh.moegirl.org.cn/File:%E5%85%B3%E4%BA%8E33%E5%A8%98.jpg</a>)</li>
+                                            <li style="display: list-item;">两姐妹都是ACG爱好者，也会追新番，也喜欢看各种神技术搞笑带弹幕吐槽的视频。（两人审核时，偶尔会被特别喜好的视频吸引住眼球，而忘记正在审核……）</li>
+                                            <li style="display: list-item;">两姐妹都会审核视频，姐姐对着宠物小电视审核；妹妹则是从自己额头的成像仪投影出视频来审核。由于，网站视频的投稿量大，两人常常忙得不亦乐乎。其他方面，网站服务器维护以及各种程序基本都是由妹妹来完成，姐姐则多处理各种BILI众的意见或BUG的反馈。(PS：根据B站视频<a href="https://mzh.moegirl.org.cn/%E5%B9%B8%E7%A6%8F%E5%B0%B1%E5%9C%A8%E4%BD%A0%E8%BA%AB%E8%BE%B9">《Bilibili耶》</a>中，可以看出妹妹略带攻属性。)</li>
+                                            <li style="display: list-item;">33左臂装有能量炮，可以向任意物体发射。(见<a href="https://mzh.moegirl.org.cn/File:Bilibili%E6%BC%AB%E7%94%BB%E5%AE%B3%E6%80%95.webp">https://mzh.moegirl.org.cn/File:Bilibili%E6%BC%AB%E7%94%BB%E5%AE%B3%E6%80%95.webp</a>)</li>
+                                            <li style="display: list-item;">据说33的右臂是爱心飞拳？可以分离？还可以抓住物体？(见<a href="https://manga.bilibili.com/mc28173/455648">https://manga.bilibili.com/mc28173/455648</a>)</li>
+                                        </ul>
+                                        <br/>
+                                        <h2>趣闻</h2>
+                                        ---------<br/>
+                                        <ul>
+                                            <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>22有一次审核恐怖视频时被吓到了，晚上不敢去洗手间，结果第二天一早醒来发现自己尿床了(⊙o⊙)。结果晒床单时被妹妹33娘看见……</del></small>(都懂的......)</li>
+                                            <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>22近期迷上了哲♂学、兄♂贵、摔♂跤以及FA♂乐器，用33的手机看了之后留下了喜好推荐被33发现，结果亲身体♂验了一番。(见<a href="https://mzh.moegirl.org.cn/File:%E4%BA%B2%E8%BA%AB%E4%BD%93%E9%AA%8C.jpg">https://mzh.moegirl.org.cn/File:%E4%BA%B2%E8%BA%AB%E4%BD%93%E9%AA%8C.jpg</a>)</del></small>(仅供娱乐)</li>
+                                            <li style="display: list-item;"><small style="font-size: xx-small"><del style='text-decoration: line-through'>万圣节时22穿上十分可怕（十分可爱）的南瓜头进行万圣节传统活动去吓唬33讨糖，结果被踢了出来。(见<a href="https://mzh.moegirl.org.cn/File:%E4%B8%87%E5%9C%A3%E8%8A%82%E6%83%8A%E9%AD%82.jpg">https://mzh.moegirl.org.cn/File:%E4%B8%87%E5%9C%A3%E8%8A%82%E6%83%8A%E9%AD%82.jpg</a>)</del></small></li>
+                                        </ul>
+                                        <br/>
+                                        <h2>一些不好说的东西</h2>
+                                        ---------<br/>
+                                        <small style="font-size: xx-small"><del style='text-decoration: line-through'>热知识：在2017年，2233 以 98 亿（9876547210.33元）被卖身。（雾）</del></small><br/>
+                                        <small style="font-size: xx-small"><del style='text-decoration: line-through'>震惊，Bilibili的98亿竟被两个员工花完。（2021年拜年纪）</del></small>
+                                      </p>
+                                      <p>更多信息请前往<a href="https://mzh.moegirl.org.cn/Bilibili%E5%A8%98">此处</a>了解。<br/>
+                                        ———— 2024年9月17日写于小黑屋<br/>
+                                      </p>
+                                      <h2>版权声明</h2>
+                                      <p>---------</p>
+                                      <p>
+                                        此文本为CMCL启动器测试文本，为CMCL启动器测试文本显示、HTML样式测试、模板填空测试以及排版测试文本，不具有任何意义。著作权归原编辑者所有。<br/>
+                                        还有，很多地方我瞎说的，别信！<br/>
+                                      </p>
+                                      <p>此文本介绍部分内容及数据引自萌娘百科(mzh.moegirl.org.cn)，具体链接：<a href="https://mzh.moegirl.org.cn/Bilibili%E5%A8%98">*</a>，<strong>内容不可商用，著作权归原编辑者所有</strong></p>
+                                    </body>
+                                </html>""" if time.localtime().tm_year != 2017 or time.localtime().tm_mon != 1 or time.localtime().tm_mday != 23 else "没有 98 亿还想知道 2233？") if time.localtime().tm_year > 2010 or (
             time.localtime().tm_year == 2010 and time.localtime().tm_mon > 8 or (
             time.localtime().tm_mon == 8 and time.localtime().tm_mday >= 16)) else "此条目不存在")
-    self.label2.setTextInteractionFlags(
+    attr_parent.label2.setTextInteractionFlags(
         Qt.TextInteractionFlag.TextSelectableByKeyboard | Qt.TextInteractionFlag.TextSelectableByMouse)  # | Qt.TextInteractionFlag.TextEditable)
-    self.label2.setWordWrap(True)
-    self.verticalLayout_2.addWidget(self.label2)
+    attr_parent.label2.setWordWrap(True)
+    layout.addWidget(attr_parent.label2)
 
 
 class MainPage(QFrame):
@@ -637,6 +658,8 @@ class MainPage(QFrame):
         self.verticalLayout.addWidget(self.scrollArea)
         self.scrollAreaContentWidget = QWidget()
         self.verticalLayout_2 = QVBoxLayout(self.scrollAreaContentWidget)
+        # testtextof2233(self.scrollAreaContentWidget, self.verticalLayout_2, self)
+        # print(self.verticalLayout_2.addWidget(self.label2))
         self.bottom_space = QSpacerItem(0, 80, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         self.verticalLayout_2.addItem(self.bottom_space)
         self.scrollArea.setWidget(self.scrollAreaContentWidget)
@@ -673,11 +696,21 @@ class MainPage(QFrame):
         self.select_version_btn.setText(self.version or "选择版本")
     
     def launch(self):
-        result = LaunchMinecraft(minecraft_path, self.version, None,
+        result = LaunchMinecraft(minecraft_path, self.version,
+                                 None if settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"] else None,
                                  "server",
-                                 CMCL_version[0], None, None, None, "", None, None,
+                                 CMCL_version[0], "CMCL", None, None, None, "", None, None,
                                  player)
         print(result)
+        if result[0] == "Successfully":
+            tip = PopupTip(frame)
+            label = Label(tip)
+            label.setText("游戏已启动")
+            label.adjustSize()
+            tip.setCentralWidget(label)
+            tip.setGeometry(QRect(0, 0, 300, 64))
+            tip.tip(PopupTip.PopupPosition.RIGHT, 3000)
+            print(tip.geometry())
     
     def setMinecraftDir(self):
         global minecraft_path
@@ -713,8 +746,125 @@ class MainPage(QFrame):
 class DownloadPage(QFrame):
     class DownloadVanilla(QFrame):
         class DownloadOptions(QFrame):
-            def __init__(self, parent):
+            frameClosed = pyqtSignal()
+            
+            class DownloadVersionThread(QThread):
+                def __init__(self, parent, version=None, path="."):
+                    super().__init__(parent)
+                    self.__version = version
+                    self.__path = Path(path)
+                
+                def run(self):
+                    if self.__version:
+                        DownloadMinecraft(self.__path, self.__version)
+            
+            def __init__(self, parent, version=None):
                 super().__init__(parent)
+                self.version = version
+                
+                self.verticalLayout = QVBoxLayout(self)
+                
+                self.topPanel = Panel(self)
+                self.verticalLayout.addWidget(self.topPanel)
+                
+                self.horizontalLayout = QVBoxLayout(self.topPanel)
+                
+                self.closeButton = CloseButton(self.topPanel)
+                self.closeButton.pressed.connect(self.closeFrame)
+                self.closeButton.pressed.connect(self.frameClosed.emit)
+                self.horizontalLayout.addWidget(self.closeButton)
+                
+                self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+                self.horizontalLayout.addItem(self.horizontalSpacer)
+                
+                self.toolBox = ToolBox(self)
+                self.toolBox.setObjectName(u"toolBox")
+                self.page = QWidget()
+                self.page.setObjectName(u"page")
+                self.page.setGeometry(QRect(0, 0, 623, 338))
+                self.verticalLayout_3 = QVBoxLayout(self.page)
+                self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+                self.formLayout = QFormLayout()
+                self.formLayout.setObjectName(u"formLayout")
+                self.lLabel = Label(self.page)
+                self.lLabel.setObjectName(u"lLabel")
+                
+                self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.lLabel)
+                
+                self.pushButton = PushButton(self.page)
+                self.pushButton.setObjectName(u"pushButton")
+                
+                self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.pushButton)
+                
+                self.verticalLayout_3.addLayout(self.formLayout)
+                
+                self.verticalSpacer_2 = QSpacerItem(20, 286, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+                
+                self.verticalLayout_3.addItem(self.verticalSpacer_2)
+                
+                self.toolBox.addItem(self.page, u"\u539f\u7248")
+                self.page_2 = QWidget()
+                self.page_2.setObjectName(u"page_2")
+                self.verticalLayout_4 = QVBoxLayout(self.page_2)
+                self.verticalLayout_4.setObjectName(u"verticalLayout_2")
+                self.formLayout_2 = QFormLayout()
+                self.formLayout_2.setObjectName(u"formLayout_2")
+                self.label_2 = Label(self.page_2)
+                self.label_2.setObjectName(u"label_2")
+                
+                self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_2)
+                
+                self.lineEdit_2 = LineEdit(self.page_2)
+                self.lineEdit_2.setObjectName(u"lineEdit_2")
+                
+                self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.lineEdit_2)
+                
+                self.verticalLayout_4.addLayout(self.formLayout_2)
+                
+                self.verticalSpacer = QSpacerItem(20, 290, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+                
+                self.verticalLayout_4.addItem(self.verticalSpacer)
+                
+                self.toolBox.addItem(self.page_2, u"\u4e0b\u8f7d\u8bbe\u7f6e")
+                
+                self.verticalLayout.addWidget(self.toolBox)
+                
+                self.startDownloadButton = PushButton(self)
+                self.verticalLayout.addWidget(self.startDownloadButton)
+                
+                self.retranslateUI()
+                
+                self.toolBox.setCurrentIndex(0)
+                
+                QMetaObject.connectSlotsByName(self)
+            
+            def retranslateUI(self):
+                self.lLabel.setText(u"\u7248\u672c\uff1a")
+                self.pushButton.setText(self.version or u"22.33")
+                self.toolBox.setItemText(self.toolBox.indexOf(self.page), u"\u539f\u7248")
+                self.label_2.setText(u"\u4e0b\u8f7d\u8def\u5f84\uff1a")
+                self.lineEdit_2.setText(str(minecraft_path))
+                self.lineEdit_2.setPlaceholderText(str(minecraft_path))
+                self.toolBox.setItemText(self.toolBox.indexOf(self.page_2), u"\u4e0b\u8f7d\u8bbe\u7f6e")
+                self.startDownloadButton.setText("下载")
+            
+            # retranslateUi
+            
+            def startDownload(self):
+                download_thread = self.DownloadVersionThread(None, self.version, self.lineEdit_2.text())
+                download_thread.start()
+                self.closeButton.pressed.emit()
+            
+            def closeFrame(self):
+                self.hide()
+                self.deleteLater()
+                del self
+            
+            def paintEvent(self, a0):
+                painter = QPainter(self)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                painter.setBrush(getBackgroundColour())
+                painter.drawRect(self.rect())
         
         class GetVersionThread(QThread):
             gotVersion = pyqtSignal(dict)
@@ -749,7 +899,7 @@ class DownloadPage(QFrame):
             self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
             self.tableView.horizontalHeader().setVisible(True)
             self.tableView.verticalHeader().setVisible(False)
-            # self.tableView.clicked.connect(self.turn_to_download_page)
+            self.tableView.clicked.connect(self.downloadOptionsOpen)
             self.versionModel = QStandardItemModel(self.tableView)
             self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
             self.tableView.setModel(self.versionModel)
@@ -804,10 +954,27 @@ class DownloadPage(QFrame):
             # setupUi
         
         def retranslateUi(self):
+            self.lineEdit.setToolTip("输入版本：查询版本。\n"
+                                     "输入类型：筛选版本类型。\n"
+                                     " release：正式版\n"
+                                     " snapshot：快照版\n"
+                                     " old_beta：远古 beta 版\n"
+                                     " old_alpha：远古 alpha 版\n"
+                                     " april_fool：愚人节版本\n"
+                                     "输入日期：查询在该日期发布的版本\n"
+                                     "注：以上方式均可使用正则表达式，\n"
+                                     "如\"1\\.14.+\"、\"old_(alpha|beta)\"、\"2023-03-22 .+\"等，\n"
+                                     "更多语法请上网查询。")
             self.label.setText(u"\u4e0b\u8f7d\u6e90\uff1a")
             self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
         
         # retranslateUi
+        
+        def event(self, e):
+            if hasattr(self, "downloadOptions") and self.downloadOptions:
+                self.downloadOptions.setGeometry(self.rect())
+                self.downloadOptions.raise_()
+            return super().event(e)
         
         def showEvent(self, *args, **kwargs):
             super().showEvent(*args, **kwargs)
@@ -959,6 +1126,16 @@ class DownloadPage(QFrame):
             self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             self.tableView.horizontalHeader().setVisible(True)
             self.tableView.verticalHeader().setVisible(False)
+        
+        def downloadOptionsOpen(self, value):
+            data = self.tableView.model().item(value.row(), 0).text()
+            print(data)
+            self.downloadOptions = self.DownloadOptions(self, data)
+            self.downloadOptions.frameClosed.connect(self.downloadOptionsClose)
+            self.downloadOptions.show()
+        
+        def downloadOptionsClose(self):
+            self.downloadOptions = None
     
     def __init__(self, parent):
         super().__init__(parent)
@@ -991,7 +1168,6 @@ class DownloadPage(QFrame):
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.addWidget(self.page)
         self.stackedWidget.setCurrentIndex(0)
-        self.stackedWidget.currentChanged.connect(self.update_navigation)
         
         self.verticalLayout.addWidget(self.stackedWidget)
         
@@ -1009,10 +1185,268 @@ class DownloadPage(QFrame):
     
     def update_page(self, btn):
         self.stackedWidget.setCurrentWidget(self.pages[btn])
+
+
+class SettingsPage(QFrame):
+    class GameSettings(QFrame):
+        def __init__(self, parent):
+            super().__init__(parent)
+            self.verticalLayout = QVBoxLayout(self)
+            self.verticalLayout.setObjectName(u"verticalLayout")
+            self.formLayout = QFormLayout()
+            self.formLayout.setObjectName(u"formLayout")
+            self.label = Label(self)
+            self.label.setObjectName(u"label")
+            
+            self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label)
+            
+            self.lineEdit = LineEdit(self)
+            self.lineEdit.setObjectName(u"lineEdit")
+            
+            self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.lineEdit)
+            
+            self.verticalLayout.addLayout(self.formLayout)
+            
+            self.groupBox = GroupBox(self)
+            self.groupBox.setObjectName(u"groupBox")
+            self.gridLayout = QGridLayout(self.groupBox)
+            self.gridLayout.setObjectName(u"gridLayout")
+            self.checkBox = CheckBox(self.groupBox)
+            self.checkBox.setObjectName(u"checkBox")
+            
+            self.gridLayout.addWidget(self.checkBox, 0, 0, 1, 1)
+            
+            self.checkBox_2 = CheckBox(self.groupBox)
+            self.checkBox_2.setObjectName(u"checkBox_2")
+            
+            self.gridLayout.addWidget(self.checkBox_2, 1, 0, 1, 1)
+            
+            self.verticalLayout.addWidget(self.groupBox)
+            
+            self.verticalSpacer = QSpacerItem(20, 360, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+            
+            self.verticalLayout.addItem(self.verticalSpacer)
+            
+            self.retranslateUi()
+            #
+            # QMetaObject.connectSlotsByName(Form)
+        
+        # setupUi
+        
+        def retranslateUi(self):
+            self.label.setText(u"\u989d\u5916\u6e38\u620f\u542f\u52a8\u53c2\u6570\uff1a")
+            self.groupBox.setTitle(u"\u9884\u8bbe")
+            self.checkBox.setText(u"demo\u6a21\u5f0f")
+            self.checkBox_2.setText(u"\u542f\u52a8\u65f6\u5168\u5c4f")
+        # retranslateUi
     
-    def update_navigation(self, _):
-        print(_)
-        print(self.stackedWidget.currentIndex())
+    class JavaSettings(QFrame):
+        class SearchVersionThread(QThread):
+            versionHasGot = pyqtSignal(list)
+            
+            def run(self):
+                where_out = subprocess.run(
+                    ["which" if GetOperationSystemName()[0].lower() != "windows" else "where",
+                     "java"],
+                    capture_output=True,
+                    check=False).stdout
+                result = []
+                for i in where_out.decode(errors="ignore").splitlines():
+                    result.append(i)
+                self.versionHasGot.emit(result)
+        
+        def __init__(self, parent):
+            super().__init__(parent)
+            self.verticalLayout = QVBoxLayout(self)
+            self.verticalLayout.setObjectName(u"verticalLayout")
+            self.groupBox = GroupBox(self)
+            self.groupBox.setObjectName(u"groupBox")
+            self.horizontalLayout = QHBoxLayout(self.groupBox)
+            self.horizontalLayout.setObjectName(u"horizontalLayout")
+            self.radioButton = RadioButton(self.groupBox)
+            self.radioButton.setObjectName(u"radioButton")
+            self.radioButton.setChecked(True)
+            
+            self.horizontalLayout.addWidget(self.radioButton)
+            
+            self.radioButton_2 = RadioButton(self.groupBox)
+            self.radioButton_2.setObjectName(u"radioButton_2")
+            
+            self.horizontalLayout.addWidget(self.radioButton_2)
+            
+            self.verticalLayout.addWidget(self.groupBox)
+            
+            self.formLayout_2 = QFormLayout()
+            self.formLayout_2.setObjectName(u"formLayout_2")
+            self.label_2 = Label(self)
+            self.label_2.setObjectName(u"label_2")
+            
+            self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_2)
+            
+            self.widget_2 = QWidget(self)
+            self.widget_2.setObjectName(u"widget_2")
+            self.horizontalLayout_3 = QHBoxLayout(self.widget_2)
+            self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+            self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
+            self.lineEdit_2 = ComboBox(self.widget_2)
+            self.lineEdit_2.setObjectName(u"lineEdit_2")
+            self.lineEdit_2.setEditable(True)
+            font = QFont("Consolas")
+            font.setPointSize(13)
+            self.lineEdit_2.setFont(font)
+            self.horizontalLayout_3.addWidget(self.lineEdit_2, 1)
+            
+            self.pushButton_2 = TogglePushButton(self.widget_2)
+            self.pushButton_2.setObjectName(u"pushButton_2")
+            self.pushButton_2.setChecked(settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"])
+            if not self.pushButton_2.isChecked():
+                self.lineEdit_2.setEnabled(True)
+                self.searchJava()
+            else:
+                self.lineEdit_2.clear()
+                self.lineEdit_2.setCurrentText("自动选择")
+                self.lineEdit_2.setEnabled(False)
+            self.pushButton_2.toggled.connect(self.updateJavaPathIsAuto)
+            
+            self.horizontalLayout_3.addWidget(self.pushButton_2)
+            
+            self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.widget_2)
+            
+            self.verticalLayout.addLayout(self.formLayout_2)
+            
+            self.formLayout = QFormLayout()
+            self.formLayout.setObjectName(u"formLayout")
+            self.label = Label(self)
+            self.label.setObjectName(u"label")
+            
+            self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label)
+            
+            self.widget = QWidget(self)
+            self.widget.setObjectName(u"widget")
+            self.horizontalLayout_2 = QHBoxLayout(self.widget)
+            self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+            self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+            self.lineEdit = LineEdit(self.widget)
+            self.lineEdit.setObjectName(u"lineEdit")
+            self.lineEdit.setFont(font)
+            
+            self.horizontalLayout_2.addWidget(self.lineEdit)
+            
+            self.pushButton = TogglePushButton(self.widget)
+            self.pushButton.setObjectName(u"pushButton")
+            self.pushButton.setChecked(settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["is_override"])
+            self.pushButton.toggled.connect(self.updateJVMArgIsOverride)
+            
+            self.horizontalLayout_2.addWidget(self.pushButton)
+            
+            self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.widget)
+            
+            self.verticalLayout.addLayout(self.formLayout)
+            
+            self.verticalSpacer = QSpacerItem(20, 163, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+            
+            self.verticalLayout.addItem(self.verticalSpacer)
+            
+            self.retranslateUi()
+            #
+            # QMetaObject.connectSlotsByName(self)
+        
+        # setupUi
+        
+        def retranslateUi(self):
+            self.groupBox.setTitle(u"\u542f\u52a8\u6a21\u5f0f")
+            self.radioButton.setText(u"client \u6a21\u5f0f")
+            self.radioButton_2.setText(u"server \u6a21\u5f0f")
+            self.label_2.setText(u"Java \u8def\u5f84\uff1a")
+            self.pushButton_2.setText(u"\u81ea\u52a8\u9009\u62e9Java")
+            self.label.setText(
+                u"\u989d\u5916JVM\u53c2\u6570\uff1a" if not self.pushButton.isChecked() else u"自定义JVM\u53c2\u6570\uff1a")
+            self.pushButton.setText(u"\u8986\u76d6\u9ed8\u8ba4JVM\u53c2\u6570")
+        
+        # retranslateUi
+        
+        def updateJavaPathIsAuto(self):
+            global settings
+            settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"] = self.pushButton_2.isChecked()
+            if not self.pushButton_2.isChecked():
+                self.lineEdit_2.setEnabled(True)
+                self.searchJava()
+            else:
+                self.lineEdit_2.clear()
+                self.lineEdit_2.setCurrentText("自动选择")
+                self.lineEdit_2.setEnabled(False)
+            self.retranslateUi()
+        
+        def updateJavaSelectPaths(self, data):
+            self.lineEdit_2.clear()
+            for i in data:
+                self.lineEdit_2.addItem(i)
+        
+        def searchJava(self):
+            thread = self.SearchVersionThread(self)
+            thread.versionHasGot.connect(self.updateJavaSelectPaths)
+            thread.start()
+        
+        def updateJVMArgIsOverride(self):
+            global settings
+            settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["is_override"] = self.pushButton.isChecked()
+            self.retranslateUi()
+    
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.frame = Panel(self)
+        self.horizontalLayout = QHBoxLayout(self.frame)
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.pages = {}
+        
+        self.page = self.GameSettings(self)
+        self.pushButton = PushButton(self.frame)
+        self.pushButton.setCheckable(True)
+        self.pushButton.setChecked(True)
+        self.pushButton.setAutoExclusive(True)
+        self.pushButton.pressed.connect(lambda: self.update_page(self.pushButton))
+        
+        self.horizontalLayout.addWidget(self.pushButton)
+        self.pages[self.pushButton] = self.page
+        
+        self.page_2 = self.JavaSettings(self)
+        self.pushButton_2 = PushButton(self.frame)
+        self.pushButton_2.setCheckable(True)
+        self.pushButton_2.setAutoExclusive(True)
+        self.pushButton_2.pressed.connect(lambda: self.update_page(self.pushButton_2))
+        
+        self.horizontalLayout.addWidget(self.pushButton_2)
+        self.pages[self.pushButton_2] = self.page_2
+        
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        
+        self.horizontalLayout.addItem(self.horizontalSpacer)
+        
+        self.verticalLayout.addWidget(self.frame)
+        
+        self.stackedWidget = QStackedWidget(self)
+        self.stackedWidget.setObjectName(u"stackedWidget")
+        self.stackedWidget.addWidget(self.page)
+        self.stackedWidget.addWidget(self.page_2)
+        
+        self.verticalLayout.addWidget(self.stackedWidget)
+        
+        self.retranslateUi()
+        #
+        # QMetaObject.connectSlotsByName(Form)
+    
+    # setupUi
+    
+    def retranslateUi(self):
+        self.pushButton.setText("游戏启动")
+        self.pushButton_2.setText("Java 设置")
+    
+    # retranslateUi
+    
+    def update_page(self, btn):
+        self.stackedWidget.setCurrentWidget(self.pages[btn])
 
 
 class UserPage(QFrame):
@@ -1152,7 +1586,12 @@ class MainWindow(RoundedWindow):
         super().__init__()
         self.resize(800, 600)
         self.setWindowIcon(QIcon("CMCL_icon.svg"))
-        self.setWindowTitle("Common Minecraft Launcher")
+        title = "Common Minecraft Launcher"
+        if random.randint(1, 100) == random.randint(1, 100):
+            title = "Chengwm's Minecraft Launcher"
+        if random.randint(1, 100000) == random.randint(1, 100000):
+            title = title.replace("Minecraft", "Minceraft")
+        self.setWindowTitle(title)
         # self.setWindowOpacity(0.9)
         self.titleBar.hide()
         self.titleBar = StandardTitleBar(self)
@@ -1172,15 +1611,21 @@ class MainWindow(RoundedWindow):
         self.topWidget.addItem(self.HomePage, "Home.svg", "主页")
         self.DownloadPage = DownloadPage(self)
         self.topWidget.addItem(self.DownloadPage, "Download.svg", "下载")
+        self.SettingsPage = SettingsPage(self)
+        self.topWidget.addItem(self.SettingsPage, "Settings.svg", "设置")
         self.UserPage = UserPage(self)
         self.topWidget.addItem(self.UserPage, "user_icon-black.svg", "用户",
                                pos=NavigationPanel.NavigationItemPosition.Right)
-        self.topWidget.addButton("auto_black.svg", "浅色", selectable=False,
+        self.topWidget.addButton("auto_black.svg", "浅色", selectable=False, pressed=self.toggle_theme,
                                  pos=NavigationPanel.NavigationItemPosition.Right)
         self.horizontalLayout.addWidget(self.topWidget)
         self.content = ContentPanel(self.centralwidget)
         self.horizontalLayout.addWidget(self.content, 1)
         self.topWidget.setContentWidget(self.content)
+        self.topWidget.fold()
+        timer = QTimer(self)
+        timer.timeout.connect(self.updateIcon)
+        timer.start(100)
         # tip = Tip(self)
         # self.horizontalLayout.addWidget(tip)
         # popoutTip = PopupTip(self)
@@ -1192,12 +1637,24 @@ class MainWindow(RoundedWindow):
         geometry = QGuiApplication.primaryScreen().geometry()
         point = QPoint(geometry.width() // 2 - self.width() // 2, geometry.height() // 2 - self.height() // 2)
         self.move(point)
-        self.show()
+        self.showNormal()
     
     @staticmethod
-    def start_login():
-        dialogue = LoginDialogue()
-        dialogue.exec()
+    def toggle_theme():
+        if getTheme() == Theme.Light:
+            setTheme(Theme.Dark)
+        elif getTheme() == Theme.Dark:
+            setTheme(Theme.Light)
+        for i in QGuiApplication.allWindows():
+            i.requestUpdate()
+    
+    def updateIcon(self):
+        if self.topWidget.button("4"):
+            self.topWidget.button("4").setIcon(
+                QIcon(f"user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
+        if self.topWidget.button("5"):
+            self.topWidget.button("5").setIcon(QIcon(f"auto_{'black' if getTheme() == Theme.Light else 'white'}.svg"))
+            self.topWidget.button("5").setText("浅色" if getTheme() == Theme.Light else "深色")
     
     def paintEvent(self, a0, **kwargs):
         painter = QPainter(self)
@@ -1205,7 +1662,6 @@ class MainWindow(RoundedWindow):
             QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
             QGradient(QGradient.Preset.PerfectWhite if getTheme() == Theme.Light else QGradient.Preset.PerfectBlue))
-        self.topWidget.button("3").setIcon(QIcon(f"user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
     
     def showEvent(self, a0):
         super().showEvent(a0)
@@ -1213,21 +1669,20 @@ class MainWindow(RoundedWindow):
         class OpacityAnimation(QVariantAnimation):
             def __init__(self, parent=None):
                 super().__init__(parent)
-                self.__realEffect = self.parent().graphicsEffect()
                 self.valueChanged.connect(self.__updateOpacity)
             
             def __updateOpacity(self, value):
                 op = QGraphicsOpacityEffect(self.parent())
                 op.setOpacity(self.currentValue() / 100)
                 if self.currentValue() == self.endValue():
-                    self.parent().setGraphicsEffect(self.__realEffect)
+                    self.parent().setGraphicsEffect(None)
                     return
                 self.parent().setGraphicsEffect(op)
         
         ani = QPropertyAnimation(self.content, b"pos", parent=self)
         ani.setDuration(1000)
         ani.setStartValue(QPoint(self.content.x(), self.content.y() + 300))
-        ani.setEndValue(QPoint(self.content.x(), self.content.y() - 45))
+        ani.setEndValue(QPoint(self.content.x(), self.content.y() + 5))
         ani.setEasingCurve(QEasingCurve.Type.OutQuad)
         ani.start()
         ani2 = OpacityAnimation(self.content)
@@ -1252,8 +1707,17 @@ class LoggingWindow(RoundedWindow):
                 string = QTextCharFormat()
                 string.setForeground(QColor(0, 170, 9))
                 
+                command = QTextCharFormat()
+                command.setForeground(QColor(144, 0, 200))
+                
+                url = QTextCharFormat()
+                url.setForeground(QColor(100, 80, 255))
+                url.setFontUnderline(True)
+                
                 self.highlight_styles["state"] = state
                 self.highlight_styles["string"] = string
+                self.highlight_styles["command"] = command
+                self.highlight_styles["url"] = url
                 
                 stringprefix = r"(?i:r|u|f|fr|rf|b|br|rb)?"
                 sqstring = stringprefix + r"'[^'\\\n]*(\\.[^'\\\n]*)*'?"
@@ -1264,7 +1728,9 @@ class LoggingWindow(RoundedWindow):
                 
                 self.rules.extend([
                     (r"\[.+\]:", 0, "state"),
-                    (string, 0, "string")
+                    (string, 0, "string"),
+                    # (r"([^.]-.+\s|[^.]--.+\s|[^.]\"-.+\"|[^.]\'--.+\')", 0, "command"),
+                    (r"http[s]?://.+", 0, "url")
                 ])
         
         Default_Highlighter = Highlighter
@@ -1375,7 +1841,7 @@ class LoggingWindow(RoundedWindow):
         # self.inputtext.setToolTip("Enter command below and press 'Return' to execute command.")
         self.canOutput = True
         self.retranslateUI()
-        self.cmd = self.Executer({"frame": frame, "player": player})
+        self.cmd = self.Executer({"frame": frame, "player": player, "testtextof2233": testtextof2233})
         self.history_command = []
         self.current_history = 0
     
@@ -1402,6 +1868,11 @@ class LoggingWindow(RoundedWindow):
             self.cmd.process_command(self.inputtext.text())
             self.inputtext.clear()
             self.current_history = 0
+    
+    def closeEvent(self, a0):
+        super().closeEvent(a0)
+        for i in QGuiApplication.allWindows():
+            i.close()
     
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
@@ -1518,10 +1989,16 @@ def login_user(name_or_token=b"", is_refresh_login=False):
         else:
             token = name_or_token
         token = token.decode()
-        status, name, uuid, access_token, refresh_token, has_mc = get_user_data(token, is_refresh_login)
-        byte_name = b"".join(
-            [str(name[i] if i < len(name) else random.randrange(0, 10)).encode("utf-8") for i in range(16)])
-        key = str(UUID(bytes=byte_name))
+        status, player, refresh_token = MicrosoftPlayerLogin(token, is_refresh_login)
+        if not is_refresh_login:
+            byte_name = b"".join(
+                [str(player.player_name[i] if i < len(player.player_name) else random.randrange(0, 10)).encode("utf-8")
+                 for
+                 i in range(16)])
+            key = str(UUID(bytes=byte_name))
+        else:
+            byte_name = b"1234567890123456"
+            key = name_or_token.decode()
         if refresh_token:
             if not is_refresh_login:
                 cursor.execute(
@@ -1534,59 +2011,90 @@ def login_user(name_or_token=b"", is_refresh_login=False):
         conn.close()
         with open("current_user.DAT", "wb") as file:
             file.write(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" + r"\x0".join(
-                list(key)).encode() + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
-        return name, uuid, access_token, has_mc
+                [str(i) for i in list(key)]).encode() + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+        return player
     except:
         traceback.print_exc()
-        return None, None, None, False
+        return MicrosoftPlayer(None, None, None, False)
 
 
 class LoginThread(QThread):
-    loginFinished = pyqtSignal(tuple)
+    loginFinished = pyqtSignal(MicrosoftPlayer)
     
     def run(self):
         try:
             data = Path("current_user.DAT").read_bytes().replace(
                 b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", b"").replace(br"\x0", b"")
-            datas = login_user(data, True)
+            data = login_user(data, True)
         except FileNotFoundError:
             Path("current_user.DAT").write_text("", encoding="utf-8")
         finally:
             try:
-                self.loginFinished.emit(datas)
+                self.loginFinished.emit(data)
             except NameError:
-                self.loginFinished.emit((None, None, None, False))
+                self.loginFinished.emit(MicrosoftPlayer(None, None, None, False))
 
 
-def update_user(datas):
+def update_user(data):
     global player
-    if datas:
-        player.player_name = datas[0]
-        player.player_uuid = datas[1]
-        player.player_accessToken = datas[2]
-        player.player_hasMC = datas[3]
+    if data:
+        player.player_name = data.player_name
+        player.player_uuid = data.player_uuid
+        player.player_accessToken = data.player_accessToken
+        player.player_hasMC = data.player_hasMC
 
 
 Path("error.log").write_text("", encoding="utf-8")
 Path("latest.log").write_text("", encoding="utf-8")
 
 
+def exception(*args, **kwargs):
+    Path("settings.json").write_text(json.dumps(settings, indent=2))
+
+
 def __excepthook__(*args, **kwargs):
-    traceback.print_exception(*args, **kwargs)
-    if DEBUG:
+    try:
+        traceback.print_exception(*args, **kwargs)
+        exception(*args, **kwargs)
+    finally:
         Path("error.log").open("a", encoding="utf-8").write("".join(traceback.format_exception(*args, **kwargs)))
 
 
 sys.excepthook = __excepthook__
-
-if not ctypes.windll.shell32.IsUserAnAdmin():
-    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-    sys.exit(0)
+if platform.system().lower() == "windows":
+    if not ctypes.windll.shell32.IsUserAnAdmin():
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+        sys.exit(0)
 logging.basicConfig(
     level=logging.NOTSET,
     format="[%(asctime)s][%(levelname)s]:%(message)s",
     datefmt="%Y/%m/%d][%H:%M:%S %p"
 )
+if Path("settings.json").exists():
+    settings = json.loads(Path("settings.json").read_text("utf-8"))
+else:
+    Path("settings.json").write_text("", encoding="utf-8")
+    settings = {
+        "Settings": {
+            "JavaSettings": {
+                "Java": {
+                    "Path": {
+                        "is_auto": True,
+                        "value": None
+                    }
+                },
+                "JVM": {
+                    "Arg": {
+                        "is_override": False,
+                        "value": None
+                    }
+                }
+            },
+            "GameSettings": {
+                "ExtraGameCommand": None,
+            }
+        }
+    }
 app = QApplication(sys.argv)
 app.setFont(QFont("Minecraft AE"))
 player = create_online_player(None, None, None, False)
@@ -1612,3 +2120,4 @@ thread = LoginThread()
 thread.loginFinished.connect(update_user)
 thread.start()
 app.exec()
+Path("settings.json").write_text(json.dumps(settings, indent=2))

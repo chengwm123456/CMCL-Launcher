@@ -24,10 +24,11 @@ class LineNumberTextEdit(TextEdit):
             self.setFixedWidth(width)
             self.__codeEditor.setViewportMargins(width, 0, 0, 0)
         
-        def paintEvent(self, a0, **kwargs):
-            super().paintEvent(event)
+        def paintEvent(self, a0):
+            super().paintEvent(a0)
             self.setFont(self.__codeEditor.font())
             painter = QPainter(self)
+            painter.setOpacity(self.property("Opacity"))
             painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
             pp = QPainterPath()
             painter.setPen(getBorderColour())
@@ -45,7 +46,7 @@ class LineNumberTextEdit(TextEdit):
             current_block = self.__codeEditor.textCursor().block().blockNumber()
             while block.isValid():
                 if block.blockNumber() == current_block:
-                    painter.setPen(getBorderColour(highlight=True))
+                    painter.setPen(getBorderColour(is_highlight=True))
                 else:
                     painter.setPen(getForegroundColour())
                 painter.setFont(self.font())

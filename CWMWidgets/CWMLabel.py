@@ -19,13 +19,15 @@ class LabelBase(QLabel):
     
     def __init__(self, *__args):
         super().__init__(*__args)
-        self.setStyleSheet(
-            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {1.0 if self.underMouse() else 0.6 if self.isEnabled() else 0.3})")
         self.installEventFilter(ToolTip(self))
+        self.installEventFilter(self)
+        self.setProperty("Opacity", 0.6)
+        self.setStyleSheet(
+            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {self.property('Opacity')})")
     
     def paintEvent(self, a0):
         self.setStyleSheet(
-            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {1.0 if self.underMouse() else 0.6 if self.isEnabled() else 0.3})")
+            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {self.property('Opacity')})")
         super().paintEvent(a0)
     
     def contextMenuEvent(self, e):
@@ -73,6 +75,135 @@ class LabelBase(QLabel):
             select_all.setShortcut("Ctrl+A")
             menu.addAction(select_all)
             menu.exec(self.mapToGlobal(e.pos()))
+    
+    def eventFilter(self, a0, a1):
+        if self != a0:
+            return super().eventFilter(a0, a1)
+        match a1.type():
+            case QEvent.Type.MouseButtonPress:
+                if self.isEnabled():
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(self.property("Opacity"))
+                    ani.setEndValue(1.0)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+                else:
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(self.property("Opacity"))
+                    ani.setEndValue(0.3)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+            case QEvent.Type.MouseMove:
+                if self.isEnabled():
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(self.property("Opacity"))
+                    ani.setEndValue(1.0)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+                else:
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(self.property("Opacity"))
+                    ani.setEndValue(0.3)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+            case QEvent.Type.Enter:
+                if self.isEnabled():
+                    if not self.hasFocus():
+                        ani = QPropertyAnimation(self, b"Opacity", self)
+                        ani.setDuration(500)
+                        ani.setStartValue(self.property("Opacity"))
+                        ani.setEndValue(1.0)
+                        ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        ani.finished.connect(ani.deleteLater)
+                        ani.start()
+                else:
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(self.property("Opacity"))
+                    ani.setEndValue(0.3)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+            case QEvent.Type.FocusIn:
+                if self.isEnabled():
+                    if not self.underMouse():
+                        ani = QPropertyAnimation(self, b"Opacity", self)
+                        ani.setDuration(500)
+                        ani.setStartValue(self.property("Opacity"))
+                        ani.setEndValue(1.0)
+                        ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        ani.finished.connect(ani.deleteLater)
+                        ani.start()
+                else:
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(self.property("Opacity"))
+                    ani.setEndValue(0.3)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+            case QEvent.Type.Leave:
+                if self.isEnabled():
+                    if not self.hasFocus():
+                        ani = QPropertyAnimation(self, b"Opacity", self)
+                        ani.setDuration(500)
+                        ani.setStartValue(self.property("Opacity"))
+                        ani.setEndValue(0.6)
+                        ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        ani.finished.connect(ani.deleteLater)
+                        ani.start()
+                else:
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(self.property("Opacity"))
+                    ani.setEndValue(0.3)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+            case QEvent.Type.FocusOut:
+                if self.isEnabled():
+                    if not self.underMouse():
+                        ani = QPropertyAnimation(self, b"Opacity", self)
+                        ani.setDuration(500)
+                        ani.setStartValue(self.property("Opacity"))
+                        ani.setEndValue(0.6)
+                        ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        ani.finished.connect(ani.deleteLater)
+                        ani.start()
+                else:
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(self.property("Opacity"))
+                    ani.setEndValue(0.3)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+            case QEvent.Type.EnabledChange:
+                if self.isEnabled():
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(0.3)
+                    ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+                else:
+                    ani = QPropertyAnimation(self, b"Opacity", self)
+                    ani.setDuration(500)
+                    ani.setStartValue(self.property("Opacity"))
+                    ani.setEndValue(0.3)
+                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    ani.finished.connect(ani.deleteLater)
+                    ani.start()
+        return super().eventFilter(a0, a1)
 
 
 class Label(LabelBase):

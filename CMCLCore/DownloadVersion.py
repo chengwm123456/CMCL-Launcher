@@ -131,7 +131,8 @@ def DownloadLibraryFiles(version: Union[str, None] = None,
             _DownloadLibraryFile(url, path)
 
 
-def download_game(minecraft_path: Union[str, Path, os.PathLike, LiteralString] = ".", version: Union[str, None] = None):
+def DownloadMinecraft(minecraft_path: Union[str, Path, os.PathLike, LiteralString] = ".",
+                      version: Union[str, None] = None):
     minecraft_path = Path(minecraft_path)
     Path(minecraft_path / "versions" / version).mkdir(parents=True, exist_ok=True)
     if not Path(minecraft_path / "versions" / version / f"{version}.json").exists():

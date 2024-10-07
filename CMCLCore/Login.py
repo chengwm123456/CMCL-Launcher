@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from typing import *
+from .Player import MicrosoftPlayer
 
 import requests
 
@@ -11,11 +12,8 @@ logging.basicConfig(
 )
 
 
-def get_user_data(token: str = "", is_refresh_login: bool = False) -> Tuple[
-    str, Optional[str], Optional[str], Optional[str], Optional[str], bool]:
-    user_name = None
-    uuid = None
-    minecraft_access_token = None
+def MicrosoftPlayerLogin(token: str = "", is_refresh_login: bool = False) -> Tuple[str, MicrosoftPlayer, Optional[str]]:
+    user_name = uuid = ""
     has_mc = False
     if is_refresh_login:
         params = {
@@ -43,7 +41,7 @@ def get_user_data(token: str = "", is_refresh_login: bool = False) -> Tuple[
         access_token_1 = response.json()['access_token']
         refresh_token = response.json()['refresh_token']
     else:
-        return "Unsuccessfully", None, None, None, None, False
+        return "Unsuccessfully", MicrosoftPlayer(None, None, None, False), None
     json_in_step_2 = {
         "Properties": {
             "AuthMethod": "RPS",
@@ -79,7 +77,7 @@ def get_user_data(token: str = "", is_refresh_login: bool = False) -> Tuple[
     xsts_token = response_3.json()["Token"]
     uhs2 = response_3.json()["DisplayClaims"]["xui"][0]["uhs"]
     if uhs != uhs2:
-        return "Unsuccessfully", None, None, None, None, False
+        return "Unsuccessfully", MicrosoftPlayer(None, None, None, False), None
     response_4 = requests.post(
         "https://api.minecraftservices.com/authentication/login_with_xbox",
         json={"identityToken": f"XBL3.0 x={uhs};{xsts_token}"},
@@ -94,10 +92,11 @@ def get_user_data(token: str = "", is_refresh_login: bool = False) -> Tuple[
     if response_profile.json().get("id") is not None and response_profile.json().get("name") is not None:
         uuid = response_profile.json()["id"]
         user_name = response_profile.json()["name"]
-    response_mc = requests.get("https://api.minecraftservices.com/entitlements/mcstore",
-                               headers={"Authorization": f"Bearer {minecraft_access_token}"},
-                               verify=True
-                               )
+    response_mc = requests.get(
+        "https://api.minecraftservices.com/entitlements/mcstore",
+        headers={"Authorization": f"Bearer {minecraft_access_token}"},
+        verify=True
+    )
     if response_mc.text:
         has_mc = True
-    return "Successfully", user_name, uuid, minecraft_access_token, refresh_token, has_mc
+    return "Successfully", MicrosoftPlayer(user_name, uuid, minecraft_access_token, has_mc), refresh_token

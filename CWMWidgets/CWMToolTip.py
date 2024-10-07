@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import *
 from .CWMThemeControl import *
 
 
-class ToolTipBase(QLabel):
+class ToolTipWidget(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
         self.setStyleSheet(
@@ -37,17 +37,20 @@ class ToolTipBase(QLabel):
 class ToolTip(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
-        self.__tooltip = ToolTipBase(self.parent().parent())
-        self.__tooltip.setText(parent.toolTip())
+        self.__tooltip = ToolTipWidget(self.parent().parent())
+        self.__tooltip.setText(self.parent().toolTip())
         self.__tooltip.adjustSize()
-        pos = parent.mapTo(parent.parent(), QPoint(0, 0))
+        pos = self.parent().mapTo(self.parent().parent(), QPoint(0, 0))
         x = (
-                pos.x() + parent.width()) if pos.x() + parent.width() + self.__tooltip.width() <= parent.parent().width() else (
+                pos.x() + self.parent().width()) if pos.x() + self.parent().width() + self.__tooltip.width() <= self.parent().parent().width() else (
                 pos.x() - self.__tooltip.width())
         y = pos.y() - 5 - self.__tooltip.height()
-        x = min(max(5, x), parent.parent().width() - self.__tooltip.width() - 5)
-        y = min(max(5, y), parent.parent().height() - self.__tooltip.height() - 5)
+        if y + self.__tooltip.height() >= self.parent().y() or y < 5:
+            y = self.parent().mapTo(self.parent().parent(), QPoint(0, self.parent().height())).y()
+        x = min(max(5, x), self.parent().parent().width() - self.__tooltip.width() - 5)
+        y = min(max(5, y), self.parent().parent().height() - self.__tooltip.height() - 5)
         self.__tooltip.move(x, y)
+        self.__tooltip.raise_()
     
     def eventFilter(self, a0, a1):
         match a1.type():
@@ -59,6 +62,8 @@ class ToolTip(QWidget):
                             pos.x() + a0.width()) if pos.x() + a0.width() + self.__tooltip.width() <= a0.parent().width() else (
                             pos.x() - self.__tooltip.width())
                     y = pos.y() - 5 - self.__tooltip.height()
+                    if y + self.__tooltip.height() >= a0.y() or y < 5:
+                        y = a0.mapTo(a0.parent(), QPoint(0, a0.height())).y()
                     x = min(max(5, x), a0.parent().width() - self.__tooltip.width() - 5)
                     y = min(max(5, y), a0.parent().height() - self.__tooltip.height() - 5)
                     self.__tooltip.move(x, y)
@@ -67,13 +72,15 @@ class ToolTip(QWidget):
                     if a0.toolTipDuration() > 0:
                         QTimer.singleShot(a0.toolTipDuration(), self.__tooltip.hide)
                 return True
-            case QEvent.Type.ToolTipChange:
-                self.__tooltip.setText(a0.toolTip())
-            case QEvent.Type.FontChange:
-                self.__tooltip.setFont(a0.font())
             case QEvent.Type.Leave:
                 if not self.__tooltip.underMouse():
                     self.__tooltip.hide()
             case QEvent.Type.Hide:
                 self.__tooltip.hide()
+            case QEvent.Type.ToolTipChange:
+                self.__tooltip.setText(a0.toolTip())
+            case QEvent.Type.FontChange:
+                self.__tooltip.setFont(a0.font())
+            case QEvent.Type.ParentChange:
+                self.__tooltip.setParent(a0.parent())
         return super().eventFilter(a0, a1)

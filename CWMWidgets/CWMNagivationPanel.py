@@ -32,18 +32,18 @@ class NavigationPanel(Panel):
             self.selectAt(page)
         page.setParent(self.__content_widget)
         item.pressed.connect(lambda: self.selectAt(page))
-        role = role or str(self.__verticalLayout.count())
         self.items[item] = page
-        self.roles[role] = item
         page.hide()
         match pos:
             case self.NavigationItemPosition.Left:
-                pos = len(self.items) - 1
+                pos = self.__verticalLayout.count() - 1
             case self.NavigationItemPosition.Right:
                 pos = -1
             case _:
-                pos = len(self.items) - 1
+                pos = self.__verticalLayout.count() - 1
         self.__verticalLayout.insertWidget(pos, item)
+        role = role or str(self.__verticalLayout.count() - 1)
+        self.roles[role] = item
     
     def removeItem(self, data):
         if isinstance(data, int):
@@ -71,13 +71,13 @@ class NavigationPanel(Panel):
             btn.pressed.connect(kwargs.get("pressed"))
         match pos:
             case self.NavigationItemPosition.Left:
-                pos = len(self.items) - 1
+                pos = self.__verticalLayout.count() - 1
             case self.NavigationItemPosition.Right:
                 pos = -1
             case _:
-                pos = len(self.items) - 1
+                pos = self.__verticalLayout.count() - 1
         self.__verticalLayout.insertWidget(pos, btn)
-        role = role or str(self.__verticalLayout.count())
+        role = role or str(self.__verticalLayout.count() - 1)
         self.roles[role] = btn
     
     def button(self, data):
