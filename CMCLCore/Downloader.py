@@ -28,14 +28,12 @@ class Downloader:
             content_length = Decimal(requests.head(self.download_url).headers.get("Content-Length", 0))
             with ThreadPoolExecutor(max_workers=self.maximum_threads) as executor:
                 futures = []
-                current_thread_num = Decimal(threading.active_count() - 1)
-                chunk_size = Decimal(current_thread_num)
-                for i in range(int(current_thread_num)):
-                    start_point = Decimal(i * chunk_size)
-                    end_point = Decimal(
-                        start_point + chunk_size - 1 if i < current_thread_num - 1 else content_length - 1)
+                start_pos = Decimal("0")
+                while start_pos < content_length + int(content_length % 1024):
                     futures.append(
-                        executor.submit(self.__download_chunk, self.download_url, start_point, end_point))
+                        executor.submit(self.__download_chunk, self.download_url, start_pos,
+                                        min(start_pos + 1024, content_length)))
+                    start_pos += 1024
                 
                 for future in as_completed(futures):
                     queue.put(future.result())
