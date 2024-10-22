@@ -3,9 +3,9 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from .CWMToolTip import ToolTip
-from .CWMWindows import RoundedMenu
-from .CWMThemeControl import *
+from CMCLWidgets.ToolTip import ToolTip
+from CMCLWidgets.Windows import RoundedMenu
+from ..ThemeManager import *
 
 
 class LineEdit(QLineEdit):
@@ -35,7 +35,7 @@ class LineEdit(QLineEdit):
         painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus()))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
         op = QStyleOptionFrame()
         op.initFrom(self)
         self.initStyleOption(op)

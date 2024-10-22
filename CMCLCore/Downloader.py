@@ -6,24 +6,24 @@ import requests
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from decimal import Decimal
-from pathlib import Path
+from pathlib import Path, PurePath
 from queue import Queue
 
 
 class Downloader:
-    def __init__(self, download_url: str, download_file_name: Union[Path, str, os.PathLike, LiteralString] = Path(),
-                 download_file_path: Union[Path, str, os.PathLike, LiteralString] = "",
-                 maximum_threads: int = 64):
+    def __init__(self, download_url: str, download_file_name: Union[str, Path, PurePath, os.PathLike, LiteralString],
+                 download_file_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = ".",
+                 maximum_threads: Union[int, str] = 64):
         self.download_url = download_url
         self.download_file_name = Path(download_file_name)
         self.download_file_path = Path(download_file_path)
         self.maximum_threads = int(maximum_threads)
     
-    def download(self, maximum_threads: Union[int, None] = None):
+    def download(self, maximum_threads: Optional[Union[int, str]] = None):
         if maximum_threads is not None:
-            self.maximum_threads = maximum_threads
+            self.maximum_threads = int(maximum_threads)
         queue = Queue()
-        range_request_state = requests.head(self.download_url).headers.get("Accept-Range", "none")
+        range_request_state = requests.head(self.download_url).headers.get("Accept-Range", "none").lower()
         if range_request_state != "none":
             content_length = Decimal(requests.head(self.download_url).headers.get("Content-Length", 0))
             with ThreadPoolExecutor(max_workers=self.maximum_threads) as executor:

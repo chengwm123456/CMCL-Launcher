@@ -7,7 +7,7 @@ import zipfile
 from typing import *
 
 import psutil
-from pathlib import Path
+from pathlib import Path, PurePath
 import subprocess
 import shlex
 from enum import Enum
@@ -75,7 +75,7 @@ def GetJavaPath(version: Union[str, int]) -> Optional[Union[str, Path]]:
     return None
 
 
-def FixMinecraftFiles(minecraft_path: Union[str, Path, os.PathLike, LiteralString], version_fix: str):
+def FixMinecraftFiles(minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString], version_fix: str):
     if not Path(minecraft_path).exists():
         os.makedirs(minecraft_path)
     os.chdir(minecraft_path)
@@ -143,7 +143,7 @@ def FixMinecraftFiles(minecraft_path: Union[str, Path, os.PathLike, LiteralStrin
 
 
 def UnpackMinecraftNativeFiles(
-        minecraft_path: Union[str, Path, os.PathLike, LiteralString],
+        minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString],
         version_launch: str
 ):
     jsons = json.loads(
@@ -168,15 +168,27 @@ def UnpackMinecraftNativeFiles(
                 path_classifiers = path_artifact
             try:
                 print(path_classifiers, Path(path_classifiers).exists())
-                zipfile.ZipFile(path_classifiers, "r").extractall(
-                    Path(minecraft_path / "versions" / version_launch / f"{version_launch}-natives"))
+                exclude = data.get("extract", {}).get("exclude", [])
+                natives_jar = zipfile.ZipFile(path_classifiers, "r")
+                if exclude:
+                    for i in natives_jar.filelist:
+                        filename = PurePath(i.filename)
+                        for j in exclude:
+                            if PurePath(j).parts in filename.parts:
+                                break
+                        else:
+                            natives_jar.extract(i, PurePath(
+                                minecraft_path / "versions" / version_launch / f"{version_launch}-natives") / filename)
+                else:
+                    natives_jar.extractall(
+                        PurePath(minecraft_path / "versions" / version_launch / f"{version_launch}-natives"))
             except FileNotFoundError:
                 pass
 
 
 def GenerateMinecraftLaunchCommand(
-        minecraft_path: Union[str, Path, os.PathLike, LiteralString],
-        java_path: Union[str, Path, os.PathLike, LiteralString],
+        minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString],
+        java_path: Union[str, Path, PurePath, os.PathLike, LiteralString],
         version_launch: str,
         player_data: Player,
         jvm_arguments: Optional[Union[str, list]],
@@ -187,6 +199,7 @@ def GenerateMinecraftLaunchCommand(
         launcher_name: str,
         launcher_version: str,
 ) -> str:
+    minecraft_path = Path(minecraft_path).absolute()
     mc_json = json.loads(
         Path(minecraft_path / "versions" / version_launch / f"{version_launch}.json").read_text(encoding="utf-8"))
     mc_libraries_file_datas = mc_json.get("libraries", [])
@@ -217,13 +230,12 @@ def GenerateMinecraftLaunchCommand(
             mc_lib_path = Path(mc_lib_base_path / mc_lib_secondary_path)
             mc_lib_path_artifact = Path(mc_libraries_path / mc_lib_path)
             mc_libraries_files.append(str(mc_lib_path_artifact))
-    mc_libraries_files = ":" if not GetOperationSystem.GetOperationSystemName()[0] == "Windows" else ";".join(
+    mc_libraries_files = (":" if not GetOperationSystem.GetOperationSystemName()[0] == "Windows" else ";").join(
         mc_libraries_files)
     if initial_memory is None or max_memory is None:
         initial_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))
         max_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))
     memory_args = f"-Xmn{str(initial_memory)} -Xmx{str(max_memory)}"
-    player_name, player_uuid, player_access_token, player_has_mc, player_type = player_data
     game_jar_path = Path(minecraft_path / "versions" / version_launch / f"{version_launch}.jar")
     assets = mc_json.get("assets")
     main_class = mc_json.get("mainClass")
@@ -240,7 +252,7 @@ def GenerateMinecraftLaunchCommand(
         mc_game_command = []
         for arg in mc_game_arguments:
             if isinstance(arg, dict):
-                if arg["value"] == "--demo" and player_has_mc:
+                if arg.get("value") == "--demo" and player_data.player_hasMC:
                     continue
                 rules = arg.get("rules", [{}])[0]
                 value = arg.get("value", "")
@@ -268,21 +280,21 @@ def GenerateMinecraftLaunchCommand(
                         mc_game_command.append(str_arg)
             else:
                 str_arg = arg
-                str_arg = str_arg.replace("${auth_player_name}", f'"{player_name}"')
+                str_arg = str_arg.replace("${auth_player_name}", f'"{player_data.player_name}"')
                 str_arg = str_arg.replace("${version_name}", f'"{version_launch}"')
                 str_arg = str_arg.replace("${game_directory}", f'"{minecraft_path}"')
                 str_arg = str_arg.replace("${assets_root}", f'"{Path(minecraft_path / "assets")}"')
                 str_arg = str_arg.replace("${assets_index_name}", f'"{assets}"')
-                str_arg = str_arg.replace("${auth_uuid}", f'"{player_uuid}"')
-                str_arg = str_arg.replace("${auth_access_token}", f'"{player_access_token}"')
+                str_arg = str_arg.replace("${auth_uuid}", f'"{player_data.player_uuid}"')
+                str_arg = str_arg.replace("${auth_access_token}", f'"{player_data.player_accessToken}"')
                 str_arg = str_arg.replace("${clientid}", f"${{clientid}}")
                 str_arg = str_arg.replace("${auth_xuid}", f"${{auth_xuid}}")
-                str_arg = str_arg.replace("${user_type}", f'"{player_type}"')
+                str_arg = str_arg.replace("${user_type}", f'"{player_data.player_accountType[1]}"')
                 str_arg = str_arg.replace("${version_type}", f'"{version_type}"')
                 mc_game_command.append(str_arg)
         if extra_game_command:
             mc_game_command.append(extra_game_command.strip(" "))
-        mc_game_command = " ".join(mc_game_command)
+        mc_game_command = shlex.join(mc_game_command)
         mc_jvm_arguments = mc_arguments.get("jvm", [])
         for arg in mc_jvm_arguments:
             if isinstance(arg, dict):
@@ -296,26 +308,16 @@ def GenerateMinecraftLaunchCommand(
                 value = arg["value"]
                 if isinstance(value, list):
                     for one_val in value:
-                        if len(one_val.split("=")) > 1:
-                            value_need = one_val.split("=")
-                            value_need_str = value_need[1]
-                            if (" " in value_need_str or " " in one_val) and not (
-                                    value_need_str.startswith('"') and value_need_str.endswith('"')):
-                                value_need_str = f'"{value_need_str}"'
-                            one_val = f"{value_need[0]}={value_need_str}"
+                        if " " in one_val:
+                            one_val = f'"{shlex.quote(one_val)}"'
                         mc_jvm_command.append(one_val)
                 else:
                     mc_jvm_command.append(value)
             else:
                 natives_dir = Path(minecraft_path / "versions" / version_launch / f"{version_launch}-natives")
                 str_arg = arg
-                if len(str_arg.split("=")) > 1:
-                    value_need = str_arg.split("=")
-                    value_need_str = value_need[1]
-                    if (" " in value_need_str or " " in str_arg) and not (
-                            value_need_str.startswith('"') and value_need_str.endswith('"')):
-                        value_need_str = f'"{value_need_str}"'
-                    str_arg = f"{value_need[0]}={value_need_str}"
+                if " " in str_arg:
+                    str_arg = f'"{shlex.quote(str_arg)}"'
                 str_arg = str_arg.replace("${natives_directory}", f'"{natives_dir}"')
                 str_arg = str_arg.replace("${launcher_name}", f'"{launcher_name}"')
                 str_arg = str_arg.replace("${launcher_version}", f'"{launcher_version}"')
@@ -325,11 +327,11 @@ def GenerateMinecraftLaunchCommand(
         mc_jvm_command.append(memory_args)
         mc_jvm_command.append(
             f"-Xmixed {main_class}")
-        mc_jvm_command = " ".join(mc_jvm_command)
+        mc_jvm_command = shlex.join(mc_jvm_command)
     elif mc_json.get("minecraftArguments"):
         mc_game_command = mc_json["minecraftArguments"]
-        mc_game_command = mc_game_command.replace("${auth_session}", f'"{player_access_token}"')
-        mc_game_command = mc_game_command.replace("${auth_player_name}", f'"{player_name}"')
+        mc_game_command = mc_game_command.replace("${auth_session}", f'"{player_data.player_accessToken}"')
+        mc_game_command = mc_game_command.replace("${auth_player_name}", f'"{player_data.player_name}"')
         mc_game_command = mc_game_command.replace("${version_name}", f'"{version_launch}"')
         mc_game_command = mc_game_command.replace("${game_directory}", f'"{minecraft_path}"')
         mc_game_command = mc_game_command.replace("${assets_root}",
@@ -337,28 +339,28 @@ def GenerateMinecraftLaunchCommand(
         mc_game_command = mc_game_command.replace("${game_assets}",
                                                   f'"{Path(minecraft_path / "assets" / "virtual" / "legacy")}"')
         mc_game_command = mc_game_command.replace("${assets_index_name}", f'"{assets}"')
-        mc_game_command = mc_game_command.replace("${auth_uuid}", f'"{player_uuid}"')
-        mc_game_command = mc_game_command.replace("${auth_access_token}", f'"{player_access_token}"')
+        mc_game_command = mc_game_command.replace("${auth_uuid}", f'"{player_data.player_uuid}"')
+        mc_game_command = mc_game_command.replace("${auth_access_token}", f'"{player_data.player_accessToken}"')
         # c = c.replace("${clientid}", "${clientid}")
         # c = c.replace("${auth_xuid}", "${auth_xuid}")
-        mc_game_command = mc_game_command.replace("${user_type}", f'"{player_type}"')
+        mc_game_command = mc_game_command.replace("${user_type}", f'"{player_data.player_accountType[1]}"')
         mc_game_command = mc_game_command.replace("${version_type}", f'"{version_type}"')
         if extra_game_command:
             mc_game_command = mc_game_command.split(" ")
             mc_game_command.append(extra_game_command.strip(" "))
-            mc_game_command = " ".join(mc_game_command)
-        mc_jvm_command = f"{' '.join(mc_jvm_command)} -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{str(Path(minecraft_path / 'versions' / version_launch / f'{version_launch}-natives'))}\" -cp \"{mc_libraries_files}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{game_jar_path}\" {memory_args} -Xmixed {main_class}"
+            mc_game_command = shlex.join(mc_game_command)
+        mc_jvm_command = f"{shlex.join(mc_jvm_command)} -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{str(Path(minecraft_path / 'versions' / version_launch / f'{version_launch}-natives'))}\" -cp \"{mc_libraries_files}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{game_jar_path}\" {memory_args} -Xmixed {main_class}"
     else:
         mc_jvm_command = mc_game_command = ""
     if isinstance(player_data, AuthlibInjectorPlayer):
         authlib_injector_jar_path = Path(r".\authlib-injector.jar")
-        auth_url = player_data.player_authServer  # "https://littleskin.cn/api/yggdrasil"
-        token = player_data.player_signaturePublickey
-        mc_authlib_injector_command = "".join(
+        authentication_server_url = player_data.player_authServer  # "https://littleskin.cn/api/yggdrasil"
+        signature_publickey = player_data.player_signaturePublickey.replace("\n", "")
+        mc_authlib_injector_command = shlex.join(
             [
-                f"-javaagent:\"{authlib_injector_jar_path}\"=\"{auth_url}\"",
-                f"-Dauthlibinjector.side={'client'}",
-                f"-Dauthlibinjector.yggdrasil.prefetched=\"{token}\""
+                f'-javaagent:"{shlex.quote(str(authlib_injector_jar_path)[1:-1])}"="{shlex.quote(authentication_server_url)[1:-1]}"',
+                '-Dauthlibinjector.side="client"',
+                f'-Dauthlibinjector.yggdrasil.prefetched="{shlex.quote(signature_publickey)[1:-1]}"'
             ]
         )
     else:

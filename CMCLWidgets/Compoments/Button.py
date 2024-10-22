@@ -3,8 +3,8 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from .CWMThemeControl import *
-from .CWMToolTip import ToolTip
+from ..ThemeManager import *
+from CMCLWidgets.ToolTip import ToolTip
 
 
 class PushButton(QPushButton):
@@ -483,6 +483,10 @@ class CheckBox(QCheckBox):
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        op = QStyleOptionButton()
+        op.initFrom(self)
+        self.initStyleOption(op)
+        op.rect.adjust(min(5, self.width()), min(5, self.height()), -min(5, self.width()), -min(5, self.height()))
         painter = QPainter(self)
         painter.setOpacity(self.property("Opacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -494,29 +498,27 @@ class CheckBox(QCheckBox):
                                                                          self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus()) and self.isEnabled())))
         painter.setBrush(getBackgroundColour(is_highlight=(self.isDown() or self.isChecked()) or (
                 (self.isDown() or self.isChecked()) and self.isEnabled())))
-        painter.drawRoundedRect(QRect(1, (self.height() - 24) // 2, 24, 24), 10, 10)
+        rect = self.style().subElementRect(QStyle.SubElement.SE_CheckBoxIndicator, op).adjusted(1, 1, -1, -1)
+        painter.drawRoundedRect(rect, 10, 10)
         painter.save()
         painter.setPen(getForegroundColour())
         painter.setBrush(Qt.GlobalColor.transparent)
         match self.checkState():
             case Qt.CheckState.Checked:
                 painter.drawLines([QLine(
-                    QPoint(6 + 1, ((self.height() - 24) // 2) + 12),
-                    QPoint(12 + 1, ((self.height() - 24) // 2) + 18)),
+                    QPoint(4 + rect.x(), rect.y() + 8),
+                    QPoint(rect.width() // 2 + rect.x(), rect.y() + 11)),
                     QLine(
-                        QPoint(12 + 1, ((self.height() - 24) // 2) + 18),
-                        QPoint(18 + 1, ((self.height() - 24) // 2) + 6))])
+                        QPoint(rect.width() // 2 + rect.x(), rect.y() + 11),
+                        QPoint(10 + rect.x(), rect.y() + 4))])
             case Qt.CheckState.PartiallyChecked:
                 painter.drawLine(QLine(
-                    QPoint(6 + 1, ((self.height() - 24) // 2) + 12),
-                    QPoint(18 + 1, ((self.height() - 24) // 2) + 12)
+                    QPoint(4 + rect.x(), rect.y() + rect.height() // 2),
+                    QPoint(10 + rect.x(), rect.y() + rect.height() // 2)
                 ))
         painter.restore()
-        op = QStyleOptionButton()
-        op.initFrom(self)
-        self.initStyleOption(op)
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
-        op.rect.setX(28)
+        op.rect = self.style().subElementRect(QStyle.SubElement.SE_CheckBoxContents, op)
         self.style().drawControl(QStyle.ControlElement.CE_CheckBoxLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
     
@@ -683,6 +685,10 @@ class RadioButton(QRadioButton):
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        op = QStyleOptionButton()
+        op.initFrom(self)
+        self.initStyleOption(op)
+        op.rect.adjust(min(5, self.width()), min(5, self.height()), -min(5, self.width()), -min(5, self.height()))
         painter = QPainter(self)
         painter.setOpacity(self.property("Opacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -694,12 +700,10 @@ class RadioButton(QRadioButton):
                                                                          self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus()) and self.isEnabled())))
         painter.setBrush(getBackgroundColour(is_highlight=(self.isDown() or self.isChecked()) or (
                 (self.isDown() or self.isChecked()) and self.isEnabled())))
-        painter.drawRoundedRect(QRect(1, (self.height() - 24) // 2, 24, 24), 10, 10)
-        op = QStyleOptionButton()
-        op.initFrom(self)
-        self.initStyleOption(op)
+        rect = self.style().subElementRect(QStyle.SubElement.SE_CheckBoxIndicator, op).adjusted(1, 1, -1, -1)
+        painter.drawRoundedRect(rect, 10, 10)
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
-        op.rect.setX(28)
+        op.rect = self.style().subElementRect(QStyle.SubElement.SE_RadioButtonContents, op)
         self.style().drawControl(QStyle.ControlElement.CE_RadioButtonLabel, op, painter, self)
         self.setStyleSheet("padding: 5px;")
     

@@ -4,8 +4,8 @@ import re
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 
-from .CWMTextEdit import TextEdit
-from .CWMWindows import RoundedMenu
+from .Compoments.TextEdit import TextEdit
+from .Windows import RoundedMenu
 
 
 class AutocompleteTextEdit(TextEdit):

@@ -8,17 +8,23 @@ class Theme(Enum):
     Dark = "Dark"
 
 
+class ColourRoles(Enum):
+    Foreground = "Foreground"
+    Background = "Background"
+    Border = "Border"
+
+
 class LightDarkDict(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     
     def __getitem__(self, item):
-        if item not in ["Dark", "Light"]:
+        if item not in [Theme.Dark, Theme.Light]:
             raise KeyError(item)
         return super().__getitem__(item)
     
     def __setitem__(self, key, value):
-        if key not in ["Dark", "Light"]:
+        if key not in [Theme.Dark, Theme.Light]:
             raise KeyError(key)
         super().__setitem__(key, value)
 
@@ -72,18 +78,35 @@ def getThemeColour(role, is_primary, is_highlight, theme):
 
 def initThemeColours():
     themeColours = ThemeColours()
-    foreColours = LightDarkDict()
-    foreColours["Light"] = (0, 0, 0)
-    foreColours["Dark"] = (255, 255, 255)
-    themeColours["Foreground"] = foreColours
-    backColours = LightDarkDict()
-    backColours["Light"] = (253, 253, 253)
-    backColours["Dark"] = (67, 67, 67)
-    themeColours["Background"] = backColours
-    borderColours = LightDarkDict()
-    borderColours["Light"] = (230, 230, 230)
-    borderColours["Dark"] = (134, 143, 150)
-    themeColours["Border"] = borderColours
+    foreHighlighs = HighlightsDict()
+    foreNohColours = LightDarkDict()
+    foreNohColours[Theme.Light] = (0, 0, 0)
+    foreNohColours[Theme.Dark] = (255, 255, 255)
+    foreHighlighs[False] = foreNohColours
+    forehColours = LightDarkDict()
+    forehColours[Theme.Light] = (0, 0, 0)
+    forehColours[Theme.Dark] = (255, 255, 255)
+    foreHighlighs[True] = forehColours
+    themeColours["Foreground"] = foreHighlighs
+    backHighlights = HighlightsDict()
+    backNohColours = LightDarkDict()
+    backNohColours[Theme.Light] = (253, 253, 253)
+    backNohColours[Theme.Dark] = (67, 67, 67)
+    backHighlights[False] = backNohColours
+    backhColours = LightDarkDict()
+    backhColours[Theme.Light] = (176, 224, 250)
+    backhColours[Theme.Dark] = (142, 197, 252)
+    themeColours["Background"] = backHighlights
+    borderHighlights = HighlightsDict()
+    borderNohColours = LightDarkDict()
+    borderNohColours[Theme.Light] = (230, 230, 230)
+    borderNohColours[Theme.Dark] = (134, 143, 150)
+    borderHighlights[False] = borderNohColours
+    borderhColours = LightDarkDict()
+    borderhColours[Theme.Light] = (135, 206, 250)
+    borderhColours[Theme.Dark] = (79, 172, 254)
+    borderHighlights[True] = borderhColours
+    themeColours["Border"] = borderHighlights
     globals()["currentThemeColours"] = themeColours
 
 

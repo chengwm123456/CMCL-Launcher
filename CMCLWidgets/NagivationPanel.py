@@ -4,8 +4,8 @@ from enum import IntEnum
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 
-from .CWMNagivationItem import NavigationItem
-from .CWMPanel import Panel
+from .NagivationItem import NavigationItem
+from .Compoments.Panel import Panel
 
 
 class NavigationPanel(Panel):
@@ -130,49 +130,3 @@ class NavigationPanel(Panel):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         super().paintEvent(a0)
-
-
-class FoldableNavigationPanel(NavigationPanel):
-    def __init__(self, parent, content_widget=None):
-        super().__init__(parent, content_widget)
-        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
-    
-    def showEvent(self, a0):
-        super().showEvent(a0)
-        self.fold()
-    
-    def fold(self):
-        self.setContentsMargins(0, 0, 0, 0)
-        for i in self.children():
-            if hasattr(i, "hide"):
-                i.hide()
-    
-    def expand(self):
-        self.setContentsMargins(5, 5, 5, 5)
-        for i in self.children():
-            if hasattr(i, "show"):
-                i.show()
-    
-    def focusInEvent(self, a0):
-        self.expand()
-    
-    def focusOutEvent(self, a0):
-        for i in self.children():
-            if hasattr(i, "hasFocus"):
-                if i.hasFocus():
-                    return
-        if self.underMouse():
-            return
-        self.fold()
-    
-    def enterEvent(self, event):
-        self.expand()
-    
-    def leaveEvent(self, a0):
-        if self.hasFocus():
-            return
-        for i in self.children():
-            if hasattr(i, "hasFocus"):
-                if i.hasFocus():
-                    return
-        self.fold()

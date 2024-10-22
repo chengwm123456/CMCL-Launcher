@@ -3,26 +3,28 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from .CWMThemeControl import *
-from .CWMToolTip import ToolTip
-from .CWMItemView import ItemDelegate
-from .CWMScrollBar import ScrollBar
+from CMCLWidgets.Windows import RoundedMenu
+from ..ThemeManager import *
+from CMCLWidgets.ToolTip import ToolTip
+from .ScrollBar import ScrollBar
 
 
-class ListView(QListView):
+class TextEdit(QTextEdit):
     @overload
     def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, text, parent=None):
         ...
     
     def __init__(self, *__args):
         super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.installEventFilter(ToolTip(self))
         self.installEventFilter(self)
         self.setProperty("Opacity", 0.6)
-        self.setItemDelegate(ItemDelegate(self))
         self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
         self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))
     
@@ -32,23 +34,27 @@ class ListView(QListView):
         painter = QPainter(self.viewport())
         painter.setOpacity(self.property("Opacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(
-            getBorderColour(
-                is_highlight=(self.viewport().underMouse() or self.viewport().hasFocus()) and self.isEnabled()))
-        painter.setBrush(getBackgroundColour(
-            is_highlight=self.viewport().hasFocus() and self.isEnabled()))
+        painter.setPen(getBorderColour(is_highlight=(self.hasFocus() or self.underMouse()) and self.isEnabled()))
+        painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
         rect = self.viewport().rect()
-        rect.setWidth(rect.width() - rect.x() - 1)
-        rect.setHeight(rect.height() - rect.y() - 1)
+        rect.setWidth(rect.width() - 1)
+        rect.setHeight(rect.height() - 1)
         rect.setX(1)
         rect.setY(1)
         painter.drawRoundedRect(rect, 10, 10)
+        self.setStyleSheet(
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
         op = QStyleOptionFrame()
         op.initFrom(self)
         self.initStyleOption(op)
-        self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
         super().paintEvent(e)
+    
+    def contextMenuEvent(self, e):
+        default = self.createStandardContextMenu()
+        menu = RoundedMenu(self)
+        for i in default.actions():
+            menu.addAction(i)
+        menu.exec(self.mapToGlobal(e.pos()))
     
     def eventFilter(self, a0, a1):
         if self != a0:
@@ -180,20 +186,22 @@ class ListView(QListView):
         return super().eventFilter(a0, a1)
 
 
-class ListWidget(QListWidget):
+class PlainTextEdit(QPlainTextEdit):
     @overload
     def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, text, parent=None):
         ...
     
     def __init__(self, *__args):
         super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.installEventFilter(ToolTip(self))
         self.installEventFilter(self)
         self.setProperty("Opacity", 0.6)
-        self.setItemDelegate(ItemDelegate(self))
         self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
         self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))
     
@@ -203,23 +211,27 @@ class ListWidget(QListWidget):
         painter = QPainter(self.viewport())
         painter.setOpacity(self.property("Opacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(
-            getBorderColour(
-                is_highlight=(self.viewport().underMouse() or self.viewport().hasFocus()) and self.isEnabled()))
-        painter.setBrush(getBackgroundColour(
-            is_highlight=self.viewport().hasFocus() and self.isEnabled()))
+        painter.setPen(getBorderColour(is_highlight=(self.hasFocus() or self.underMouse()) and self.isEnabled()))
+        painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
         rect = self.viewport().rect()
-        rect.setWidth(rect.width() - rect.x() - 1)
-        rect.setHeight(rect.height() - rect.y() - 1)
+        rect.setWidth(rect.width() - 1)
+        rect.setHeight(rect.height() - 1)
         rect.setX(1)
         rect.setY(1)
         painter.drawRoundedRect(rect, 10, 10)
+        self.setStyleSheet(
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(painter.opacity())}); background: transparent; border: none; padding: 5px;")
         op = QStyleOptionFrame()
         op.initFrom(self)
         self.initStyleOption(op)
-        self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
         super().paintEvent(e)
+    
+    def contextMenuEvent(self, e):
+        default = self.createStandardContextMenu()
+        menu = RoundedMenu(self)
+        for i in default.actions():
+            menu.addAction(i)
+        menu.exec(self.mapToGlobal(e.pos()))
     
     def eventFilter(self, a0, a1):
         if self != a0:

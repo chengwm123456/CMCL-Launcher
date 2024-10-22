@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from qframelesswindow import TitleBar
-from .CWMThemeControl import *
-from .CWMFramelessWindow import *
+from CMCLWidgets.ThemeManager.ThemeControl import *
+from .FramelessWindow import *
 from ctypes import WinDLL, pointer, windll
 from ctypes.wintypes import RECT
 import platform
@@ -132,9 +131,9 @@ class RoundedMenu(QMenu):
         RoundedMenu::item{{
             background: rgba({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, 0.6);
             color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-            border-radius: 6px;
+            border-radius: 10px;
             border: 1px solid rgba({str(getBorderColour(is_tuple=True)).replace('(', '').replace(')', '')}, 0.6);
-            padding: 4px, 2px;
+            padding: 4px 2px;
             margin: 3px;
             height: 30px;
         }}

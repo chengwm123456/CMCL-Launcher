@@ -1,20 +1,117 @@
 # -*- coding: utf-8 -*-
 import platform
 
-import win32con
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from qframelesswindow.utils.win32_utils import Taskbar
 
-from .CWMFrameStructures import *
-from .CWMFrameFunctions import *
+from ctypes import *
+
+import win32api
+import win32con
+import win32gui
+import win32print
+
+from PyQt6.QtGui import QGuiApplication
+
+
+def isFullScreen(hwnd):
+    if not hwnd:
+        return False
+    
+    windowRect = win32gui.GetWindowRect(int(hwnd))
+    if not windowRect:
+        return False
+    
+    monitorInfo = getMonitorInfo(int(hwnd), win32con.MONITOR_DEFAULTTOPRIMARY)
+    if not monitorInfo:
+        return False
+    
+    monitorRect = monitorInfo["Monitor"]
+    return all(i == j for i, j in zip(windowRect, monitorRect))
+
+
+def getMonitorInfo(hwnd, dwFlags):
+    monitor = win32api.MonitorFromWindow(int(hwnd), dwFlags)
+    if not monitor:
+        return
+    
+    return win32api.GetMonitorInfo(monitor)
+
+
+def getResizeBorderThickness(hwnd, horizontal=True):
+    window = findWindow(int(hwnd))
+    if not window:
+        return 0
+    
+    frame = 33 if horizontal else 32
+    thickness = getSystemMetrics(int(hwnd), frame, horizontal) + getSystemMetrics(int(hwnd), 92, horizontal)
+    if thickness:
+        return int(thickness)
+    
+    return round(8 * window.devicePixelRatio() if IsCompositionEnabled() else 4 * window.devicePixelRatio())
+
+
+def getSystemMetrics(hwnd, index, horizontal=True):
+    if not hasattr(windll.user32, "GetSystemMetricsForDpi"):
+        return win32api.GetSystemMetrics(index)
+    
+    return windll.user32.GetSystemMetricsForDpi(index, int(getMetricsDpi(hwnd, horizontal)))
+
+
+def getMetricsDpi(hwnd, horizontal=True):
+    if hasattr(windll.user32, "GetDpiForWindow"):
+        return windll.user32.GetDpiForWindow(int(hwnd))
+    
+    hdc = win32gui.GetDC(int(hwnd))
+    if not hdc:
+        return 96
+    dpiX, dpiY = win32print.GetDeviceCaps(hdc, win32con.LOGPIXELSX), win32print.GetDeviceCaps(hdc,
+                                                                                              win32con.LOGPIXELSY)
+    win32gui.ReleaseDC(int(hwnd), hdc)
+    if dpiX and not horizontal:
+        return dpiX
+    if dpiY and horizontal:
+        return dpiY
+    
+    return 96
+
+
+def getWindowDpi(hwnd):
+    windll.user32.SetProcessDPIAware()
+    return windll.user32.GetDpiForWindow(int(hwnd)) / 96.0
+
+
+def getSystemDpi():
+    windll.user32.SetProcessDPIAware()
+    return windll.user32.GetDpiForSystem() / 96.0
+
+
+def findWindow(hwnd):
+    if not hwnd:
+        return
+    
+    topWindows = QGuiApplication.topLevelWindows()
+    if not topWindows:
+        return
+    
+    for topWindow in topWindows:
+        if topWindow and int(topWindow.winId()) == int(hwnd):
+            return topWindow
+
+
+def IsCompositionEnabled():
+    bResult = c_int(0)
+    windll.dwmapi.DwmIsCompositionEnabled(byref(bResult))
+    return bool(bResult.value)
 
 
 class FramelessWindow(QWidget):
     def __init__(self, *__args):
         super().__init__(*__args)
         self.__ctypes = None
+        self.__wintypes = None
         self.__win32con = None
         self.__win32gui = None
         self.__objc = None
@@ -45,6 +142,7 @@ class FramelessWindow(QWidget):
                 self.__ctypes = __import__("ctypes")
                 self.__ctypes.PWINDOWPOS = PWINDOWPOS
                 self.__ctypes.NCCLACSIZE_PARAMS = NCCALCSIZE_PARAMS
+                self.__wintypes = __import__("ctypes.wintypes", fromlist=("ctypes",))
                 self.__win32con = __import__("win32con")
                 self.__win32con.CS_DROPSHADOW = 0x00020000
                 self.__win32gui = __import__("win32gui")
@@ -61,7 +159,6 @@ class FramelessWindow(QWidget):
     def __updateFrameless(self):
         # TODO: test the compatibility on other platform
         # TODO: done the code of Linux.
-        # TODO: check the spelling of MacOS
         match platform.system().lower():
             case "windows":
                 self.__updateWindowFrameless()
@@ -195,8 +292,8 @@ class FramelessWindow(QWidget):
     
     def nativeEvent(self, eventType, message):
         match eventType:
-            case "windows_generic_MSG":
-                msg = MSG.from_address(message.__int__())
+            case b"windows_generic_MSG":
+                msg = self.__wintypes.MSG.from_address(message.__int__())
                 if not msg.hWnd:
                     return False, 0
                 
@@ -209,10 +306,10 @@ class FramelessWindow(QWidget):
                             w, h = self.frameGeometry().width(), self.frameGeometry().height()
                             xw = getResizeBorderThickness(int(self.winId()), False)
                             yw = getResizeBorderThickness(int(self.winId()), True)
-                            lx = pos.x() < xw
-                            rx = pos.x() > w - xw
+                            lx = pos.x() < xw // 2
+                            rx = pos.x() > w + xw // 2
                             ty = pos.y() < yw
-                            by = pos.y() > h - yw
+                            by = pos.y() > h
                             if lx and ty:
                                 return True, win32con.HTTOPLEFT
                             elif rx and by:
@@ -238,7 +335,8 @@ class FramelessWindow(QWidget):
                         else:
                             rect = self.__ctypes.cast(msg.lParam, self.__ctypes.POINTER(self.__ctypes.RECT)).contents
                         
-                        if isMaximized(msg.hWnd) and not isFullScreen(msg.hWnd):
+                        if self.__win32gui.GetWindowPlacement(int(msg.hWnd))[
+                            1] == self.__win32con.SW_MAXIMIZE and not isFullScreen(msg.hWnd):
                             bx = getResizeBorderThickness(msg.hWnd, True)
                             by = getResizeBorderThickness(msg.hWnd, False)
                             rect.top += by
@@ -246,7 +344,8 @@ class FramelessWindow(QWidget):
                             rect.left += bx
                             rect.right -= bx
                         
-                        if (isMaximized(msg.hWnd) or isFullScreen(msg.hWnd)) and Taskbar.isAutoHide():
+                        if (self.__win32gui.GetWindowPlacement(int(msg.hWnd))[
+                                1] == self.__win32con.SW_MAXIMIZE or isFullScreen(msg.hWnd)) and Taskbar.isAutoHide():
                             position = Taskbar.getPosition(msg.hWnd)
                             if position == Taskbar.TOP:
                                 rect.top += Taskbar.AUTO_HIDE_THICKNESS

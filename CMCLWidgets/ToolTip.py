@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from .CWMThemeControl import *
+from CMCLWidgets.ThemeManager.ThemeControl import *
 
 
 class ToolTipWidget(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
         self.setStyleSheet(
-            f"background: transparent; color: {str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}")
+            f"background: transparent; color: {str(getForegroundColour(is_tuple=True)).strip('()')}")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         dsg = QGraphicsDropShadowEffect(self)
@@ -30,7 +30,7 @@ class ToolTipWidget(QLabel):
         painter.setBrush(getBackgroundColour())
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         self.setStyleSheet(
-            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {painter.opacity()});")
+            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {painter.opacity()});")
         super().paintEvent(a0)
 
 

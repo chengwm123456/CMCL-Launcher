@@ -3,9 +3,9 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from .CWMThemeControl import *
-from .CWMButton import CloseButton
-from .CWMPanel import Panel
+from ..ThemeManager import *
+from .Button import CloseButton
+from .Panel import Panel
 
 
 class TipBase(Panel):

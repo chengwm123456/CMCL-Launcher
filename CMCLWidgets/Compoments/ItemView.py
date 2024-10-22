@@ -3,9 +3,9 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from .CWMThemeControl import *
-from .CWMToolTip import ToolTip
-from .CWMScrollBar import ScrollBar
+from ..ThemeManager import *
+from CMCLWidgets.ToolTip import ToolTip
+from .ScrollBar import ScrollBar
 
 
 class ItemDelegate(QStyledItemDelegate):
@@ -61,7 +61,7 @@ class ItemView(QAbstractItemView):
         op.initFrom(self)
         self.initStyleOption(op)
         self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(is_tuple=True)).replace('(', '').replace(')', '')}, {str(painter.opacity())}); background: transparent; border: none;")
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(painter.opacity())}); background: transparent; border: none;")
         super().paintEvent(e)
     
     def eventFilter(self, a0, a1):

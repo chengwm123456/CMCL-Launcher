@@ -3,25 +3,27 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from .CWMThemeControl import *
-from .CWMToolTip import ToolTip
+from ..ThemeManager import *
+from CMCLWidgets.ToolTip import ToolTip
 
 
-class ToolBox(QToolBox):
+class GroupBox(QGroupBox):
     @overload
     def __init__(self, parent=None):
         ...
     
+    @overload
+    def __init__(self, title, parent=None):
+        ...
+    
     def __init__(self, *__args):
         super().__init__(*__args)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.installEventFilter(ToolTip(self))
         self.installEventFilter(self)
         self.setProperty("Opacity", 0.6)
     
     def paintEvent(self, a0):
-        self.setStyleSheet("padding: 3px;")
+        self.setStyleSheet("padding: 10px 0px 5px 0px;")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
@@ -29,25 +31,50 @@ class ToolBox(QToolBox):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(getBorderColour())
         painter.setBrush(getBackgroundColour())
-        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
-        for i in self.children():
-            if isinstance(i, QAbstractButton):
-                i.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-                i.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-                opacity = QGraphicsOpacityEffect(i)
-                opacity.setOpacity(0.0)
-                i.setGraphicsEffect(opacity)
-                painter.save()
-                painter.setPen(getBorderColour(
-                    is_highlight=(i.isDown() or i.isChecked()) or ((
-                                                                           i.isDown() or i.isChecked() or i.underMouse() or i.hasFocus()) and self.isEnabled())))
-                painter.setBrush(getBackgroundColour(is_highlight=(i.isDown() or i.isChecked()) or (
-                        (i.isDown() or i.isChecked()) and i.isEnabled())))
-                painter.drawRoundedRect(i.geometry().adjusted(1, 1, -1, -1), 10, 10)
-                painter.setPen(getForegroundColour())
-                painter.setBrush(getForegroundColour())
-                painter.drawText(i.geometry().adjusted(1, 1, -1, -1), Qt.AlignmentFlag.AlignCenter, i.text())
-                painter.restore()
+        y = self.fontMetrics().boundingRect(QRect(8, 0, self.width() - 20, self.height()), self.alignment(),
+                                            self.title()).height() + 1 if self.title() else 0
+        rect = self.rect().adjusted(1, 1, -1, -1)
+        rect = QRect(rect.x(), rect.y() + (y // 2 if self.title() else 0), rect.width(),
+                     rect.height() - (y // 2 if self.title() else 0))
+        painter.drawRoundedRect(rect, 10, 10)
+        op = QStyleOptionGroupBox()
+        op.initFrom(self)
+        self.initStyleOption(op)
+        if self.title() or self.isCheckable():
+            painter.drawRoundedRect(
+                self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
+                                            QStyle.SubControl.SC_GroupBoxLabel).united(
+                    self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
+                                                QStyle.SubControl.SC_GroupBoxCheckBox)),
+                10, 10)
+        if self.title():
+            painter.save()
+            painter.setPen(getForegroundColour())
+            painter.setBrush(Qt.GlobalColor.transparent)
+            painter.drawText(
+                self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op, QStyle.SubControl.SC_GroupBoxLabel),
+                Qt.AlignmentFlag.AlignCenter, self.title())
+            painter.restore()
+        if self.isCheckable():
+            painter.setPen(getBorderColour(
+                is_highlight=self.isChecked() or (
+                        (self.isChecked() or self.underMouse() or self.hasFocus()) and self.isEnabled())))
+            painter.setBrush(getBackgroundColour(is_highlight=(self.isChecked()) or (
+                    self.isChecked() and self.isEnabled())))
+            rect = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
+                                               QStyle.SubControl.SC_GroupBoxCheckBox).adjusted(1, 1, -1, -1)
+            painter.drawRoundedRect(rect, 10, 10)
+            painter.save()
+            painter.setPen(getForegroundColour())
+            painter.setBrush(Qt.GlobalColor.transparent)
+            if self.isChecked():
+                painter.drawLines([QLine(
+                    QPoint(4 + rect.x(), rect.y() + 8),
+                    QPoint(rect.width() // 2 + rect.x(), rect.y() + 11)),
+                    QLine(
+                        QPoint(rect.width() // 2 + rect.x(), rect.y() + 11),
+                        QPoint(10 + rect.x(), rect.y() + 4))])
+            painter.restore()
     
     def eventFilter(self, a0, a1):
         if self != a0:

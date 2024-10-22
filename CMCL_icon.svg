@@ -1,7 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-    <polygon points="19,0 45,0 64,19 64,45 45,64 19,64 0,45 0,19" fill="#A5F1FF"/>
-    <polygon points="32,2 55,12 61,37.5 44,58 20,58 3,37.5 9,12" fill="#5A9CCE"/>
-    <polygon points="20,11 44,11 54,30 43,49 21,49 10,30" fill="#9CCEFF"/>
-    <polygon points="22,15 42,15 48,30.5 31.5,45.5 16,30.5" fill="#006F9F"/>
+    <defs>
+        <linearGradient id="CMCL_G1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color: #A5F1FF"/>
+            <stop offset="100%" style="stop-color: #DDDDFF"/>
+        </linearGradient>
+        <linearGradient id="CMCL_G2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color: #5A9CCE"/>
+            <stop offset="100%" style="stop-color: #5599FF"/>
+        </linearGradient>
+        <linearGradient id="CMCL_G3" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color: #9CCEFF"/>
+            <stop offset="100%" style="stop-color: #55AAFF"/>
+        </linearGradient>
+        <linearGradient id="CMCL_G4" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color: #006F9F"/>
+            <stop offset="100%" style="stop-color: #006FFF"/>
+        </linearGradient>
+    </defs>
+    <polygon points="19,0 45,0 64,19 64,45 45,64 19,64 0,45 0,19" fill="url(#CMCL_G1)"/>
+    <polygon points="32,2 55,12 61,37.5 44,58 20,58 3,37.5 9,12" fill="url(#CMCL_G2)"/>
+    <polygon points="20,11 44,11 54,30 43,49 21,49 10,30" fill="url(#CMCL_G3)"/>
+    <polygon points="22,15 42,15 48,30.5 31.5,45.5 16,30.5" fill="url(#CMCL_G4)"/>
     <text x="6.75" y="37.5" font-family="Consolas" font-size="23" fill="#FFFFFF">CMCL</text>
 </svg>

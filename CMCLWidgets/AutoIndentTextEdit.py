@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .CWMTextEdit import TextEdit
+from .Compoments.TextEdit import TextEdit
 import re
 
 

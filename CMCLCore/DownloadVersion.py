@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from typing import *
+from pathlib import PurePath
 
 from . import GetOperationSystem
 from .Downloader import Downloader
@@ -10,7 +11,7 @@ from .GetVersion import *
 
 
 def DownloadVersionJson(version: Union[str, None] = None,
-                        minecraft_path: Union[str, Path, os.PathLike, LiteralString] = "."):
+                        minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = "."):
     minecraft_path = Path(minecraft_path)
     if version is not None:
         response = requests.get('https://launchermeta.mojang.com/mc/game/version_manifest.json')
@@ -37,7 +38,7 @@ def DownloadVersionJson(version: Union[str, None] = None,
         pass
 
 
-def _DownloadLibraryFile(url: str, path: Union[str, Path, os.PathLike, LiteralString] = "."):
+def _DownloadLibraryFile(url: str, path: Union[str, Path, PurePath, os.PathLike, LiteralString] = "."):
     path, file_name = Path(*(Path(path).parts[:-1])), Path(Path(path).parts[-1])
     Path(path).mkdir(parents=True, exist_ok=True)
     file_path = Path(path / file_name)
@@ -46,8 +47,8 @@ def _DownloadLibraryFile(url: str, path: Union[str, Path, os.PathLike, LiteralSt
         downloader.download()
 
 
-def DownloadAssetIndexFile(minecraft_path: Union[str, Path, os.PathLike, LiteralString] = ".",
-                           json_path: Union[str, Path, os.PathLike, LiteralString] = "."):
+def DownloadAssetIndexFile(minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = ".",
+                           json_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = "."):
     minecraft_path = Path(minecraft_path)
     assets_file_data = json.loads(Path(json_path).read_text(encoding="utf-8"))["assetIndex"]
     if not Path(minecraft_path / "assets" / "indexes").exists():
@@ -79,7 +80,7 @@ def DownloadAssetIndexFile(minecraft_path: Union[str, Path, os.PathLike, Literal
             )
 
 
-def DownloadAssetObjectFiles(path: Union[str, Path, os.PathLike, LiteralString], hash_value: str):
+def DownloadAssetObjectFiles(path: Union[str, Path, PurePath, os.PathLike, LiteralString], hash_value: str):
     path = Path(path)
     Path(path / hash_value[0:2]).mkdir(parents=True, exist_ok=True)
     file_path = Path(path / hash_value[0:2] / hash_value)
@@ -96,7 +97,7 @@ def DownloadAssetObjectFiles(path: Union[str, Path, os.PathLike, LiteralString],
 
 
 def DownloadLibraryFiles(version: Union[str, None] = None,
-                         minecraft_path: Union[str, Path, os.PathLike, LiteralString] = "."):
+                         minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = "."):
     if not version:
         return
     minecraft_path = Path(minecraft_path)
@@ -131,7 +132,7 @@ def DownloadLibraryFiles(version: Union[str, None] = None,
             _DownloadLibraryFile(url, path)
 
 
-def DownloadMinecraft(minecraft_path: Union[str, Path, os.PathLike, LiteralString] = ".",
+def DownloadMinecraft(minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = ".",
                       version: Union[str, None] = None):
     minecraft_path = Path(minecraft_path)
     Path(minecraft_path / "versions" / version).mkdir(parents=True, exist_ok=True)

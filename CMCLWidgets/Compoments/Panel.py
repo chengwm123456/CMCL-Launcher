@@ -1,29 +1,19 @@
 # -*- coding: utf-8 -*-
-from typing import overload
-
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from .CWMThemeControl import *
-from .CWMToolTip import ToolTip
+from ..ThemeManager import *
+from CMCLWidgets.ToolTip import ToolTip
 
 
-class GroupBox(QGroupBox):
-    @overload
-    def __init__(self, parent=None):
-        ...
-    
-    @overload
-    def __init__(self, title, parent=None):
-        ...
-    
-    def __init__(self, *__args):
-        super().__init__(*__args)
+class Panel(QFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
         self.installEventFilter(ToolTip(self))
         self.installEventFilter(self)
         self.setProperty("Opacity", 0.6)
     
     def paintEvent(self, a0):
-        self.setStyleSheet("padding: 10px 0px 5px 0px;")
+        self.setStyleSheet("padding: 3px;")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
@@ -31,28 +21,7 @@ class GroupBox(QGroupBox):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(getBorderColour())
         painter.setBrush(getBackgroundColour())
-        y = self.fontMetrics().boundingRect(QRect(8, 0, self.width() - 20, self.height()), self.alignment(),
-                                            self.title()).height() + 1 if self.title() else 0
-        rect = self.rect().adjusted(1, 1, -1, -1)
-        rect = QRect(rect.x(), rect.y() + (y // 2 if self.title() else 0), rect.width(),
-                     rect.height() - (y // 2 if self.title() else 0))
-        painter.drawRoundedRect(rect, 10, 10)
-        op = QStyleOptionGroupBox()
-        op.initFrom(self)
-        self.initStyleOption(op)
-        if self.title():
-            painter.drawRoundedRect(
-                self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op, QStyle.SubControl.SC_GroupBoxLabel),
-                10, 10)
-            painter.save()
-            painter.setPen(getForegroundColour())
-            painter.setBrush(Qt.GlobalColor.transparent)
-            painter.drawText(
-                self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op, QStyle.SubControl.SC_GroupBoxLabel),
-                Qt.AlignmentFlag.AlignCenter, self.title())
-            painter.restore()
-        op.textColor = getForegroundColour()
-        # self.style().drawComplexControl(QStyle.ComplexControl.CC_GroupBox, op, painter, self)
+        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
     
     def eventFilter(self, a0, a1):
         if self != a0:

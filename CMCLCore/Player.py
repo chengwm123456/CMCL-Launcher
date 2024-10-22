@@ -107,7 +107,7 @@ class AuthlibInjectorPlayer(OnlinePlayer):
         return "online", "authlib-injector", PlayerState.ONLINE
 
 
-class LittleSkin(AuthlibInjectorPlayer):
+class LittleSkinPlayer(AuthlibInjectorPlayer):
     @property
     def player_accountType(self):
         return "online", "littleskin", PlayerState.ONLINE

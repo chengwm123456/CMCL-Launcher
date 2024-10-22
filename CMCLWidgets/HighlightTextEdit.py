@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
-from .CWMTextEdit import TextEdit
+from .Compoments.TextEdit import TextEdit
 
 
 class HighlightTextEdit(TextEdit):

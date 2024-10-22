@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtCore import *
-from .CWMTextEdit import TextEdit
-from .CWMPanel import Panel
-from .CWMThemeControl import *
+from .Compoments.TextEdit import TextEdit
+from .Compoments.Panel import Panel
+from CMCLWidgets.ThemeManager.ThemeControl import *
 
 
 class LineNumberTextEdit(TextEdit):

@@ -1,27 +1,80 @@
 # -*- coding: utf-8 -*-
+from typing import overload
+
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from .CWMThemeControl import *
-from .CWMToolTip import ToolTip
+from ..ThemeManager import *
+from CMCLWidgets.Windows import RoundedMenu
+from CMCLWidgets.ToolTip import ToolTip
 
 
-class Panel(QFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
+class LabelBase(QLabel):
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, text="", parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
         self.installEventFilter(ToolTip(self))
         self.installEventFilter(self)
         self.setProperty("Opacity", 0.6)
+        self.setStyleSheet(
+            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('Opacity')})")
     
     def paintEvent(self, a0):
-        self.setStyleSheet("padding: 3px;")
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        painter = QPainter(self)
-        painter.setOpacity(self.property("Opacity"))
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
-        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
+        self.setStyleSheet(
+            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('Opacity')})")
+        super().paintEvent(a0)
+    
+    def contextMenuEvent(self, e):
+        if self.textInteractionFlags():
+            menu = RoundedMenu(self)
+            if self.textInteractionFlags() & Qt.TextInteractionFlag.TextEditable:
+                undo = QAction()
+                undo.setText("Undo")
+                # undo.setEnabled(self.isUndoRedoEnabled())
+                # undo.triggered.connect(self.undo)
+                undo.setShortcut("Ctrl+Z")
+                menu.addAction(undo)
+                redo = QAction()
+                redo.setText("Redo")
+                # redo.setEnabled(self.isUndoRedoEnabled())
+                # redo.triggered.connect(self.redo)
+                redo.setShortcut("Ctrl+Y")
+                menu.addAction(redo)
+                menu.addSeparator()
+                cut = QAction()
+                cut.setText("Cut")
+                # cut.triggered.connect(self.cut)
+                cut.setShortcut("Ctrl+X")
+                menu.addAction(cut)
+            copy = QAction()
+            copy.setText("Copy")
+            # copy.triggered.connect(self.copy)
+            # QApplication.clipboard().setText(self.selectedText())
+            copy.setShortcut("Ctrl+C")
+            menu.addAction(copy)
+            if self.textInteractionFlags() & Qt.TextInteractionFlag.TextEditable:
+                paste = QAction()
+                paste.setText("Paste")
+                # paste.triggered.connect(self.paste)
+                paste.setShortcut("Ctrl+V")
+                menu.addAction(paste)
+                delete = QAction()
+                delete.setText("Delete")
+                # delete.triggered.connect(self.textCursor().deleteChar)
+                menu.addAction(delete)
+            menu.addSeparator()
+            select_all = QAction()
+            select_all.setText("Select All")
+            # select_all.triggered.connect(self.selectAll)
+            select_all.setShortcut("Ctrl+A")
+            menu.addAction(select_all)
+            menu.exec(self.mapToGlobal(e.pos()))
     
     def eventFilter(self, a0, a1):
         if self != a0:
@@ -151,3 +204,15 @@ class Panel(QFrame):
                     ani.finished.connect(ani.deleteLater)
                     ani.start()
         return super().eventFilter(a0, a1)
+
+
+class Label(LabelBase):
+    pass
+
+
+class StrongLabel(LabelBase):
+    pass
+
+
+class TitleLabel(LabelBase):
+    pass
