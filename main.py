@@ -1724,7 +1724,7 @@ class LoggingWindow(RoundedWindow):
         super().__init__()
         self.resize(800, 600)
         self.setWindowIcon(QIcon("CMCL_icon.svg"))
-        self.setWindowTitle("日志窗口")
+        self.setWindowTitle(self.tr("LoggingWindow.Title"))
         self.titleBar.hide()
         self.titleBar = StandardTitleBar(self)
         self.titleBar.show()
@@ -1769,7 +1769,8 @@ class LoggingWindow(RoundedWindow):
         self.current_history = 0
     
     def retranslateUI(self):
-        self.stopOutputBtn.setText("停止输出" if self.canOutput else "开始输出")
+        self.stopOutputBtn.setText(self.tr("LoggingWindow.stopOutputBtn.StopOut.Text") if self.canOutput else self.tr(
+            "LoggingWindow.stopOutputBtn.StartOut.Text"))
     
     def updateText(self):
         if self.bftext != output.getvalue():
@@ -1783,7 +1784,8 @@ class LoggingWindow(RoundedWindow):
     
     def toggleOutput(self):
         self.canOutput = not self.canOutput
-        self.stopOutputBtn.setText("停止输出" if self.canOutput else "开始输出")
+        self.stopOutputBtn.setText(self.tr("LoggingWindow.stopOutputBtn.StopOut.Text") if self.canOutput else self.tr(
+            "LoggingWindow.stopOutputBtn.StartOut.Text"))
     
     def process_command(self):
         if self.inputtext.text():
