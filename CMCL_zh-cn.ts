@@ -4,29 +4,29 @@
 <context>
     <name>DownloadOptions</name>
     <message>
-        <location filename="main.py" line="664"/>
-        <location filename="main.py" line="705"/>
+        <location filename="main.py" line="666"/>
+        <location filename="main.py" line="708"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page1.Title</source>
         <translation>原版</translation>
     </message>
     <message>
-        <location filename="main.py" line="688"/>
-        <location filename="main.py" line="710"/>
+        <location filename="main.py" line="690"/>
+        <location filename="main.py" line="713"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page2.Title</source>
         <translation>下载设置</translation>
     </message>
     <message>
-        <location filename="main.py" line="702"/>
+        <location filename="main.py" line="705"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.lLabel.Text</source>
         <translation>版本：</translation>
     </message>
     <message>
-        <location filename="main.py" line="706"/>
+        <location filename="main.py" line="709"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.label_2.Text</source>
         <translation>下载路径</translation>
     </message>
     <message>
-        <location filename="main.py" line="712"/>
+        <location filename="main.py" line="715"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.startDownloadButton.Text</source>
         <translation>下载</translation>
     </message>
@@ -34,7 +34,7 @@
 <context>
     <name>DownloadPage</name>
     <message>
-        <location filename="main.py" line="1054"/>
+        <location filename="main.py" line="1053"/>
         <source>DownloadPage.pushButton.text</source>
         <translation>原版</translation>
     </message>
@@ -42,46 +42,77 @@
 <context>
     <name>DownloadVanilla</name>
     <message>
-        <location filename="main.py" line="768"/>
-        <location filename="main.py" line="900"/>
+        <location filename="main.py" line="771"/>
+        <location filename="main.py" line="830"/>
+        <location filename="main.py" line="897"/>
+        <location filename="main.py" line="912"/>
         <location filename="main.py" line="993"/>
         <source>DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1</source>
         <translation>版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="769"/>
-        <location filename="main.py" line="901"/>
+        <location filename="main.py" line="772"/>
+        <location filename="main.py" line="831"/>
+        <location filename="main.py" line="898"/>
+        <location filename="main.py" line="913"/>
         <location filename="main.py" line="994"/>
         <source>DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2</source>
         <translation>类型</translation>
     </message>
     <message>
-        <location filename="main.py" line="770"/>
-        <location filename="main.py" line="902"/>
+        <location filename="main.py" line="773"/>
+        <location filename="main.py" line="832"/>
+        <location filename="main.py" line="899"/>
+        <location filename="main.py" line="914"/>
         <location filename="main.py" line="995"/>
         <source>DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3</source>
         <translation>发布时间</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="804"/>
+        <source>DownloadPage.DownloadVanilla.ComboBox.Item1.Text</source>
+        <translation>官方源</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="827"/>
+        <source>DownloadPage.DownloadVanilla.lineEdit.ToolTip</source>
+        <translation>输入版本：查询版本。
+输入类型：筛选版本类型。
+ release：正式版
+ snapshot：快照版
+ old_beta：远古 beta 版
+ old_alpha：远古 alpha 版
+ april_fool：愚人节版本
+输入日期：查询在该日期发布的版本
+注：以上方式均可使用正则表达式，
+如\&quot;1\\.14.+\&quot;、\&quot;old_(alpha|beta)\&quot;、\&quot;2023-03-22 .+\&quot;等，
+更多语法请上网查询。</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="828"/>
+        <source>DownloadPage.DownloadVanilla.label.Text</source>
+        <translation>下载源：</translation>
     </message>
 </context>
 <context>
     <name>GameSettings</name>
     <message>
-        <location filename="main.py" line="1119"/>
+        <location filename="main.py" line="1118"/>
         <source>SettingsPage.GameSettings.label.Text</source>
         <translation>额外游戏启动参数：</translation>
     </message>
     <message>
-        <location filename="main.py" line="1120"/>
+        <location filename="main.py" line="1119"/>
         <source>SettingsPage.GameSettings.gropuBox.Title</source>
         <translation>预设</translation>
     </message>
     <message>
-        <location filename="main.py" line="1121"/>
+        <location filename="main.py" line="1120"/>
         <source>SettingsPage.GameSettings.checkBox.Text</source>
         <translation>demo模式</translation>
     </message>
     <message>
-        <location filename="main.py" line="1122"/>
+        <location filename="main.py" line="1121"/>
         <source>SettingsPage.GameSettings.checkBox_2.Text</source>
         <translation>启动时全屏</translation>
     </message>
@@ -89,48 +120,48 @@
 <context>
     <name>JavaSettings</name>
     <message>
-        <location filename="main.py" line="1208"/>
-        <location filename="main.py" line="1278"/>
+        <location filename="main.py" line="1207"/>
+        <location filename="main.py" line="1277"/>
         <source>SettingsPage.JavaSettings.comboBox.Text</source>
         <translation>自动选择</translation>
     </message>
     <message>
-        <location filename="main.py" line="1258"/>
+        <location filename="main.py" line="1257"/>
         <source>SettingsPage.JavaSettings.groupBox.Text</source>
         <translation>启动模式</translation>
     </message>
     <message>
-        <location filename="main.py" line="1259"/>
+        <location filename="main.py" line="1258"/>
         <source>SettingsPage.JavaSettings.radioButton.Text</source>
         <translation>client 模式</translation>
     </message>
     <message>
-        <location filename="main.py" line="1260"/>
+        <location filename="main.py" line="1259"/>
         <source>SettingsPage.JavaSettings.radioButton_2.Text</source>
         <translation>server 模式</translation>
     </message>
     <message>
-        <location filename="main.py" line="1261"/>
+        <location filename="main.py" line="1260"/>
         <source>SettingsPage.JavaSettings.label_2.Text</source>
         <translation>Java 路径：</translation>
     </message>
     <message>
-        <location filename="main.py" line="1262"/>
+        <location filename="main.py" line="1261"/>
         <source>SettingsPage.JavaSettings.pushButton_2.Text</source>
         <translation>自动选择Java</translation>
     </message>
     <message>
-        <location filename="main.py" line="1264"/>
+        <location filename="main.py" line="1263"/>
         <source>SettingsPage.JavaSettings.label.Text.1</source>
         <translation>额外JVM参数：</translation>
     </message>
     <message>
-        <location filename="main.py" line="1265"/>
+        <location filename="main.py" line="1264"/>
         <source>SettingsPage.JavaSettings.label.Text.2</source>
         <translation>自定义JVM参数：</translation>
     </message>
     <message>
-        <location filename="main.py" line="1266"/>
+        <location filename="main.py" line="1265"/>
         <source>SettingsPage.JavaSettings.pushButton.Text</source>
         <translation>覆盖默认JVM参数</translation>
     </message>
@@ -204,12 +235,12 @@
         <translation>切换文件夹</translation>
     </message>
     <message>
-        <location filename="main.py" line="566"/>
+        <location filename="main.py" line="568"/>
         <source>MainPage.VersionLaunchedTip.Label.Text</source>
         <translation>游戏已启动</translation>
     </message>
     <message>
-        <location filename="main.py" line="575"/>
+        <location filename="main.py" line="577"/>
         <source>MainPage.SelectDir.Title</source>
         <translation>选择文件夹</translation>
     </message>
@@ -217,32 +248,32 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="main.py" line="1535"/>
+        <location filename="main.py" line="1529"/>
         <source>MainWindow.HomePage.Text</source>
         <translation>主页</translation>
     </message>
     <message>
-        <location filename="main.py" line="1538"/>
+        <location filename="main.py" line="1531"/>
         <source>MainWindow.DownloadPage.Text</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="main.py" line="1541"/>
+        <location filename="main.py" line="1533"/>
         <source>MainWindow.SettingsPage.Text</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="main.py" line="1544"/>
+        <location filename="main.py" line="1535"/>
         <source>MainWindow.UserPage.Text</source>
         <translation>用户</translation>
     </message>
     <message>
-        <location filename="main.py" line="1586"/>
+        <location filename="main.py" line="1575"/>
         <source>MainPage.ToggleTheme.Light.Text</source>
         <translation>浅色</translation>
     </message>
     <message>
-        <location filename="main.py" line="1587"/>
+        <location filename="main.py" line="1576"/>
         <source>MainPage.ToggleTheme.Dark.Text</source>
         <translation>深色</translation>
     </message>
@@ -258,12 +289,12 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="main.py" line="1346"/>
+        <location filename="main.py" line="1344"/>
         <source>SettingsPage.pushButton.Text</source>
         <translation>游戏启动</translation>
     </message>
     <message>
-        <location filename="main.py" line="1348"/>
+        <location filename="main.py" line="1345"/>
         <source>SettingsPage.pushButton_2.Text</source>
         <translation>Java 设置</translation>
     </message>
@@ -271,32 +302,34 @@
 <context>
     <name>UserPage</name>
     <message>
-        <location filename="main.py" line="1389"/>
-        <location filename="main.py" line="1403"/>
-        <location filename="main.py" line="1421"/>
-        <location filename="main.py" line="1461"/>
-        <location filename="main.py" line="1468"/>
-        <location filename="main.py" line="1477"/>
+        <location filename="main.py" line="1386"/>
+        <location filename="main.py" line="1400"/>
+        <location filename="main.py" line="1418"/>
+        <location filename="main.py" line="1456"/>
+        <location filename="main.py" line="1463"/>
+        <location filename="main.py" line="1471"/>
         <source>UserPage.UserDataFormat.Text</source>
         <translation>用户名称：{}
 类型：{}账户（在线）
 是否拥有Minecraft: {}</translation>
     </message>
     <message>
-        <location filename="main.py" line="1408"/>
-        <location filename="main.py" line="1473"/>
+        <location filename="main.py" line="1405"/>
+        <location filename="main.py" line="1467"/>
         <source>UserPage.UserIconNoUser.Text</source>
         <translation>暂无账号，快去登录一个吧。</translation>
     </message>
     <message>
+        <location filename="main.py" line="1440"/>
         <location filename="main.py" line="1444"/>
-        <location filename="main.py" line="1448"/>
+        <location filename="main.py" line="1476"/>
         <source>UserPage.userTable.horizontalHeaderLabels.1</source>
         <translation>用户名</translation>
     </message>
     <message>
+        <location filename="main.py" line="1441"/>
         <location filename="main.py" line="1445"/>
-        <location filename="main.py" line="1449"/>
+        <location filename="main.py" line="1477"/>
         <source>UserPage.userTable.horizontalHeaderLabels.2</source>
         <translation>用户名</translation>
     </message>

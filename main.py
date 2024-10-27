@@ -555,9 +555,11 @@ class MainPage(QFrame):
     
     def launch(self):
         result = LaunchMinecraft(minecraft_path, self.version,
-                                 None if settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"] else None,
+                                 None if settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"] else
+                                 settings["Settings"]["JavaSettings"]["Java"]["Path"]["value"],
                                  "server",
-                                 CMCL_version[0], "CMCL", None, None, None, "", None, None,
+                                 CMCL_version[0], "CMCL", None, None, None,
+                                 settings["Settings"]["GameSettings"]["ExtraGameCommand"], None, None,
                                  player)
         print(result)
         if result[0] == "Successfully":
@@ -690,6 +692,7 @@ class DownloadPage(QFrame):
                 self.verticalLayout.addWidget(self.toolBox)
                 
                 self.startDownloadButton = PushButton(self)
+                self.startDownloadButton.pressed.connect(self.startDownload)
                 self.verticalLayout.addWidget(self.startDownloadButton)
                 
                 self.retranslateUI()
@@ -797,7 +800,7 @@ class DownloadPage(QFrame):
             
             self.comboBox = ComboBox(self.frame)
             self.comboBox.setObjectName(u"comboBox")
-            self.comboBox.addItem("官方源")
+            self.comboBox.addItem(self.tr("DownloadPage.DownloadVanilla.ComboBox.Item1.Text"))
             # self.comboBox.setEditable(True)
             
             self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.comboBox)
@@ -820,19 +823,12 @@ class DownloadPage(QFrame):
             # setupUi
         
         def retranslateUi(self):
-            self.lineEdit.setToolTip("输入版本：查询版本。\n"
-                                     "输入类型：筛选版本类型。\n"
-                                     " release：正式版\n"
-                                     " snapshot：快照版\n"
-                                     " old_beta：远古 beta 版\n"
-                                     " old_alpha：远古 alpha 版\n"
-                                     " april_fool：愚人节版本\n"
-                                     "输入日期：查询在该日期发布的版本\n"
-                                     "注：以上方式均可使用正则表达式，\n"
-                                     "如\"1\\.14.+\"、\"old_(alpha|beta)\"、\"2023-03-22 .+\"等，\n"
-                                     "更多语法请上网查询。")
-            self.label.setText(u"\u4e0b\u8f7d\u6e90\uff1a")
-            self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
+            self.lineEdit.setToolTip(self.tr("DownloadPage.DownloadVanilla.lineEdit.ToolTip"))
+            self.label.setText(self.tr("DownloadPage.DownloadVanilla.label.Text"))
+            self.versionModel.setHorizontalHeaderLabels(
+                [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
+                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
+                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
         
         # retranslateUi
         
@@ -911,7 +907,10 @@ class DownloadPage(QFrame):
         def searchVersion(self, value):
             version_d = value
             self.versionModel.clear()
-            self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
+            self.versionModel.setHorizontalHeaderLabels(
+                [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
+                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
+                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
             i = 0
             latest_release = False
             latest_snapshot = False
@@ -1050,7 +1049,6 @@ class DownloadPage(QFrame):
     # setupUi
     
     def retranslateUi(self):
-        # 原版
         self.pushButton.setText(self.tr("DownloadPage.pushButton.text"))
         # self.pushButton_2.setText("")
     
@@ -1572,8 +1570,6 @@ class MainWindow(RoundedWindow):
                 QIcon(f"user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
         if self.topWidget.button("5"):
             self.topWidget.button("5").setIcon(QIcon(f"auto_{'black' if getTheme() == Theme.Light else 'white'}.svg"))
-            # 浅色
-            # 深色
             self.topWidget.button("5").setText(
                 self.tr("MainPage.ToggleTheme.Light.Text") if getTheme() == Theme.Light else self.tr(
                     "MainPage.ToggleTheme.Dark.Text"))
