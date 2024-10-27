@@ -140,11 +140,10 @@ class FramelessWindow(QWidget):
                     ]
                 
                 self.__ctypes = __import__("ctypes")
-                self.__ctypes.PWINDOWPOS = PWINDOWPOS
-                self.__ctypes.NCCLACSIZE_PARAMS = NCCALCSIZE_PARAMS
                 self.__wintypes = __import__("ctypes.wintypes", fromlist=("ctypes",))
+                self.__wintypes.PWINDOWPOS = PWINDOWPOS
+                self.__wintypes.NCCLACSIZE_PARAMS = NCCALCSIZE_PARAMS
                 self.__win32con = __import__("win32con")
-                self.__win32con.CS_DROPSHADOW = 0x00020000
                 self.__win32gui = __import__("win32gui")
             case "darwin":
                 self.__objc = __import__("objc")
@@ -157,8 +156,6 @@ class FramelessWindow(QWidget):
         self.__updateFrameless()
     
     def __updateFrameless(self):
-        # TODO: test the compatibility on other platform
-        # TODO: done the code of Linux.
         match platform.system().lower():
             case "windows":
                 self.__updateWindowFrameless()
@@ -172,10 +169,18 @@ class FramelessWindow(QWidget):
     def __updateShadow(self):
         match platform.system().lower():
             case "windows":
-                user32 = WinDLL("user32")
-                user32.SetClassLongPtrW(int(self.winId()), win32con.GCL_STYLE,
-                                        user32.GetClassLongPtrW(int(self.winId()),
-                                                                win32con.GCL_STYLE) | 0x00020000)
+                import ctypes
+                class MARGINS(ctypes.Structure):
+                    _fields_ = [
+                        ("cxLeftWidth", ctypes.c_int),
+                        ("cxRightWidth", ctypes.c_int),
+                        ("cyTopHeight", ctypes.c_int),
+                        ("cyBottomHeight", ctypes.c_int),
+                    ]
+                
+                dwmapi = WinDLL("dwmapi")
+                margins = MARGINS(1, 1, 1, 1)
+                dwmapi.DwmExtendFrameIntoClientArea(int(self.winId()), ctypes.byref(margins))
             case "darwin":
                 self.__nsWindow.setHasShadow_(True)
             case "linux":
@@ -183,6 +188,7 @@ class FramelessWindow(QWidget):
     
     def __updateWindowFrameless(self):
         if platform.system().lower() == "windows":
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.FramelessWindowHint)
             self.__win32gui.SetWindowLong(
                 int(self.winId()),
                 self.__win32con.GWL_STYLE,
@@ -327,13 +333,15 @@ class FramelessWindow(QWidget):
                             elif rx:
                                 return True, win32con.HTRIGHT
                     case self.__win32con.WM_NCCALCSIZE:
-                        if msg.wParam:
-                            rect = self.__ctypes.cast(msg.lParam,
-                                                      self.__ctypes.POINTER(
-                                                          self.__ctypes.NCCLACSIZE_PARAMS)).contents.rgrc[
-                                0]
-                        else:
-                            rect = self.__ctypes.cast(msg.lParam, self.__ctypes.POINTER(self.__ctypes.RECT)).contents
+                        rect = self.__wintypes.RECT()
+                        match msg.wParam:
+                            case True:
+                                rect = self.__ctypes.cast(
+                                    msg.lParam,
+                                    self.__ctypes.POINTER(self.__wintypes.NCCLACSIZE_PARAMS)
+                                ).contents.rgrc[0]
+                            case False:
+                                rect = self.__ctypes.cast(msg.lParam, self.__wintypes.LPRECT).contents
                         
                         if self.__win32gui.GetWindowPlacement(int(msg.hWnd))[
                             1] == self.__win32con.SW_MAXIMIZE and not isFullScreen(msg.hWnd):
@@ -357,7 +365,7 @@ class FramelessWindow(QWidget):
                                 rect.right -= Taskbar.AUTO_HIDE_THICKNESS
                         if bool(msg.wParam):
                             self.update()
-                        return True, 0 if not bool(msg.wParam) else win32con.WVR_VREDRAW
+                        return True, 0 if not bool(msg.wParam) else self.__win32con.WVR_VREDRAW
                 result = super().nativeEvent(eventType, message)
                 return result[0], result[1] or 0
         return super().nativeEvent(eventType, message)
@@ -403,10 +411,6 @@ class FramelessWindow(QWidget):
                 self.setProperty("systemTitleBarButtonVisible", bool(value))
             else:
                 raise TypeError(f"'{type(value)}' object cannot be interpreted as a bool.")
-        self.__updateFrameless()
-    
-    def childEvent(self, *args):
-        super().childEvent(*args)
         self.__updateFrameless()
 
 

@@ -49,12 +49,12 @@ class ThemeColours(dict):
         super().__init__(*args, **kwargs)
     
     def __getitem__(self, item):
-        if item not in ["Foreground", "Background", "Border"]:
+        if item not in [ColourRoles.Foreground, ColourRoles.Background, ColourRoles.Border]:
             raise KeyError(item)
         return HighlightsDict(super().__getitem__(item))
     
     def __setitem__(self, key, value):
-        if key not in ["Foreground", "Background", "Border"]:
+        if key not in [ColourRoles.Foreground, ColourRoles.Background, ColourRoles.Border]:
             raise KeyError(key)
         super().__setitem__(key, HighlightsDict(value))
 
@@ -87,7 +87,7 @@ def initThemeColours():
     forehColours[Theme.Light] = (0, 0, 0)
     forehColours[Theme.Dark] = (255, 255, 255)
     foreHighlighs[True] = forehColours
-    themeColours["Foreground"] = foreHighlighs
+    themeColours[ColourRoles.Foreground] = foreHighlighs
     backHighlights = HighlightsDict()
     backNohColours = LightDarkDict()
     backNohColours[Theme.Light] = (253, 253, 253)
@@ -96,7 +96,7 @@ def initThemeColours():
     backhColours = LightDarkDict()
     backhColours[Theme.Light] = (176, 224, 250)
     backhColours[Theme.Dark] = (142, 197, 252)
-    themeColours["Background"] = backHighlights
+    themeColours[ColourRoles.Background] = backHighlights
     borderHighlights = HighlightsDict()
     borderNohColours = LightDarkDict()
     borderNohColours[Theme.Light] = (230, 230, 230)
@@ -106,7 +106,7 @@ def initThemeColours():
     borderhColours[Theme.Light] = (135, 206, 250)
     borderhColours[Theme.Dark] = (79, 172, 254)
     borderHighlights[True] = borderhColours
-    themeColours["Border"] = borderHighlights
+    themeColours[ColourRoles.Border] = borderHighlights
     globals()["currentThemeColours"] = themeColours
 
 

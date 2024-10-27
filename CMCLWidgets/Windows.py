@@ -6,6 +6,7 @@ from .FramelessWindow import *
 from ctypes import WinDLL, pointer, windll
 from ctypes.wintypes import RECT
 import platform
+import win32con
 
 
 class RoundedWindow(FramelessMainWindow):
@@ -49,6 +50,11 @@ class RoundedWindow(FramelessMainWindow):
                                                int(self.BORDER_RADIUS * dpiScaleRate)
                                            ),
                                            False)
+                
+                user32 = WinDLL("user32")
+                user32.SetClassLongPtrW(int(self.winId()), win32con.GCL_STYLE,
+                                        user32.GetClassLongPtrW(int(self.winId()),
+                                                                win32con.GCL_STYLE) | 0x00020000)
             case "Darwin":
                 pass
             case "Linux":
@@ -107,6 +113,11 @@ class RoundedDialogue(QDialog, FramelessWindow):
                                                int(self.BORDER_RADIUS * dpiScaleRate)
                                            ),
                                            False)
+                
+                user32 = WinDLL("user32")
+                user32.SetClassLongPtrW(int(self.winId()), win32con.GCL_STYLE,
+                                        user32.GetClassLongPtrW(int(self.winId()),
+                                                                win32con.GCL_STYLE) | 0x00020000)
             case "Darwin":
                 pass
             case "Linux":
@@ -168,6 +179,11 @@ class RoundedMenu(QMenu):
                                                                                  int(self.BORDER_RADIUS * dpiScaleRate),
                                                                                  int(self.BORDER_RADIUS * dpiScaleRate)),
                                               False)
+                
+                user32 = WinDLL("user32")
+                user32.SetClassLongPtrW(int(self.winId()), win32con.GCL_STYLE,
+                                        user32.GetClassLongPtrW(int(self.winId()),
+                                                                win32con.GCL_STYLE) | 0x00020000)
             case "darwin":
                 pass
             case "linux":

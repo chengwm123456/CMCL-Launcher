@@ -32,6 +32,7 @@ class ScrollBar(QScrollBar):
         painter = QPainter(self)
         painter.setOpacity(self.property("Opacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.save()
         painter.setPen(getBorderColour())
         painter.setBrush(getBackgroundColour())
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
@@ -56,7 +57,6 @@ class ScrollBar(QScrollBar):
             )
         )
         painter.setBrush(getForegroundColour())
-        painter.save()
         match self.orientation():
             case Qt.Orientation.Horizontal:
                 painter.translate(QPoint(0, 0))
@@ -67,6 +67,7 @@ class ScrollBar(QScrollBar):
                 painter.drawPolygon(
                     [QPoint(self.height() - 3, self.height() // 2), QPoint(3, self.height() - 3),
                      QPoint(3, 3)])
+                painter.translate(QPoint(0, 0))
             case Qt.Orientation.Vertical:
                 painter.translate(QPoint(0, 0))
                 painter.drawPolygon(
@@ -75,10 +76,11 @@ class ScrollBar(QScrollBar):
                 painter.translate(QPoint(0, self.height() - self.width()))
                 painter.drawPolygon(
                     [QPoint(3, 3), QPoint(self.width() // 2, self.width() - 3), QPoint(self.width() - 3, 3)])
+                painter.translate(QPoint(0, 0))
         painter.restore()
+        painter.save()
         painter.setPen(getBorderColour(is_highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled()))
-        painter.setBrush(getBackgroundColour(
-            is_highlight=self.isEnabled()))
+        painter.setBrush(getBackgroundColour(is_highlight=self.isEnabled()))
         x = 0
         y = 0
         width = 0
@@ -105,6 +107,7 @@ class ScrollBar(QScrollBar):
                 height = min(max(50, self.height() - self.maximum()),
                              self.height() - y - self.width())
         painter.drawRoundedRect(QRect(x, y, width, height).adjusted(2, 2, -2, -2), 10, 10)
+        painter.restore()
     
     def contextMenuEvent(self, a0):
         menu = RoundedMenu(self)
@@ -245,22 +248,23 @@ class ScrollBar(QScrollBar):
                     ani.finished.connect(ani.deleteLater)
                     ani.start()
             case QEvent.Type.EnabledChange:
-                if self.isEnabled():
-                    ani = QPropertyAnimation(self, b"Opacity", self)
-                    ani.setDuration(500)
-                    ani.setStartValue(0.3)
-                    ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
-                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
-                    ani.start()
-                else:
-                    ani = QPropertyAnimation(self, b"Opacity", self)
-                    ani.setDuration(500)
-                    ani.setStartValue(self.property("Opacity"))
-                    ani.setEndValue(0.3)
-                    ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
-                    ani.start()
+                match self.isEnabled:
+                    case True:
+                        ani = QPropertyAnimation(self, b"Opacity", self)
+                        ani.setDuration(500)
+                        ani.setStartValue(0.3)
+                        ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
+                        ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        ani.finished.connect(ani.deleteLater)
+                        ani.start()
+                    case False:
+                        ani = QPropertyAnimation(self, b"Opacity", self)
+                        ani.setDuration(500)
+                        ani.setStartValue(self.property("Opacity"))
+                        ani.setEndValue(0.3)
+                        ani.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        ani.finished.connect(ani.deleteLater)
+                        ani.start()
         return super().eventFilter(a0, a1)
 
 

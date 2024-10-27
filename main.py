@@ -22,6 +22,7 @@ from io import StringIO
 from uuid import UUID
 import logging
 import time
+import gettext
 
 from CMCLWidgets import *
 from PyQt6.QtCore import *
@@ -93,13 +94,22 @@ class AcrylicBackground(QWidget):
         self.img = QPixmap()
     
     def paintEvent(self, a0):
-        bg = QGraphicsBlurEffect(self)
-        bg.setBlurRadius(self.blurRadius)
-        self.setGraphicsEffect(bg)
-        painter = QPainter(self)
         brush = self.createTexture()
-        painter.drawImage(self.img)
-        painter.fillRect(self.img.rect(), brush)
+        scene = QGraphicsScene()
+        item = QGraphicsPixmapItem()
+        item.setPixmap(self.img)
+        blur = QGraphicsBlurEffect()
+        blur.setBlurRadius(30)
+        item.setGraphicsEffect(blur)
+        scene.addItem(item)
+        img = QPixmap(self.img.size())
+        img.fill(Qt.GlobalColor.transparent)
+        ptr = QPainter(img)
+        scene.render(ptr, QRectF(img.rect()), QRectF(img.rect()))
+        ptr.end()
+        painter = QPainter(self)
+        painter.drawImage(img)
+        painter.fillRect(img.rect(), brush)
     
     def createTexture(self):
         acrylicTexture = QImage(64, 64, QImage.Format.Format_ARGB32_Premultiplied)
@@ -210,12 +220,12 @@ class LoadingAnimation(QFrame):
     
     def __updateText(self):
         self.__counter += 1
-        self.__statusLabel.setText("加载中" + "." * (self.__counter % 4))
+        self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text") + "." * (self.__counter % 4))
     
     def start(self, ani=True):
         self.setStyleSheet(
             f"background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});")
-        self.__statusLabel.setText("加载中")
+        self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text"))
         self.__svgWidget.load("CMCL_loading.svg")
         self.__failedSvg.load("CMCL_loading_failed.svg")
         self.__failedSvg.hide()
@@ -237,11 +247,11 @@ class LoadingAnimation(QFrame):
                 self.HideAnimation(self).start()
             else:
                 self.hide()
-            self.__statusLabel.setText("已加载完成")
+            self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.SuccessText"))
             self.__failedSvg.hide()
         else:
             self.setStyleSheet(f"background: rgb({'255, 200, 200' if getTheme() == Theme.Light else '100, 50, 50'});")
-            self.__statusLabel.setText("加载失败，请重试")
+            self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.FailedText"))
             self.__failedSvg.show()
     
     def hideEvent(self, *args, **kwargs):
@@ -279,7 +289,7 @@ class LoginDialogue(RoundedDialogue):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background: white")
-        self.setWindowTitle("登录")
+        self.setWindowTitle(self.tr("LoginDialogue.Title"))
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setContentsMargins(11, 43, 11, 11)
         self.content = Label(self)
@@ -312,17 +322,17 @@ class LoginDialogue(RoundedDialogue):
         self.lineEdit.setInputMask("X.XXXX_XXX.X.X.XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX;X")
         self.horizontalLayout.addWidget(self.lineEdit)
         self.toolButton = ToolButton(self)
-        self.toolButton.setText("继续")
+        self.toolButton.setText(self.tr("LoginDialogue.toolButton.Text"))
         self.toolButton.pressed.connect(self.process_login)
         self.horizontalLayout.addWidget(self.toolButton)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.pushButton = PushButton(self)
-        self.pushButton.setText("重新打开网页")
+        self.pushButton.setText(self.tr("LoginDialogue.pushButton.Text"))
         self.pushButton.pressed.connect(lambda: webb.open(
             "https://login.live.com/oauth20_authorize.srf?client_id=00000000402b5328&response_type=code&scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf"))
         self.verticalLayout.addWidget(self.pushButton)
         self.trybtn = PushButton(self)
-        self.trybtn.setText("体验新登录")
+        self.trybtn.setText(self.tr("LoginDialogue.trybtn.Text"))
         self.trybtn.pressed.connect(self.open_new_login)
         self.verticalLayout.addWidget(self.trybtn)
         spacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
@@ -373,14 +383,14 @@ class LoginWindow(RoundedDialogue):
         def contextMenuEvent(self, a0):
             menu = RoundedMenu(self)
             reload = QAction(menu)
-            reload.setText("重新加载")
+            reload.setText(self.tr("LoginWindow.WebEngineView.Reload.Text"))
             reload.triggered.connect(self.reload)
             menu.addAction(reload)
             menu.popup(self.mapToGlobal(a0.pos()))
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("登录")
+        self.setWindowTitle(self.tr("LoginWindow.Title"))
         self.resize(800, 600)
         self.view = self.QWebEngineView(self)
         self.view.show()
@@ -535,13 +545,13 @@ class MainPage(QFrame):
         self.bottomPanelIsShow = True
     
     def retranslateUI(self):
-        self.launch_btn.setText("启动")
-        self.select_version_btn.setText(self.version or "选择版本")
-        self.change_dir_btn.setText("切换文件夹")
+        self.launch_btn.setText(self.tr("MainPage.launch_btn.Text"))
+        self.select_version_btn.setText(self.version or self.tr("MainPage.select_version_btn.DefaultText"))
+        self.change_dir_btn.setText(self.tr("MainPage.change_dir_btn.Text"))
     
     def select_version(self, version):
         self.version = version
-        self.select_version_btn.setText(self.version or "选择版本")
+        self.select_version_btn.setText(self.version or self.tr("MainPage.select_version_btn.DefaultText"))
     
     def launch(self):
         result = LaunchMinecraft(minecraft_path, self.version,
@@ -553,7 +563,7 @@ class MainPage(QFrame):
         if result[0] == "Successfully":
             tip = PopupTip(frame)
             label = Label(tip)
-            label.setText("游戏已启动")
+            label.setText(self.tr("MainPage.VersionLaunchedTip.Label.Text"))
             label.adjustSize()
             tip.setCentralWidget(label)
             tip.setGeometry(QRect(0, 0, 300, 64))
@@ -562,7 +572,7 @@ class MainPage(QFrame):
     
     def setMinecraftDir(self):
         global minecraft_path
-        path = QFileDialog(self).getExistingDirectory(self, "选择文件夹", str(minecraft_path))
+        path = QFileDialog(self).getExistingDirectory(self, self.tr("MainPage.SelectDir.Title"), str(minecraft_path))
         if path:
             minecraft_path = Path(path)
             self.update_menu()
@@ -650,7 +660,8 @@ class DownloadPage(QFrame):
                 
                 self.verticalLayout_3.addItem(self.verticalSpacer_2)
                 
-                self.toolBox.addItem(self.page, u"\u539f\u7248")
+                self.toolBox.addItem(self.page,
+                                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page1.Title"))
                 self.page_2 = QWidget()
                 self.page_2.setObjectName(u"page_2")
                 self.verticalLayout_4 = QVBoxLayout(self.page_2)
@@ -673,7 +684,8 @@ class DownloadPage(QFrame):
                 
                 self.verticalLayout_4.addItem(self.verticalSpacer)
                 
-                self.toolBox.addItem(self.page_2, u"\u4e0b\u8f7d\u8bbe\u7f6e")
+                self.toolBox.addItem(self.page_2,
+                                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page2.Title"))
                 
                 self.verticalLayout.addWidget(self.toolBox)
                 
@@ -687,14 +699,17 @@ class DownloadPage(QFrame):
                 QMetaObject.connectSlotsByName(self)
             
             def retranslateUI(self):
-                self.lLabel.setText(u"\u7248\u672c\uff1a")
+                self.lLabel.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.lLabel.Text"))
                 self.pushButton.setText(self.version or u"22.33")
-                self.toolBox.setItemText(self.toolBox.indexOf(self.page), u"\u539f\u7248")
-                self.label_2.setText(u"\u4e0b\u8f7d\u8def\u5f84\uff1a")
+                self.toolBox.setItemText(self.toolBox.indexOf(self.page),
+                                         self.tr("DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page1.Title"))
+                self.label_2.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.label_2.Text"))
                 self.lineEdit_2.setText(str(minecraft_path))
                 self.lineEdit_2.setPlaceholderText(str(minecraft_path))
-                self.toolBox.setItemText(self.toolBox.indexOf(self.page_2), u"\u4e0b\u8f7d\u8bbe\u7f6e")
-                self.startDownloadButton.setText("下载")
+                self.toolBox.setItemText(self.toolBox.indexOf(self.page_2),
+                                         self.tr("DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page2.Title"))
+                self.startDownloadButton.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.startDownloadButton.Text"))
             
             # retranslateUi
             
@@ -749,7 +764,10 @@ class DownloadPage(QFrame):
             self.tableView.verticalHeader().setVisible(False)
             self.tableView.clicked.connect(self.downloadOptionsOpen)
             self.versionModel = QStandardItemModel(self.tableView)
-            self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
+            self.versionModel.setHorizontalHeaderLabels(
+                [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
+                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
+                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
             self.tableView.setModel(self.versionModel)
             self.versions = {}
             sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -878,7 +896,10 @@ class DownloadPage(QFrame):
                                               "ReleaseTime": release_time, "ReleaseDatetime": release_datetime}
                     completer_l.append(version)
                 self.lineEdit.setCompleter(QCompleter(completer_l, self.lineEdit))
-                self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
+                self.versionModel.setHorizontalHeaderLabels(
+                    [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
+                     self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
+                     self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
                 self.tableView.setModel(self.versionModel)
                 self.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
                 self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -968,7 +989,10 @@ class DownloadPage(QFrame):
                             i += 1
                     except re.error:
                         pass
-            self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布时间"])
+            self.versionModel.setHorizontalHeaderLabels(
+                [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
+                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
+                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
             self.tableView.setModel(self.versionModel)
             self.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
             self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -1026,7 +1050,8 @@ class DownloadPage(QFrame):
     # setupUi
     
     def retranslateUi(self):
-        self.pushButton.setText("原版")
+        # 原版
+        self.pushButton.setText(self.tr("DownloadPage.pushButton.text"))
         # self.pushButton_2.setText("")
     
     # retranslateUi
@@ -1091,10 +1116,10 @@ class SettingsPage(QFrame):
         # setupUi
         
         def retranslateUi(self):
-            self.label.setText(u"\u989d\u5916\u6e38\u620f\u542f\u52a8\u53c2\u6570\uff1a")
-            self.groupBox.setTitle(u"\u9884\u8bbe")
-            self.checkBox.setText(u"demo\u6a21\u5f0f")
-            self.checkBox_2.setText(u"\u542f\u52a8\u65f6\u5168\u5c4f")
+            self.label.setText(self.tr("SettingsPage.GameSettings.label.Text"))
+            self.groupBox.setTitle(self.tr("SettingsPage.GameSettings.gropuBox.Title"))
+            self.checkBox.setText(self.tr("SettingsPage.GameSettings.checkBox.Text"))
+            self.checkBox_2.setText(self.tr("SettingsPage.GameSettings.checkBox_2.Text"))
         
         # retranslateUi
         
@@ -1164,24 +1189,24 @@ class SettingsPage(QFrame):
             self.horizontalLayout_3 = QHBoxLayout(self.widget_2)
             self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
             self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
-            self.lineEdit_2 = ComboBox(self.widget_2)
-            self.lineEdit_2.setObjectName(u"lineEdit_2")
-            self.lineEdit_2.setEditable(True)
+            self.comboBox = ComboBox(self.widget_2)
+            self.comboBox.setObjectName(u"lineEdit_2")
+            self.comboBox.setEditable(True)
             font = QFont("Consolas")
             font.setPointSize(13)
-            self.lineEdit_2.setFont(font)
-            self.horizontalLayout_3.addWidget(self.lineEdit_2, 1)
+            self.comboBox.setFont(font)
+            self.horizontalLayout_3.addWidget(self.comboBox, 1)
             
             self.pushButton_2 = TogglePushButton(self.widget_2)
             self.pushButton_2.setObjectName(u"pushButton_2")
             self.pushButton_2.setChecked(settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"])
             if not self.pushButton_2.isChecked():
-                self.lineEdit_2.setEnabled(True)
+                self.comboBox.setEnabled(True)
                 self.searchJava()
             else:
-                self.lineEdit_2.clear()
-                self.lineEdit_2.setCurrentText("自动选择")
-                self.lineEdit_2.setEnabled(False)
+                self.comboBox.clear()
+                self.comboBox.setCurrentText(self.tr("SettingsPage.JavaSettings.comboBox.Text"))
+                self.comboBox.setEnabled(False)
             self.pushButton_2.toggled.connect(self.updateJavaPathIsAuto)
             
             self.horizontalLayout_3.addWidget(self.pushButton_2)
@@ -1230,14 +1255,15 @@ class SettingsPage(QFrame):
         # setupUi
         
         def retranslateUi(self):
-            self.groupBox.setTitle(u"\u542f\u52a8\u6a21\u5f0f")
-            self.radioButton.setText(u"client \u6a21\u5f0f")
-            self.radioButton_2.setText(u"server \u6a21\u5f0f")
-            self.label_2.setText(u"Java \u8def\u5f84\uff1a")
-            self.pushButton_2.setText(u"\u81ea\u52a8\u9009\u62e9Java")
+            self.groupBox.setTitle(self.tr("SettingsPage.JavaSettings.groupBox.Text"))
+            self.radioButton.setText(self.tr("SettingsPage.JavaSettings.radioButton.Text"))
+            self.radioButton_2.setText(self.tr("SettingsPage.JavaSettings.radioButton_2.Text"))
+            self.label_2.setText(self.tr("SettingsPage.JavaSettings.label_2.Text"))
+            self.pushButton_2.setText(self.tr("SettingsPage.JavaSettings.pushButton_2.Text"))
             self.label.setText(
-                u"\u989d\u5916JVM\u53c2\u6570\uff1a" if not self.pushButton.isChecked() else u"自定义JVM\u53c2\u6570\uff1a")
-            self.pushButton.setText(u"\u8986\u76d6\u9ed8\u8ba4JVM\u53c2\u6570")
+                self.tr("SettingsPage.JavaSettings.label.Text.1") if not self.pushButton.isChecked() else self.tr(
+                    "SettingsPage.JavaSettings.label.Text.2"))
+            self.pushButton.setText(self.tr("SettingsPage.JavaSettings.pushButton.Text"))
         
         # retranslateUi
         
@@ -1245,18 +1271,18 @@ class SettingsPage(QFrame):
             global settings
             settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"] = self.pushButton_2.isChecked()
             if not self.pushButton_2.isChecked():
-                self.lineEdit_2.setEnabled(True)
+                self.comboBox.setEnabled(True)
                 self.searchJava()
             else:
-                self.lineEdit_2.clear()
-                self.lineEdit_2.setCurrentText("自动选择")
-                self.lineEdit_2.setEnabled(False)
+                self.comboBox.clear()
+                self.comboBox.setCurrentText(self.tr("SettingsPage.JavaSettings.comboBox.Text"))
+                self.comboBox.setEnabled(False)
             self.retranslateUi()
         
         def updateJavaSelectPaths(self, data):
-            self.lineEdit_2.clear()
+            self.comboBox.clear()
             for i in data:
-                self.lineEdit_2.addItem(i)
+                self.comboBox.addItem(i)
         
         def searchJava(self):
             thread = self.SearchVersionThread(self)
@@ -1316,13 +1342,18 @@ class SettingsPage(QFrame):
     # setupUi
     
     def retranslateUi(self):
-        self.pushButton.setText("游戏启动")
-        self.pushButton_2.setText("Java 设置")
+        self.pushButton.setText(self.tr("SettingsPage.pushButton.Text"))
+        self.pushButton_2.setText(self.tr("SettingsPage.pushButton_2.Text"))
     
     # retranslateUi
     
     def update_page(self, btn):
         self.stackedWidget.setCurrentWidget(self.pages[btn])
+
+
+class AboutPage(QFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
 
 
 class UserPage(QFrame):
@@ -1332,12 +1363,14 @@ class UserPage(QFrame):
         self.current_user = 0
         
         # DEBUG: ON#
-        self.user_datas.append(create_online_player("2233", "68559", "TheFengHaoDouLuoOfBiZhan", True))
-        self.user_datas.append(create_online_player("22和33", "68559", "TheSameAsAbove", True))
-        self.user_datas.append(player)
-        self.user_datas.append(create_online_player("chengwm_CMCL", "100000000", "NoAccessToken", False))
-        self.current_user = 2
+        # self.user_datas.append(create_online_player("2233", "68559", "TheFengHaoDouLuoOfBiZhan", True))
+        # self.user_datas.append(create_online_player("22和33", "68559", "TheSameAsAbove", True))
+        # self.user_datas.append(player)
+        # self.user_datas.append(create_online_player("chengwm_CMCL", "100000000", "NoAccessToken", False))
+        # self.current_user = 2
         # DEBUG: END#
+        
+        self.user_datas.append(player)
         
         self.verticalLayout = QVBoxLayout(self)
         self.topPanel = Panel(self)
@@ -1349,8 +1382,10 @@ class UserPage(QFrame):
         self.leftUserIcon.setVisible(len(self.user_datas) > 1 and self.current_user >= 1)
         if len(self.user_datas) > 1 and self.current_user >= 1:
             left_user = self.user_datas[min(max(self.current_user - 1, 0), len(self.user_datas) - 1)]
+            # 用户名称：{}\n类型：{}账户（在线）\n是否拥有Minecraft: {}
             self.leftUserIcon.setToolTip(
-                f"用户名称：{left_user.player_name}\n类型：{left_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {left_user.player_hasMC}")
+                self.tr("UserPage.UserDataFormat.Text").format(left_user.player_name, left_user.player_accountType[1],
+                                                               left_user.player_hasMC))
         else:
             self.leftUserIcon.setToolTip("")
         self.leftUserIcon.pressed.connect(lambda: self.select_new_user(self.current_user - 1))
@@ -1363,9 +1398,12 @@ class UserPage(QFrame):
         if len(self.user_datas) > 0:
             current_user = self.user_datas[self.current_user]
             self.UserIcon.setText(
-                f"用户名称：{current_user.player_name}\n类型：{current_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {current_user.player_hasMC}")
+                self.tr("UserPage.UserDataFormat.Text").format(current_user.player_name,
+                                                               current_user.player_accountType[1],
+                                                               current_user.player_hasMC))
         else:
-            self.UserIcon.setText("暂无账号，快去登录一个吧。")
+            # 暂无账号，快去登录一个吧。
+            self.UserIcon.setText(self.tr("UserPage.UserIconNoUser.Text"))
         self.UserIcon.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.UserIcon.pressed.connect(self.startLogin)
         self.horizontalLayout.addWidget(self.UserIcon)
@@ -1378,12 +1416,17 @@ class UserPage(QFrame):
         if len(self.user_datas) > 1 and self.current_user < len(self.user_datas) - 1:
             right_user = self.user_datas[min(max(self.current_user + 1, 0), len(self.user_datas) - 1)]
             self.rightUserIcon.setToolTip(
-                f"用户名称：{right_user.player_name}\n类型：{right_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {right_user.player_hasMC}")
+                self.tr("UserPage.UserDataFormat.Text").format(right_user.player_name, right_user.player_accountType[1],
+                                                               right_user.player_hasMC))
         else:
             self.rightUserIcon.setToolTip("")
         self.rightUserIcon.pressed.connect(lambda: self.select_new_user(self.current_user + 1))
         self.horizontalLayout.addWidget(self.rightUserIcon)
         self.verticalLayout.addWidget(self.topPanel)
+        
+        self.centrePanel = Panel(self)
+        self.horizontalLayout_2 = QHBoxLayout(self.centrePanel)
+        self.verticalLayout.addWidget(self.centrePanel)
         
         self.userTabel = TableView(self)
         self.verticalLayout.addWidget(self.userTabel)
@@ -1395,21 +1438,15 @@ class UserPage(QFrame):
         self.userTabel.horizontalHeader().setVisible(True)
         self.userTabel.verticalHeader().setVisible(False)
         self.userModel = QStandardItemModel()
-        self.userModel.setHorizontalHeaderLabels(["用户名", "类型"])
+        self.userModel.setHorizontalHeaderLabels([self.tr("UserPage.userTable.horizontalHeaderLabels.1"),
+                                                  self.tr("UserPage.userTable.horizontalHeaderLabels.2")])
         self.userTabel.setModel(self.userModel)
         self.userModel.clear()
-        self.userModel.setHorizontalHeaderLabels(["用户名", "类型"])
+        self.userModel.setHorizontalHeaderLabels([self.tr("UserPage.userTable.horizontalHeaderLabels.1"),
+                                                  self.tr("UserPage.userTable.horizontalHeaderLabels.2")])
         for e, i in enumerate(self.user_datas):
             self.userModel.setItem(e, 0, QStandardItem(i.player_name))
             self.userModel.setItem(e, 1, QStandardItem(i.player_accountType[1]))
-        # self.userModel.setItem(0, 0, QStandardItem("22&33"))
-        # self.userModel.setItem(0, 1, QStandardItem("Bilibili账户"))
-        # self.userModel.setItem(1, 0, QStandardItem("22和33"))
-        # self.userModel.setItem(1, 1, QStandardItem("Bilibili账户"))
-        # self.userModel.setItem(2, 0, QStandardItem("chengwm"))
-        # self.userModel.setItem(2, 1, QStandardItem("Microsoft账户"))
-        # self.userModel.setItem(3, 0, QStandardItem("chengwm_CMCL"))
-        # self.userModel.setItem(3, 1, QStandardItem("Bilibili账户"))
         
         self.retranslateUI()
     
@@ -1417,23 +1454,28 @@ class UserPage(QFrame):
         if len(self.user_datas) > 1 and self.current_user >= 1:
             left_user = self.user_datas[min(max(self.current_user - 1, 0), len(self.user_datas) - 1)]
             self.leftUserIcon.setToolTip(
-                f"用户名称：{left_user.player_name}\n类型：{left_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {left_user.player_hasMC}")
+                self.tr("UserPage.UserDataFormat.Text").format(left_user.player_name, left_user.player_accountType[1],
+                                                               left_user.player_hasMC))
         else:
             self.leftUserIcon.setToolTip("")
         if len(self.user_datas) > 0:
             current_user = self.user_datas[self.current_user]
             self.UserIcon.setText(
-                f"用户名称：{current_user.player_name}\n类型：{current_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {current_user.player_hasMC}")
+                self.tr("UserPage.UserDataFormat.Text").format(current_user.player_name,
+                                                               current_user.player_accountType[1],
+                                                               current_user.player_hasMC))
         else:
-            self.UserIcon.setText("暂无账号，快去登录一个吧。")
+            self.UserIcon.setText(self.tr("UserPage.UserIconNoUser.Text"))
         if len(self.user_datas) > 1 and self.current_user < len(self.user_datas) - 1:
             right_user = self.user_datas[min(max(self.current_user + 1, 0), len(self.user_datas) - 1)]
             self.rightUserIcon.setToolTip(
-                f"用户名称：{right_user.player_name}\n类型：{right_user.player_accountType[1]}账户（在线）\n是否拥有Minecraft: {right_user.player_hasMC}")
+                self.tr("UserPage.UserDataFormat.Text").format(right_user.player_name, right_user.player_accountType[1],
+                                                               right_user.player_hasMC))
         else:
             self.rightUserIcon.setToolTip("")
         self.userModel.clear()
-        self.userModel.setHorizontalHeaderLabels(["用户名", "类型"])
+        self.userModel.setHorizontalHeaderLabels([self.tr("UserPage.userTable.horizontalHeaderLabels.1"),
+                                                  self.tr("UserPage.userTable.horizontalHeaderLabels.2")])
         for e, i in enumerate(self.user_datas):
             self.userModel.setItem(e, 0, QStandardItem(i.player_name))
             self.userModel.setItem(e, 1, QStandardItem(i.player_accountType[1]))
@@ -1485,15 +1527,15 @@ class MainWindow(RoundedWindow):
         self.topWidget = NavigationPanel(self.centralwidget)
         self.topWidget.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.HomePage = MainPage(self)
-        self.topWidget.addItem(self.HomePage, "Home.svg", "主页")
+        self.topWidget.addItem(self.HomePage, "Home.svg", self.tr("MainWindow.HomePage.Text"))
         self.DownloadPage = DownloadPage(self)
-        self.topWidget.addItem(self.DownloadPage, "Download.svg", "下载")
+        self.topWidget.addItem(self.DownloadPage, "Download.svg", self.tr("MainWindow.DownloadPage.Text"))
         self.SettingsPage = SettingsPage(self)
-        self.topWidget.addItem(self.SettingsPage, "Settings.svg", "设置")
+        self.topWidget.addItem(self.SettingsPage, "Settings.svg", self.tr("MainWindow.SettingsPage.Text"))
         self.UserPage = UserPage(self)
-        self.topWidget.addItem(self.UserPage, "user_icon-black.svg", "用户",
+        self.topWidget.addItem(self.UserPage, "user_icon-black.svg", self.tr("MainWindow.UserPage.Text"),
                                pos=NavigationPanel.NavigationItemPosition.Right)
-        self.topWidget.addButton("auto_black.svg", "浅色", selectable=False, pressed=self.toggle_theme,
+        self.topWidget.addButton("auto_black.svg", "", selectable=False, pressed=self.toggle_theme,
                                  pos=NavigationPanel.NavigationItemPosition.Right)
         self.horizontalLayout.addWidget(self.topWidget)
         self.content = ContentPanel(self.centralwidget)
@@ -1530,7 +1572,11 @@ class MainWindow(RoundedWindow):
                 QIcon(f"user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
         if self.topWidget.button("5"):
             self.topWidget.button("5").setIcon(QIcon(f"auto_{'black' if getTheme() == Theme.Light else 'white'}.svg"))
-            self.topWidget.button("5").setText("浅色" if getTheme() == Theme.Light else "深色")
+            # 浅色
+            # 深色
+            self.topWidget.button("5").setText(
+                self.tr("MainPage.ToggleTheme.Light.Text") if getTheme() == Theme.Light else self.tr(
+                    "MainPage.ToggleTheme.Dark.Text"))
     
     def paintEvent(self, a0, **kwargs):
         painter = QPainter(self)
@@ -1985,6 +2031,10 @@ if font_id != -1:
         font = QFont(font_families[0])
         app.setFont(font)
 player = create_online_player(None, None, None, False)
+
+translator = QTranslator()
+translator.load("CMCL_zh-cn.qm")
+app.installTranslator(translator)
 # player = LittleSkinPlayer("chengwm", "random", "random",
 #                           "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEArGcNOOFIqLJSqoE3u0hj\ntOEnOcET3wj9Drss1BE6sBqgPo0bMulOULhqjkc/uH/wyosYnzw3xaazJt87jTHh\nJ8BPMxCeQMoyEdRoS3Jnj1G0Kezj4A2b61PJJM1DpvDAcqQBYsrSdpBJ+52MjoGS\nvJoeQO5XUlJVQm21/HmJnqsPhzcA6HgY71RHYE5xnhpWJiPxLKUPtmt6CNYUQQoS\no2v36XWgMmLBZhAbNOPxYX+1ioxKamjhLO29UhwtgY9U6PWEO7/SBfXzyRPTzhPV\n2nHq7KJqd8IIrltslv6i/4FEM81ivS/mm+PN3hYlIYK6z6Ymii1nrQAplsJ67OGq\nYHtWKOvpfTzOollugsRihkAG4OB6hM0Pr45jjC3TIc7eO7kOgIcGUGUQGuuugDEz\nJ1N9FFWnN/H6P9ukFeg5SmGC5+wmUPZZCtNBLr8o8sI5H7QhK7NgwCaGFoYuiAGL\ngz3k/3YwJ40BbwQayQ2gIqenz+XOFIAlajv+/nyfcDvZH9vGNKP9lVcHXUT5YRnS\nZSHo5lwvVrYUrqEAbh/zDz8QMEyiujWvUkPhZs9fh6fimUGxtm8mFIPCtPJVXjeY\nwD3Lvt3aIB1JHdUTJR3eEc4eIaTKMwMPyJRzVn5zKsitaZz3nn/cOA/wZC9oqyEU\nmc9h6ZMRTRUEE4TtaJyg9lMCAwEAAQ==",
 #                           "https://littleskin.cn/api/yggdrasil", True)
