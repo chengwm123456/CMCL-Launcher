@@ -2,7 +2,7 @@
 from PyQt6.QtCore import *
 from .Compoments.TextEdit import TextEdit
 from .Compoments.Panel import Panel
-from CMCLWidgets.ThemeManager.ThemeControl import *
+from .ThemeController.ThemeControl import *
 
 
 class LineNumberTextEdit(TextEdit):

@@ -3,9 +3,9 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from CMCLWidgets.ToolTip import ToolTip
-from CMCLWidgets.Windows import RoundedMenu
-from ..ThemeManager import *
+from .ToolTip import ToolTip
+from ..Windows import RoundedMenu
+from ..ThemeController import *
 
 
 class LineEdit(QLineEdit):

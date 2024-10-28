@@ -293,26 +293,7 @@ class LoginDialogue(RoundedDialogue):
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setContentsMargins(11, 43, 11, 11)
         self.content = Label(self)
-        self.content.setText("""<html><head/><body style="margin: 0px"><p style="margin: 0px">
-                登录步骤：</p>
-                <p style="margin: 0px">1，启动器将打开一个网页，请在网页里登录您的账号。</p>
-                <p style="margin: 0px">如果没有自动打开或者被关了，请点击下方的“重新打开网页”，或者手动打开：</p><br/>
-                   <a href="https://login.live.com/oauth20_authorize.srf?client_id=00000000402b5328&response_type=code&scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf">
-        https://login.live.com/oauth20_authorize.srf?<br/>
-        client_id=00000000402b5328<br/>
-        &response_type=code<br/>
-        &scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL<br/>
-        &redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf<br/>
-                   </a>
-                <p style="margin: 0px">2，如果用户名和密码正确，您应该会被重定向至一个网站，网址会类似这样：</p>
-                <p style="margin: 0px">https://login.live.com/oauth20_desktop.srf?code={code}&lc=XXXX</p>
-                <p style="margin: 0px">您需要将{code}部分的代码提取出来，填在下方的输入框</p>
-                <p style="margin: 0px">（应该没有人会在下面乱输吧。。。。。。）<small><del style="text-decoration: line-through">（事实是：作者此时就在乱按）</del></small></p>
-                <p style="margin: 0px">3，按下 继续 按钮，然后就静静的等等等等等等等等等等等等等等吧。<p>
-                <br/>
-                <p>可以尝试一下新版登录。只要点一下下方的 体验新登录 按钮，就可以尝试新登录了。<br/>
-                Bug 和 建议 可以通过CMCL启动器的官方网站反馈。</p>
-                </body></html>""")
+        self.content.setText(self.tr("LoginDialogue.content.Text"))
         self.content.setWordWrap(True)
         self.content.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.TextSelectableByKeyboard)
@@ -557,7 +538,7 @@ class MainPage(QFrame):
         result = LaunchMinecraft(minecraft_path, self.version,
                                  None if settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"] else
                                  settings["Settings"]["JavaSettings"]["Java"]["Path"]["value"],
-                                 "server",
+                                 settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"],
                                  CMCL_version[0], "CMCL", None, None, None,
                                  settings["Settings"]["GameSettings"]["ExtraGameCommand"], None, None,
                                  player)
@@ -1164,12 +1145,13 @@ class SettingsPage(QFrame):
             self.horizontalLayout.setObjectName(u"horizontalLayout")
             self.radioButton = RadioButton(self.groupBox)
             self.radioButton.setObjectName(u"radioButton")
-            self.radioButton.setChecked(True)
+            self.radioButton.setChecked(settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] == "client")
             
             self.horizontalLayout.addWidget(self.radioButton)
             
             self.radioButton_2 = RadioButton(self.groupBox)
             self.radioButton_2.setObjectName(u"radioButton_2")
+            self.radioButton_2.setChecked(settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] == "server")
             
             self.horizontalLayout.addWidget(self.radioButton_2)
             
@@ -1291,6 +1273,12 @@ class SettingsPage(QFrame):
             global settings
             settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["is_override"] = self.pushButton.isChecked()
             self.retranslateUi()
+        
+        def updateJavaLaunchMode(self):
+            if self.radioButton.isChecked():
+                settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] = "client"
+            if self.radioButton_2.isChecked():
+                settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] = "server"
     
     def __init__(self, parent):
         super().__init__(parent)
@@ -1354,6 +1342,37 @@ class AboutPage(QFrame):
         super().__init__(parent)
 
 
+class OfflinePlayerCreationDialogue(RoundedDialogue):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setStyleSheet(f"background: {'white' if getTheme() == Theme.Light else 'black'}")
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setContentsMargins(5, 37, 5, 5)
+        self.formLayout = QFormLayout(self)
+        self.label = Label(self)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label)
+        self.playernameLineEdit = LineEdit(self)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.playernameLineEdit)
+        self.bottomPanel = Panel(self)
+        self.horizontalLayout = QHBoxLayout(self.bottomPanel)
+        self.CancelButton = PushButton(self.bottomPanel)
+        self.horizontalLayout.addWidget(self.CancelButton)
+        self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.OKButton = PushButton(self.bottomPanel)
+        self.horizontalLayout.addWidget(self.OKButton)
+        self.verticalLayout.addWidget(self.bottomPanel)
+        self.retranslateUI()
+    
+    def retranslateUI(self):
+        self.label.setText(self.tr("OfflinePlayerCreationDialogue.label.Text"))
+        self.CancelButton.setText(self.tr("OfflinePlayerCreationDialogue.CancelButton.Text"))
+        self.OKButton.setText(self.tr("OfflinePlayerCreationDialogue.OKButton.Text"))
+    
+    def setPlayer(self):
+        global player
+        player = create_offline_user(self.playernameLineEdit.text(), player.player_hasMC)
+
+
 class UserPage(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
@@ -1380,7 +1399,6 @@ class UserPage(QFrame):
         self.leftUserIcon.setVisible(len(self.user_datas) > 1 and self.current_user >= 1)
         if len(self.user_datas) > 1 and self.current_user >= 1:
             left_user = self.user_datas[min(max(self.current_user - 1, 0), len(self.user_datas) - 1)]
-            # 用户名称：{}\n类型：{}账户（在线）\n是否拥有Minecraft: {}
             self.leftUserIcon.setToolTip(
                 self.tr("UserPage.UserDataFormat.Text").format(left_user.player_name, left_user.player_accountType[1],
                                                                left_user.player_hasMC))
@@ -1400,7 +1418,6 @@ class UserPage(QFrame):
                                                                current_user.player_accountType[1],
                                                                current_user.player_hasMC))
         else:
-            # 暂无账号，快去登录一个吧。
             self.UserIcon.setText(self.tr("UserPage.UserIconNoUser.Text"))
         self.UserIcon.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.UserIcon.pressed.connect(self.startLogin)
@@ -1424,6 +1441,11 @@ class UserPage(QFrame):
         
         self.centrePanel = Panel(self)
         self.horizontalLayout_2 = QHBoxLayout(self.centrePanel)
+        self.addUserBtn = ToolButton(self.centrePanel)
+        self.createAddUserBtnActions()
+        self.horizontalLayout_2.addWidget(self.addUserBtn)
+        self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.horizontalLayout_2.addItem(self.horizontalSpacer)
         self.verticalLayout.addWidget(self.centrePanel)
         
         self.userTabel = TableView(self)
@@ -1447,6 +1469,21 @@ class UserPage(QFrame):
             self.userModel.setItem(e, 1, QStandardItem(i.player_accountType[1]))
         
         self.retranslateUI()
+        
+        def tempfun(elf):
+            if len(self.user_datas) > 0:
+                current_user = self.user_datas[self.current_user]
+                self.UserIcon.setText(
+                    self.tr("UserPage.UserDataFormat.Text").format(current_user.player_name,
+                                                                   current_user.player_accountType[1],
+                                                                   current_user.player_hasMC))
+            else:
+                self.UserIcon.setText(self.tr("UserPage.UserIconNoUser.Text"))
+        
+        timer = QTimer(self)
+        timer.setInterval(100)
+        timer.timeout.connect(lambda: tempfun(self))
+        timer.start()
     
     def retranslateUI(self):
         if len(self.user_datas) > 1 and self.current_user >= 1:
@@ -1471,6 +1508,8 @@ class UserPage(QFrame):
                                                                right_user.player_hasMC))
         else:
             self.rightUserIcon.setToolTip("")
+        self.addUserBtn.setText(self.tr("UserPage.addUserBtn.Text"))
+        self.createAddUserBtnActions()
         self.userModel.clear()
         self.userModel.setHorizontalHeaderLabels([self.tr("UserPage.userTable.horizontalHeaderLabels.1"),
                                                   self.tr("UserPage.userTable.horizontalHeaderLabels.2")])
@@ -1486,6 +1525,19 @@ class UserPage(QFrame):
         self.rightUserIcon.setIcon(QIcon(f"user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
         super().paintEvent(a0)
     
+    def createAddUserBtnActions(self):
+        menu = RoundedMenu(self.addUserBtn)
+        action1 = QAction(menu)
+        action1.setText(self.tr("UserPage.addUserBtn.Item1.Text"))
+        action1.triggered.connect(self.startLogin)
+        menu.addAction(action1)
+        action2 = QAction(menu)
+        action2.setText(self.tr("UserPage.addUserBtn.Item2.Text"))
+        action2.triggered.connect(self.startCreateOfflinePlayer)
+        menu.addAction(action2)
+        self.addUserBtn.setMenu(menu)
+        self.addUserBtn.setPopupMode(ToolButton.ToolButtonPopupMode.InstantPopup)
+    
     def select_new_user(self, id):
         self.current_user = id
         self.current_user = max(0, min(len(self.user_datas) - 1, self.current_user))
@@ -1494,6 +1546,11 @@ class UserPage(QFrame):
     @staticmethod
     def startLogin():
         dialogue = LoginDialogue()
+        dialogue.exec()
+    
+    @staticmethod
+    def startCreateOfflinePlayer():
+        dialogue = OfflinePlayerCreationDialogue()
         dialogue.exec()
 
 
@@ -1530,6 +1587,8 @@ class MainWindow(RoundedWindow):
         self.topWidget.addItem(self.DownloadPage, "Download.svg", self.tr("MainWindow.DownloadPage.Text"))
         self.SettingsPage = SettingsPage(self)
         self.topWidget.addItem(self.SettingsPage, "Settings.svg", self.tr("MainWindow.SettingsPage.Text"))
+        self.AboutPage = AboutPage(self)
+        self.topWidget.addItem(self.AboutPage, "About.svg", self.tr("MainWindow.AboutPage.Text"))
         self.UserPage = UserPage(self)
         self.topWidget.addItem(self.UserPage, "user_icon-black.svg", self.tr("MainWindow.UserPage.Text"),
                                pos=NavigationPanel.NavigationItemPosition.Right)
@@ -1565,12 +1624,12 @@ class MainWindow(RoundedWindow):
             i.requestUpdate()
     
     def updateIcon(self):
-        if self.topWidget.button("4"):
-            self.topWidget.button("4").setIcon(
-                QIcon(f"user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
         if self.topWidget.button("5"):
-            self.topWidget.button("5").setIcon(QIcon(f"auto_{'black' if getTheme() == Theme.Light else 'white'}.svg"))
-            self.topWidget.button("5").setText(
+            self.topWidget.button("5").setIcon(
+                QIcon(f"user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
+        if self.topWidget.button("6"):
+            self.topWidget.button("6").setIcon(QIcon(f"auto_{'black' if getTheme() == Theme.Light else 'white'}.svg"))
+            self.topWidget.button("6").setText(
                 self.tr("MainPage.ToggleTheme.Light.Text") if getTheme() == Theme.Light else self.tr(
                     "MainPage.ToggleTheme.Dark.Text"))
     
@@ -1745,6 +1804,7 @@ class LoggingWindow(RoundedWindow):
         self.horizontalLayout.addItem(spacer)
         self.loggingtext = self.LoggingText(self)
         self.loggingtext.setReadOnly(True)
+        # self.loggingtext.setLineWrapMode(self.LoggingText.LineWrapMode.NoWrap)
         font = QFont("Consolas")
         font.setPointSize(13)
         self.loggingtext.setFont(font)
@@ -2006,7 +2066,8 @@ else:
                     "Path": {
                         "is_auto": True,
                         "value": None
-                    }
+                    },
+                    "LaunchMode": "client"
                 },
                 "JVM": {
                     "Arg": {

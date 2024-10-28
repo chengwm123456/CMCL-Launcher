@@ -3,8 +3,8 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from ..ThemeManager import *
-from CMCLWidgets.ToolTip import ToolTip
+from ..ThemeController import *
+from .ToolTip import ToolTip
 from CMCLWidgets.Windows import RoundedMenu
 from .ItemView import ItemDelegate
 

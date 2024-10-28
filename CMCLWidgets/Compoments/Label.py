@@ -3,9 +3,9 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from ..ThemeManager import *
+from ..ThemeController import *
 from CMCLWidgets.Windows import RoundedMenu
-from CMCLWidgets.ToolTip import ToolTip
+from .ToolTip import ToolTip
 
 
 class LabelBase(QLabel):

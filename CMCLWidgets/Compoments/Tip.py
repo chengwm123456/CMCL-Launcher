@@ -3,7 +3,7 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from ..ThemeManager import *
+from ..ThemeController import *
 from .Button import CloseButton
 from .Panel import Panel
 

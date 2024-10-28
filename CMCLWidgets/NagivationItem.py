@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from CMCLWidgets.ThemeManager.ThemeControl import *
+from .ThemeController.ThemeControl import *
 
 
 class NavigationItem(QToolButton):

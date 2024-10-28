@@ -16,6 +16,18 @@ import win32print
 from PyQt6.QtGui import QGuiApplication
 
 
+def isMaximized(hwnd):
+    if not hwnd:
+        return False
+    
+    windowPlacement = win32gui.GetWindowPlacement(int(hwnd))
+    
+    if not windowPlacement:
+        return False
+    
+    return windowPlacement[1] == win32con.SW_MAXIMIZE
+
+
 def isFullScreen(hwnd):
     if not hwnd:
         return False
@@ -333,18 +345,21 @@ class FramelessWindow(QWidget):
                             elif rx:
                                 return True, win32con.HTRIGHT
                     case self.__win32con.WM_NCCALCSIZE:
-                        rect = self.__wintypes.RECT()
-                        match msg.wParam:
+                        match bool(msg.wParam):
                             case True:
                                 rect = self.__ctypes.cast(
                                     msg.lParam,
                                     self.__ctypes.POINTER(self.__wintypes.NCCLACSIZE_PARAMS)
                                 ).contents.rgrc[0]
                             case False:
-                                rect = self.__ctypes.cast(msg.lParam, self.__wintypes.LPRECT).contents
+                                rect = self.__ctypes.cast(
+                                    msg.lParam,
+                                    self.__wintypes.LPRECT
+                                ).contents
+                            case _:
+                                rect = self.__wintypes.RECT()
                         
-                        if self.__win32gui.GetWindowPlacement(int(msg.hWnd))[
-                            1] == self.__win32con.SW_MAXIMIZE and not isFullScreen(msg.hWnd):
+                        if isMaximized(msg.hWnd) and not isFullScreen(msg.hWnd):
                             bx = getResizeBorderThickness(msg.hWnd, True)
                             by = getResizeBorderThickness(msg.hWnd, False)
                             rect.top += by
@@ -352,8 +367,7 @@ class FramelessWindow(QWidget):
                             rect.left += bx
                             rect.right -= bx
                         
-                        if (self.__win32gui.GetWindowPlacement(int(msg.hWnd))[
-                                1] == self.__win32con.SW_MAXIMIZE or isFullScreen(msg.hWnd)) and Taskbar.isAutoHide():
+                        if (isMaximized(msg.hWnd) or isFullScreen(msg.hWnd)) and Taskbar.isAutoHide():
                             position = Taskbar.getPosition(msg.hWnd)
                             if position == Taskbar.TOP:
                                 rect.top += Taskbar.AUTO_HIDE_THICKNESS
@@ -401,7 +415,7 @@ class FramelessWindow(QWidget):
         self.__updateFrameless()
     
     def systemTitleBarButtonVisible(self):
-        if platform.system() == "Darwin":
+        if platform.system().lower() == "darwin":
             return self.property("systemTitleBarButtonVisible")
         return False
     

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from ..ThemeManager import *
-from CMCLWidgets.ToolTip import ToolTip
+from ..ThemeController import *
+from .ToolTip import ToolTip
 from .ItemView import ItemDelegate
 from .ScrollBar import ScrollBar
 

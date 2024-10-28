@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtWidgets import *
 from qframelesswindow import TitleBar
-from CMCLWidgets.ThemeManager.ThemeControl import *
+from CMCLWidgets.ThemeController.ThemeControl import *
 from .FramelessWindow import *
 from ctypes import WinDLL, pointer, windll
 from ctypes.wintypes import RECT

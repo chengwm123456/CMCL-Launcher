@@ -7,4 +7,4 @@ from .LineNumberTextEdit import LineNumberTextEdit
 from .Compoments import *
 from .NagivationItem import NavigationItem
 from .NagivationPanel import NavigationPanel
-from .ThemeManager import *
+from .ThemeController import *
