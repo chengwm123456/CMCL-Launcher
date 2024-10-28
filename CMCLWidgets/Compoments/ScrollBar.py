@@ -3,9 +3,9 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from ..ThemeManager import *
-from CMCLWidgets.ToolTip import ToolTip
-from CMCLWidgets.Windows import RoundedMenu
+from ..ThemeController import *
+from .ToolTip import ToolTip
+from ..Windows import RoundedMenu
 
 
 class ScrollBar(QScrollBar):
@@ -32,6 +32,9 @@ class ScrollBar(QScrollBar):
         painter = QPainter(self)
         painter.setOpacity(self.property("Opacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        op = QStyleOptionSlider()
+        op.initFrom(self)
+        self.initStyleOption(op)
         painter.save()
         painter.setPen(getBorderColour())
         painter.setBrush(getBackgroundColour())
@@ -45,6 +48,8 @@ class ScrollBar(QScrollBar):
                 painter.drawLines([QLine(QPoint(2, self.width()), QPoint(self.width() - 2, self.width())),
                                    QLine(QPoint(2, self.height() - self.width()),
                                          QPoint(self.width() - 2, self.height() - self.width()))])
+        painter.restore()
+        painter.save()
         painter.setPen(
             QPen(
                 getBorderColour(is_highlight=True) \
@@ -67,7 +72,6 @@ class ScrollBar(QScrollBar):
                 painter.drawPolygon(
                     [QPoint(self.height() - 3, self.height() // 2), QPoint(3, self.height() - 3),
                      QPoint(3, 3)])
-                painter.translate(QPoint(0, 0))
             case Qt.Orientation.Vertical:
                 painter.translate(QPoint(0, 0))
                 painter.drawPolygon(
@@ -76,56 +80,27 @@ class ScrollBar(QScrollBar):
                 painter.translate(QPoint(0, self.height() - self.width()))
                 painter.drawPolygon(
                     [QPoint(3, 3), QPoint(self.width() // 2, self.width() - 3), QPoint(self.width() - 3, 3)])
-                painter.translate(QPoint(0, 0))
         painter.restore()
         painter.save()
         painter.setPen(getBorderColour(is_highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled()))
         painter.setBrush(getBackgroundColour(is_highlight=self.isEnabled()))
-        x = 0
-        y = 0
-        width = 0
-        height = 0
-        match self.orientation():
-            case Qt.Orientation.Horizontal:
-                x = max(min(self.width() - 50 - self.height(),
-                            int((self.value() / (self.maximum() or 1)) * (
-                                    self.width() - self.height() - max((self.width() - self.maximum()), 50)) + (
-                                        self.height() * (1.0 - (self.value() / (self.maximum() or 1)))))),
-                        self.height())
-                y = 0
-                width = min(max(50, self.width() - self.maximum()),
-                            self.width() - x - self.height())
-                height = self.height()
-            case Qt.Orientation.Vertical:
-                x = 0
-                y = max(min(self.height() - 50 - self.width(),
-                            int((self.value() / (self.maximum() or 1)) * (
-                                    self.height() - self.width() - max((self.height() - self.maximum()), 50)) + (
-                                        self.width() * (1.0 - (self.value() / (self.maximum() or 1)))))),
-                        self.width())
-                width = self.width()
-                height = min(max(50, self.height() - self.maximum()),
-                             self.height() - y - self.width())
-        painter.drawRoundedRect(QRect(x, y, width, height).adjusted(2, 2, -2, -2), 10, 10)
+        painter.drawRoundedRect(self.style().subControlRect(QStyle.ComplexControl.CC_ScrollBar, op,
+                                                            QStyle.SubControl.SC_ScrollBarSlider).adjusted(2, 2, -2,
+                                                                                                           -2), 10, 10)
         painter.restore()
     
     def contextMenuEvent(self, a0):
         menu = RoundedMenu(self)
-        value = 0
-        match self.orientation():
-            case Qt.Orientation.Horizontal:
-                value = QCursor.pos().x() - self.mapToGlobal(
-                    QPoint(0, 0)).x()
-            case Qt.Orientation.Vertical:
-                value = QCursor.pos().y() - self.mapToGlobal(
-                    QPoint(0, 0)).y() * self.height()
-        if value >= self.maximum():
-            value = self.maximum()
-        if value <= 0:
-            value = 0
-        print(value, QCursor.pos().y() - self.mapToGlobal(QPoint(0, 0)).y(), self.height(), self.maximum(),
-              self.height() / self.maximum(), value / (self.height() / self.maximum()))
-        menu.addAction("Scroll Here", lambda: self.setValue(int(value)))
+        menu.addAction("Scroll Here",
+                       lambda: self.setValue(
+                           int(self.style().sliderValueFromPosition(
+                               self.minimum(),
+                               self.maximum(),
+                               QCursor.pos().x() - self.mapToGlobal(QPoint(0,
+                                                                           0)).x() if self.orientation() == Qt.Orientation.Horizontal else QCursor.pos().y() - self.mapToGlobal(
+                                   QPoint(0, 0)).y(),
+                               self.width() if self.orientation() == Qt.Orientation.Horizontal else self.height(),
+                           ))))
         menu.addSeparator()
         menu.addAction("Top", lambda: self.setValue(0))
         menu.addAction("Bottom", lambda: self.setValue(self.maximum()))
