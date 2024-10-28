@@ -1340,6 +1340,31 @@ class SettingsPage(QFrame):
 class AboutPage(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.layout_temp = QVBoxLayout(self)
+        self.label = Label(self)
+        self.layout_temp.addWidget(self.label)
+        self.retranslateUI()
+    
+    def retranslateUI(self):
+        self.label.setText("""<html>
+    <head/>
+    <body>
+        <p>此为 Common Minecraft Launcher 临时的“关于”界面，下一个版本将正式完善。</p>
+        <h1>关于开发组</h1>
+        <ul>
+            <li>chengwm -> 启动器的作者</li>
+            <li>Minecraft_稻田(mcdt) -> 启动器的策划</li>
+        </ul>
+        <h1>关于启动器</h1>
+        <p>启动器版本：Alpha-24001</p>
+        <h1>特别感谢</h1>
+        <ul>
+            <li>Minecraft 中文Wiki -> 不仅是wiki，更是教程聚集地(bushi)(因为其中的教程对启动器的编写有帮助)</li>
+            <li>龙腾猫跃 -> PCL2，有个LatestLaunch.bat，启动器的启动命令校验就是拿这个校验的。</li>
+            <li>zhiyiYo(之一Yo) -> 启动器的无边框窗口都要感谢这个大佬的教程。</li>
+        </ul>
+    </body>
+</html>""")
 
 
 class OfflinePlayerCreationDialogue(RoundedDialogue):
@@ -1628,7 +1653,7 @@ class MainWindow(RoundedWindow):
             self.topWidget.button("5").setIcon(
                 QIcon(f"user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
         if self.topWidget.button("6"):
-            self.topWidget.button("6").setIcon(QIcon(f"auto_{'black' if getTheme() == Theme.Light else 'white'}.svg"))
+            self.topWidget.button("6").setIcon(QIcon(f"{'light' if getTheme() == Theme.Light else 'dark'}.svg"))
             self.topWidget.button("6").setText(
                 self.tr("MainPage.ToggleTheme.Light.Text") if getTheme() == Theme.Light else self.tr(
                     "MainPage.ToggleTheme.Dark.Text"))
