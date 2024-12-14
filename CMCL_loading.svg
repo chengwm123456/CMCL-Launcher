@@ -1,23 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
     <defs>
-        <linearGradient id="CMCL_G1" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="CMCLBrandGradient1" x1="100%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style="stop-color: #A5F1FF"/>
-            <stop offset="100%" style="stop-color: #DDDDFF"/>
+            <stop offset="60%" style="stop-color: #CCAAFF"/>
+            <stop offset="100%" style="stop-color: #EE99FF"/>
         </linearGradient>
-        <linearGradient id="CMCL_G2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="CMCLBrandGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color: #5A9CCE"/>
-            <stop offset="100%" style="stop-color: #5599FF"/>
+            <stop offset="60%" style="stop-color: #336AFF"/>
+            <stop offset="100%" style="stop-color: #2255FF"/>
         </linearGradient>
-        <linearGradient id="CMCL_G3" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="CMCLBrandGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color: #9CCEFF"/>
-            <stop offset="100%" style="stop-color: #55AAFF"/>
+            <stop offset="60%" style="stop-color: #55AAFF"/>
+            <stop offset="100%" style="stop-color: #3388FF"/>
         </linearGradient>
-        <linearGradient id="CMCL_G4" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color: #006F9F"/>
-            <stop offset="100%" style="stop-color: #006FFF"/>
+        <linearGradient id="CMCLBrandGradient4" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color: #0033FF"/>
+            <stop offset="60%" style="stop-color: #006AFF"/>
+            <stop offset="100%" style="stop-color: #006CFF"/>
         </linearGradient>
     </defs>
-    <polygon points="19,0 45,0 64,19 64,45 45,64 19,64 0,45 0,19" fill="url(#CMCL_G1)">
+    <polygon points="19,0 45,0 64,19 64,45 45,64 19,64 0,45 0,19" fill="url(#CMCLBrandGradient1)">
         <animateTransform
                 attributeName="transform"
                 begin="0s"
@@ -28,7 +32,7 @@
                 repeatCount="indefinite"
         />
     </polygon>
-    <polygon points="32,2 55,12 61,37.5 44,58 20,58 3,37.5 9,12" fill="url(#CMCL_G2)">
+    <polygon points="32,2 55,12 61,37.5 44,58 20,58 3,37.5 9,12" fill="url(#CMCLBrandGradient2)">
         <animateTransform
                 attributeName="transform"
                 begin="0s"
@@ -39,7 +43,7 @@
                 repeatCount="indefinite"
         />
     </polygon>
-    <polygon points="20,11 44,11 54,30 43,49 21,49 10,30" fill="url(#CMCL_G3)">
+    <polygon points="20,11 44,11 54,30 43,49 21,49 10,30" fill="url(#CMCLBrandGradient3)">
         <animateTransform
                 attributeName="transform"
                 begin="0s"
@@ -50,7 +54,7 @@
                 repeatCount="indefinite"
         />
     </polygon>
-    <polygon points="22,15 42,15 48,30.5 31.5,45.5 16,30.5" fill="url(#CMCL_G4)">
+    <polygon points="22,15 42,15 48,30.5 31.5,45.5 16,30.5" fill="url(#CMCLBrandGradient4)">
         <animateTransform
                 attributeName="transform"
                 begin="0s"

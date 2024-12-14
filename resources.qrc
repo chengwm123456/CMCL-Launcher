@@ -1,0 +1,20 @@
+<!DOCTYPE RCC>
+<RCC>
+    <qresource>
+        <file>CMCL_icon.svg</file>
+        <file>CMCL_loading.svg</file>
+        <file>CMCL_loading_failed.svg</file>
+        <file>CMCL_zh-cn.qm</file>
+        <file>Unifont 13.0.01.ttf</file>
+        <file>Home.svg</file>
+        <file>Download.svg</file>
+        <file>Settings.svg</file>
+        <file>About.svg</file>
+        <file>light.svg</file>
+        <file>dark.svg</file>
+        <file>user_icon-black.svg</file>
+        <file>user_icon-white.svg</file>
+        <file>acrylic_noise.png</file>
+        <file>chengwm_headimage.png</file>
+    </qresource>
+</RCC>

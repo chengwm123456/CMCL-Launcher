@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
+import platform
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import *
 from qframelesswindow import TitleBar
 from CMCLWidgets.ThemeController.ThemeControl import *
 from .FramelessWindow import *
-from ctypes import WinDLL, pointer, windll
-from ctypes.wintypes import RECT
-import platform
-import win32con
+
+if platform.system().lower() == "windows":
+    from ctypes import WinDLL, pointer, windll
+    from ctypes.wintypes import RECT
+    import win32con
 
 
-class RoundedWindow(FramelessMainWindow):
-    BORDER_RADIUS = 10
-    
+class Window(FramelessWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.titleBar = TitleBar(self)
@@ -23,6 +24,24 @@ class RoundedWindow(FramelessMainWindow):
         if hasattr(self, "titleBar"):
             self.titleBar.resize(self.width(), self.titleBar.height())
             self.titleBar.raise_()
+
+
+class MainWindow(FramelessMainWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.titleBar = TitleBar(self)
+    
+    def resizeEvent(self, a0):
+        if hasattr(self, "titleBar"):
+            self.titleBar.resize(self.width(), self.titleBar.height())
+        super().resizeEvent(a0)
+        if hasattr(self, "titleBar"):
+            self.titleBar.resize(self.width(), self.titleBar.height())
+            self.titleBar.raise_()
+
+
+class RoundedWindow(MainWindow):
+    BORDER_RADIUS = 10
     
     def __getCurrentDpiScaleRate(self):
         match platform.system():
@@ -66,26 +85,18 @@ class RoundedWindow(FramelessMainWindow):
         return super().event(a0)
 
 
-class RoundedDialogue(QDialog, FramelessWindow):
+class RoundedDialogue(QDialog, Window):
     BORDER_RADIUS = 10
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.titleBar = TitleBar(self)
         self.titleBar.maxBtn.hide()
         self.titleBar.maxBtn.deleteLater()
         self.titleBar.minBtn.hide()
         self.titleBar.minBtn.deleteLater()
-        self.setMaximizeEnabled(False)
+        self.setWindowFlags(
+            self.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
         self.setResizeEnabled(False)
-    
-    def resizeEvent(self, a0, **kwargs):
-        if hasattr(self, "titleBar"):
-            self.titleBar.resize(self.width(), self.titleBar.height())
-        super().resizeEvent(a0)
-        if hasattr(self, "titleBar"):
-            self.titleBar.resize(self.width(), self.titleBar.height())
-            self.titleBar.raise_()
     
     def __getCurrentDpiScaleRate(self):
         match platform.system():

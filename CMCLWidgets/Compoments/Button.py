@@ -84,16 +84,16 @@ class PushButton(QPushButton):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.MouseMove:
                 if self.isEnabled():
                     ani = QPropertyAnimation(self, b"Opacity", self)
@@ -101,16 +101,16 @@ class PushButton(QPushButton):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Enter:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -119,16 +119,16 @@ class PushButton(QPushButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -137,16 +137,16 @@ class PushButton(QPushButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Leave:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -155,16 +155,16 @@ class PushButton(QPushButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -173,34 +173,34 @@ class PushButton(QPushButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.EnabledChange:
-                match self.isEnabled:
+                match self.isEnabled():
                     case True:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(0.3)
                         ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                     case False:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.3)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
         return super().eventFilter(a0, a1)
 
 
@@ -269,16 +269,16 @@ class ToolButton(QToolButton):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.MouseMove:
                 if self.isEnabled():
                     ani = QPropertyAnimation(self, b"Opacity", self)
@@ -286,16 +286,16 @@ class ToolButton(QToolButton):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Enter:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -304,16 +304,16 @@ class ToolButton(QToolButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -322,16 +322,16 @@ class ToolButton(QToolButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Leave:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -340,16 +340,16 @@ class ToolButton(QToolButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -358,34 +358,34 @@ class ToolButton(QToolButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.EnabledChange:
-                match self.isEnabled:
+                match self.isEnabled():
                     case True:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(0.3)
                         ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                     case False:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.3)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
         return super().eventFilter(a0, a1)
 
 
@@ -547,16 +547,16 @@ class CheckBox(QCheckBox):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.MouseMove:
                 if self.isEnabled():
                     ani = QPropertyAnimation(self, b"Opacity", self)
@@ -564,16 +564,16 @@ class CheckBox(QCheckBox):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Enter:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -582,16 +582,16 @@ class CheckBox(QCheckBox):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -600,16 +600,16 @@ class CheckBox(QCheckBox):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Leave:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -618,16 +618,16 @@ class CheckBox(QCheckBox):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -636,34 +636,34 @@ class CheckBox(QCheckBox):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.EnabledChange:
-                match self.isEnabled:
+                match self.isEnabled():
                     case True:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(0.3)
                         ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                     case False:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.3)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
         return super().eventFilter(a0, a1)
 
 
@@ -733,16 +733,16 @@ class RadioButton(QRadioButton):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.MouseMove:
                 if self.isEnabled():
                     ani = QPropertyAnimation(self, b"Opacity", self)
@@ -750,16 +750,16 @@ class RadioButton(QRadioButton):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Enter:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -768,16 +768,16 @@ class RadioButton(QRadioButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -786,16 +786,16 @@ class RadioButton(QRadioButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Leave:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -804,16 +804,16 @@ class RadioButton(QRadioButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -822,34 +822,34 @@ class RadioButton(QRadioButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.EnabledChange:
-                match self.isEnabled:
+                match self.isEnabled():
                     case True:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(0.3)
                         ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                     case False:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.3)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
         return super().eventFilter(a0, a1)
 
 
@@ -954,16 +954,16 @@ class SwitchButton(QAbstractButton):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.MouseMove:
                 if self.isEnabled():
                     ani = QPropertyAnimation(self, b"Opacity", self)
@@ -971,16 +971,16 @@ class SwitchButton(QAbstractButton):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Enter:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -989,16 +989,16 @@ class SwitchButton(QAbstractButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -1007,16 +1007,16 @@ class SwitchButton(QAbstractButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Leave:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -1025,16 +1025,16 @@ class SwitchButton(QAbstractButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -1043,32 +1043,32 @@ class SwitchButton(QAbstractButton):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.EnabledChange:
-                match self.isEnabled:
+                match self.isEnabled():
                     case True:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(0.3)
                         ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                     case False:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.3)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
         return super().eventFilter(a0, a1)

@@ -6,8 +6,7 @@ from .Compoments.TextEdit import TextEdit
 
 class HighlightTextEdit(TextEdit):
     class Highlighter(QSyntaxHighlighter):
-        highlight_styles = {
-        }
+        highlight_styles = {}
         
         def __init__(self, document):
             super().__init__(document)

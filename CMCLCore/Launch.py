@@ -2,7 +2,6 @@
 import json
 import os
 import hashlib
-import re
 import zipfile
 from typing import *
 
@@ -29,12 +28,6 @@ class QuickPlayMode(Enum):
     SINGLE_PLAYER = "SinglePlayer"
     MULTI_PLAYER = "MultiPlayer"
     REALMS = "Realms"
-
-
-report_description_lists = {
-    "Manually triggered debug crash": "通过调试功能崩溃",
-    "Reading NBT data": "读取NBT数据时崩溃"
-}
 
 
 def GetJavaPath(version: Union[str, int]) -> Optional[Union[str, Path]]:
@@ -199,11 +192,13 @@ def GenerateMinecraftLaunchCommand(
         launcher_name: str,
         launcher_version: str,
 ) -> str:
+    # TODO: test the Minecraft launch command generation correction rate and launch Minecraft success rate on Linux
     minecraft_path = Path(minecraft_path).absolute()
     mc_json = json.loads(
         Path(minecraft_path / "versions" / version_launch / f"{version_launch}.json").read_text(encoding="utf-8"))
     mc_libraries_file_datas = mc_json.get("libraries", [])
     mc_libraries_files = []
+    mc_libraries_files_names = {}
     for mc_lib in mc_libraries_file_datas:
         if mc_lib.get("downloads"):
             if mc_lib.get("rules"):
@@ -217,10 +212,21 @@ def GenerateMinecraftLaunchCommand(
             else:
                 allow = bool(mc_lib.get("downloads", {}).get("artifact", {}))
             downloads = mc_lib.get("downloads", {})
-            mc_libraries_path = Path(minecraft_path / "libraries")
+            # mc_libraries_path = Path(minecraft_path / "libraries")
             if downloads.get("artifact") and allow:
-                mc_lib_path_artifact = Path(mc_libraries_path / downloads.get("artifact", {}).get("path", ""))
-                mc_libraries_files.append(str(mc_lib_path_artifact))
+                # mc_lib_path_artifact = Path(mc_libraries_path / downloads.get("artifact", {}).get("path", ""))
+                mc_libraries_path = Path(minecraft_path / "libraries")
+                mc_lib_name = mc_lib.get("name", "::")
+                names = mc_lib_name.split(":")
+                mc_lib_base_path = Path(Path(names[0].replace(".", "/")) / names[1])
+                mc_lib_secondary_path = Path(Path(names[2]) / f"{names[1]}-{names[2]}.jar")
+                mc_lib_path = Path(mc_lib_base_path / mc_lib_secondary_path)
+                mc_lib_path_artifact = Path(mc_libraries_path / mc_lib_path)
+                if tuple(names[:-1]) in mc_libraries_files_names:
+                    mc_libraries_files[mc_libraries_files_names[tuple(names[:-1])]] = str(mc_lib_path_artifact)
+                else:
+                    mc_libraries_files.append(str(mc_lib_path_artifact))
+                mc_libraries_files_names[tuple(names[:-1])] = len(mc_libraries_files) - 1
         else:
             mc_libraries_path = Path(minecraft_path / "libraries")
             mc_lib_name = mc_lib.get("name", "::")
@@ -229,7 +235,11 @@ def GenerateMinecraftLaunchCommand(
             mc_lib_secondary_path = Path(Path(names[2]) / f"{names[1]}-{names[2]}.jar")
             mc_lib_path = Path(mc_lib_base_path / mc_lib_secondary_path)
             mc_lib_path_artifact = Path(mc_libraries_path / mc_lib_path)
-            mc_libraries_files.append(str(mc_lib_path_artifact))
+            if tuple(names[:-1]) in mc_libraries_files_names:
+                mc_libraries_files[mc_libraries_files_names[tuple(names[:-1])]] = str(mc_lib_path_artifact)
+            else:
+                mc_libraries_files.append(str(mc_lib_path_artifact))
+            mc_libraries_files_names[tuple(names[:-1])] = len(mc_libraries_files) - 1
     mc_libraries_files = (":" if not GetOperationSystem.GetOperationSystemName()[0] == "Windows" else ";").join(
         mc_libraries_files)
     if initial_memory is None or max_memory is None:
@@ -294,7 +304,7 @@ def GenerateMinecraftLaunchCommand(
                 mc_game_command.append(str_arg)
         if extra_game_command:
             mc_game_command.append(extra_game_command.strip(" "))
-        mc_game_command = shlex.join(mc_game_command)
+        mc_game_command = " ".join(mc_game_command)
         mc_jvm_arguments = mc_arguments.get("jvm", [])
         for arg in mc_jvm_arguments:
             if isinstance(arg, dict):
@@ -308,8 +318,8 @@ def GenerateMinecraftLaunchCommand(
                 value = arg["value"]
                 if isinstance(value, list):
                     for one_val in value:
-                        if " " in one_val:
-                            one_val = f'"{shlex.quote(one_val)}"'
+                        if " " in one_val and '"' not in one_val:
+                            one_val = f'"{shlex.quote(one_val)[1:-1]}"'
                         mc_jvm_command.append(one_val)
                 else:
                     mc_jvm_command.append(value)
@@ -317,7 +327,7 @@ def GenerateMinecraftLaunchCommand(
                 natives_dir = Path(minecraft_path / "versions" / version_launch / f"{version_launch}-natives")
                 str_arg = arg
                 if " " in str_arg:
-                    str_arg = f'"{shlex.quote(str_arg)}"'
+                    str_arg = f'"{shlex.quote(str_arg)[1:-1]}"'
                 str_arg = str_arg.replace("${natives_directory}", f'"{natives_dir}"')
                 str_arg = str_arg.replace("${launcher_name}", f'"{launcher_name}"')
                 str_arg = str_arg.replace("${launcher_version}", f'"{launcher_version}"')
@@ -327,7 +337,7 @@ def GenerateMinecraftLaunchCommand(
         mc_jvm_command.append(memory_args)
         mc_jvm_command.append(
             f"-Xmixed {main_class}")
-        mc_jvm_command = shlex.join(mc_jvm_command)
+        mc_jvm_command = " ".join(mc_jvm_command)
     elif mc_json.get("minecraftArguments"):
         mc_game_command = mc_json["minecraftArguments"]
         mc_game_command = mc_game_command.replace("${auth_session}", f'"{player_data.player_accessToken}"')
@@ -346,17 +356,17 @@ def GenerateMinecraftLaunchCommand(
         mc_game_command = mc_game_command.replace("${user_type}", f'"{player_data.player_accountType[1]}"')
         mc_game_command = mc_game_command.replace("${version_type}", f'"{version_type}"')
         if extra_game_command:
-            mc_game_command = mc_game_command.split(" ")
+            mc_game_command = shlex.split(mc_game_command)
             mc_game_command.append(extra_game_command.strip(" "))
-            mc_game_command = shlex.join(mc_game_command)
-        mc_jvm_command = f"{shlex.join(mc_jvm_command)} -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{str(Path(minecraft_path / 'versions' / version_launch / f'{version_launch}-natives'))}\" -cp \"{mc_libraries_files}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{game_jar_path}\" {memory_args} -Xmixed {main_class}"
+            mc_game_command = " ".join(mc_game_command)
+        mc_jvm_command = f"{' '.join(mc_jvm_command)} -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{str(Path(minecraft_path / 'versions' / version_launch / f'{version_launch}-natives'))}\" -cp \"{mc_libraries_files}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{game_jar_path}\" {memory_args} -Xmixed {main_class}"
     else:
         mc_jvm_command = mc_game_command = ""
     if isinstance(player_data, AuthlibInjectorPlayer):
         authlib_injector_jar_path = Path(r".\authlib-injector.jar")
         authentication_server_url = player_data.player_authServer  # "https://littleskin.cn/api/yggdrasil"
         signature_publickey = player_data.player_signaturePublickey.replace("\n", "")
-        mc_authlib_injector_command = shlex.join(
+        mc_authlib_injector_command = " ".join(
             [
                 f'-javaagent:"{shlex.quote(str(authlib_injector_jar_path)[1:-1])}"="{shlex.quote(authentication_server_url)[1:-1]}"',
                 '-Dauthlibinjector.side="client"',
@@ -483,22 +493,3 @@ def LaunchMinecraft(
     )
     # print(detect(output), output.decode(detect(output)['encoding']))
     return "Successfully", game
-
-
-def analysis_log(output, error=None):
-    # r"[\u4e00-\u9fa5]"
-    search = re.search(r"#@!@#", output, re.I)
-    if error:
-        search1 = re.search(r"#@!@#", error, re.I)
-    else:
-        search1 = None
-    if search is not None or search1 is not None:
-        data = re.split(r"#@!@#", output if search is not None else error)[-1]
-        file = Path(data.strip())
-        report = file.read_text(encoding="utf-8").split("\n")
-        for i in report:
-            if "Description: " in i:
-                description = i.split(":")[-1].strip()
-                reason = report_description_lists.get(description, description)
-                # q.Put(("Error:", reason))
-                return "Error:", reason

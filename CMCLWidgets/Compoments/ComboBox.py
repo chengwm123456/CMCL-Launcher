@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import *
 from ..ThemeController import *
 from .ToolTip import ToolTip
 from CMCLWidgets.Windows import RoundedMenu
-from .ItemView import ItemDelegate
+from .ListView import ListWidget
 
 
 class ComboBox(QComboBox):
@@ -29,7 +29,8 @@ class ComboBox(QComboBox):
         self.installEventFilter(ToolTip(self))
         self.installEventFilter(self)
         self.setProperty("Opacity", 0.6)
-        self.setItemDelegate(ItemDelegate(self))
+        self.setView(ListWidget(self))
+        self.setModel(self.view().model())
     
     def paintEvent(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -38,7 +39,7 @@ class ComboBox(QComboBox):
             self.lineEdit().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             self.lineEdit().setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
             self.lineEdit().setStyleSheet(
-                f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(self.property("Opacity") or 1.0)}); background: transparent; border: none;")
+                f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(self.property('Opacity') or 1.0)}); background: transparent; border: none;")
             self.lineEdit().setFont(self.font())
         painter = QPainter(self)
         painter.setOpacity(self.property("Opacity"))
@@ -49,10 +50,11 @@ class ComboBox(QComboBox):
         painter.save()
         painter.setPen(QPen(getBorderColour(
             is_highlight=self.isEnabled()) if (
-                                                      self.hasFocus() or self.underMouse()) and self.isEnabled() else getForegroundColour(),
+                                                      self.hasFocus() or self.underMouse() or self.view().isVisible()) and self.isEnabled() else getForegroundColour(),
                             1.0,
                             Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-        painter.setBrush(getForegroundColour())
+        painter.setBrush(getBorderColour(
+            is_highlight=self.isEnabled()) if self.view().isVisible() and self.isEnabled() else getForegroundColour())
         painter.translate((self.width() - 8) - 3, self.height() / 2 - 4)
         painter.drawPolygon([QPoint(0, 0), QPoint(4, 8), QPoint(8, 0)])
         painter.restore()
@@ -61,11 +63,7 @@ class ComboBox(QComboBox):
         self.initStyleOption(op)
         op.palette.setColor(op.palette.ColorRole.Text, getForegroundColour())
         self.style().drawControl(QStyle.ControlElement.CE_ComboBoxLabel, op, painter, self)
-        self.setStyleSheet(f"""ComboBox QAbstractItemView {{
-            background: rgba({str(getBackgroundColour(is_tuple=True)).strip('()')}, {1.0});
-            border: rgba({str(getBorderColour(is_tuple=True)).strip('()')}, {1.0});
-            border-radius: 10px;
-        }}""")
+        self.view().setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
     
     def contextMenuEvent(self, e):
         if self.lineEdit() and self.isEditable():
@@ -74,6 +72,9 @@ class ComboBox(QComboBox):
             for i in default.actions():
                 menu.addAction(i)
             menu.exec(self.mapToGlobal(e.pos()))
+    
+    def hasFocus(self):
+        return super().hasFocus() or self.view().hasFocus()
     
     def eventFilter(self, a0, a1):
         if self != a0:
@@ -86,16 +87,16 @@ class ComboBox(QComboBox):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.MouseMove:
                 if self.isEnabled():
                     ani = QPropertyAnimation(self, b"Opacity", self)
@@ -103,16 +104,16 @@ class ComboBox(QComboBox):
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Enter:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -121,16 +122,16 @@ class ComboBox(QComboBox):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -139,16 +140,16 @@ class ComboBox(QComboBox):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.Leave:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -157,16 +158,16 @@ class ComboBox(QComboBox):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -175,32 +176,32 @@ class ComboBox(QComboBox):
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                 else:
                     ani = QPropertyAnimation(self, b"Opacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("Opacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.finished.connect(ani.deleteLater)
                     ani.start()
+                    QTimer.singleShot(500, lambda: ani.deleteLater())
             case QEvent.Type.EnabledChange:
-                match self.isEnabled:
+                match self.isEnabled():
                     case True:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(0.3)
                         ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
                     case False:
                         ani = QPropertyAnimation(self, b"Opacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("Opacity"))
                         ani.setEndValue(0.3)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.finished.connect(ani.deleteLater)
                         ani.start()
+                        QTimer.singleShot(500, lambda: ani.deleteLater())
         return super().eventFilter(a0, a1)

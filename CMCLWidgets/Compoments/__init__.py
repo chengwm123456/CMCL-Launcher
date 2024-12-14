@@ -6,6 +6,8 @@ from .Button import PushButton, ToolButton, TogglePushButton, ToggleToolButton, 
 from .ComboBox import ComboBox
 from .LineEdit import LineEdit
 from .TextEdit import TextEdit, PlainTextEdit
+from .ItemView import ItemDelegate, ItemView
+from .ListView import ListView, ListWidget
 from .TableView import HeaderView, TableView, TableWidget
 from .Tip import Tip, PopupTip
 from .Panel import Panel
