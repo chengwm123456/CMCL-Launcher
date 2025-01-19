@@ -11,13 +11,13 @@ import requests
 
 def GetVersionByMojangApi(returns: str = "RETURN_DATA") -> Union[str, dict, list]:
     mojang_api_url = "https://launchermeta.mojang.com"
-    
+
     versions_url = f"{mojang_api_url}/mc/game/version_manifest.json"
     versions_response = requests.get(versions_url)
     versions_data = versions_response.json()
     versions_json = versions_data
     versions = [version["id"] for version in versions_data["versions"]]
-    
+
     latest_version = versions_data["latest"]["release"]
     for v in range(len(versions_data["versions"])):
         ver = versions_data["versions"][v]
@@ -49,9 +49,10 @@ def GetVersionByScanDirectory(minecraft_path: Union[str, Path, os.PathLike] = No
     if Path(Path(minecraft_path) / "assets").exists() and Path(
             Path(minecraft_path) / "versions").exists():
         for i in os.listdir(minecraft_path / "versions"):
-            j = os.listdir(minecraft_path / "versions" / i)
-            if f"{i}.jar" in j:
-                versions.append(i)
+            if Path(minecraft_path / "versions" / i).is_dir():
+                j = os.listdir(minecraft_path / "versions" / i)
+                if f"{i}.jar" in j:
+                    versions.append(i)
         return versions
     return None
 

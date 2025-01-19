@@ -14,3 +14,4 @@ from .Panel import Panel
 from .ToolBox import ToolBox
 from .ScrollBar import ScrollBar, ScrollArea
 from .GroupBox import GroupBox
+from .Slider import Slider

@@ -60,4 +60,13 @@ class ThemeColours(dict):
 
 
 class Colour(QColor):
-    pass
+    def __str__(self):
+        return f"({self.red()}, {self.green()}, {self.blue()})"
+    
+    def __repr__(self):
+        return repr(self.__str__())
+    
+    def __iter__(self):
+        yield self.red()
+        yield self.green()
+        yield self.blue()

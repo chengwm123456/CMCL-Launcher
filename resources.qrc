@@ -1,15 +1,23 @@
 <!DOCTYPE RCC>
 <RCC>
     <qresource>
-        <file>CMCL_icon.svg</file>
-        <file>CMCL_loading.svg</file>
-        <file>CMCL_loading_failed.svg</file>
+        <file>CommonMinecraftLauncherIcon.svg</file>
+        <file>CommonMinecraftLauncherLoading.svg</file>
+        <file>CommonMinecraftLauncherLoadingFailed.svg</file>
         <file>CMCL_zh-cn.qm</file>
+        <file>CMCL_zh-hk.qm</file>
+        <file>CMCL_zh-tw.qm</file>
         <file>Unifont 13.0.01.ttf</file>
-        <file>Home.svg</file>
-        <file>Download.svg</file>
-        <file>Settings.svg</file>
-        <file>About.svg</file>
+        <file>Home-white.svg</file>
+        <file>Home-black.svg</file>
+        <file>Download-white.svg</file>
+        <file>Download-black.svg</file>
+        <file>Settings-white.svg</file>
+        <file>Settings-black.svg</file>
+        <file>About-white.svg</file>
+        <file>About-black.svg</file>
+        <file>StopGame-white.svg</file>
+        <file>StopGame-black.svg</file>
         <file>light.svg</file>
         <file>dark.svg</file>
         <file>user_icon-black.svg</file>

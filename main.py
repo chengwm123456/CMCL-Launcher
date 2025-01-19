@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-project start time:1693310592
+"Common Minecraft Launcher" started time: 1693310591 (folder created time)
+|-time.struct_time(tm_year=2023, tm_mon=8, tm_mday=29, tm_hour=20, tm_min=3, tm_sec=11, tm_wday=1, tm_yday=241, tm_isdst=0)
+|-2023/08/29 20:03:11, 周二, 八月, 时区: 中国标准时间(UTC+8), 一年的第241天
+main.py started time: 1693310592 (main.py created time)
 |-time.struct_time(tm_year=2023, tm_mon=8, tm_mday=29, tm_hour=20, tm_min=3, tm_sec=12, tm_wday=1, tm_yday=241, tm_isdst=0)
-|-2023/08/29 20:03:12, Tuesday, August, Zone:中国标准时间(UTC+8), 一年的第241天
+|-2023/08/29 20:03:12, 周二, 八月, 时区: 中国标准时间(UTC+8), 一年的第241天
 """
 import shlex
 import json
@@ -23,19 +26,15 @@ from uuid import UUID
 import logging
 import time
 import tempfile
-
-try:
-    from dateutil import tz
-except ImportError:
-    import pytz as tz
+import os
 
 from CMCLWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtSvgWidgets import QSvgWidget
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from qframelesswindow import StandardTitleBar
 
 from CMCLCore.Launch import LaunchMinecraft
 from CMCLCore.Login import MicrosoftPlayerLogin
@@ -46,9 +45,15 @@ from CMCLCore.GetOperationSystem import GetOperationSystemName
 
 import requests
 
-from CMCLModding.GetMods import GetModsOnModrinth
+from CMCLModding.GetMods import GetMods, ListModVersions
+from CMCLModding.DownloadMods import DownloadMod
 
 import resources
+
+try:
+    from dateutil import tz
+except ImportError:
+    import pytz as tz
 
 DEBUG = True
 
@@ -88,12 +93,12 @@ if DEBUG:
     
     qInstallMessageHandler(log)
 
-CMCL_version = ("AlphaDev-24002", "Alpha Development-24002")
+CMCL_version = ("AlphaDev-25001", "Alpha Development-25001")
 minecraft_path = Path(r"D:\Program Files\minecraft")
-language = "zh-cn"
+current_language = "zh-cn"
 
 theme_colour_defines = {
-    "CMCL_Blue": {
+    "PresetBlue": {
         Theme.Light: {
             ColourRole.Background: {
                 False: (253, 253, 253),
@@ -115,7 +120,7 @@ theme_colour_defines = {
             },
         }
     },
-    "CMCL_Pink": {
+    "PresetPink": {
         Theme.Light: {
             ColourRole.Background: {
                 False: (253, 253, 253),
@@ -137,7 +142,7 @@ theme_colour_defines = {
             }
         }
     },
-    "CMCL_Red": {
+    "PresetRed": {
         Theme.Light: {
             ColourRole.Background: {
                 False: (253, 253, 253),
@@ -159,6 +164,14 @@ theme_colour_defines = {
             }
         }
     }
+}
+languages_map = {
+    "zh-cn": "简体中文（中国大陆）",
+    "zh-hk": "繁體中文（中國香港特別行政區/中國澳門特別行政區）",
+    "zh-tw": "繁體中文（中國台灣）",
+    "lzh": "文言（華夏）",
+    "en-us": "English (United States)",
+    "en-gb": "English (United Kingdom)",
 }
 
 window_class = MainWindow
@@ -199,22 +212,74 @@ class AcrylicBackground(QWidget):
         painter.setOpacity(1.0)
         painter.fillRect(acrylicTexture.rect(), self.tintColour)
         painter.setOpacity(self.noiseOpacity)
-        painter.drawImage(acrylicTexture.rect(), QImage("acrylic_noise.png"))
+        painter.drawImage(acrylicTexture.rect(), QImage(":/acrylic_noise.png"))
         
         brush = QBrush(acrylicTexture)
         return brush
 
 
-class ContentPanel(QStackedWidget, Panel):
-    def event(self, a0):
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        for i in self.children():
-            if hasattr(i, "setGeometry"):
-                i.setGeometry(self.rect().adjusted(5, 5, -5, -5))
-            if hasattr(i, "setAttribute"):
-                i.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        return super().event(a0)
+class AnimatedStackedWidget(QStackedWidget):
+    def setCurrentWidget(self, w):
+        class OpacityAnimation(QVariantAnimation):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.valueChanged.connect(self.__updateOpacity)
+            
+            def __updateOpacity(self, value):
+                op = QGraphicsOpacityEffect(self.parent())
+                op.setOpacity(self.currentValue() / 100)
+                if self.currentValue() == self.endValue():
+                    self.parent().setGraphicsEffect(None)
+                    return
+                self.parent().setGraphicsEffect(op)
+        
+        lastWidget = self.currentWidget()
+        if lastWidget == w:
+            return
+        super().setCurrentWidget(w)
+        lastWidget.show()
+        w.stackUnder(lastWidget)
+        ani1 = QPropertyAnimation(lastWidget, b"geometry", parent=lastWidget)
+        ani1.setDuration(500)
+        ani1.setStartValue(
+            QRectF(lastWidget.x(), float(lastWidget.y()), self.childrenRect().width(), self.childrenRect().height()))
+        ani1.setEndValue(
+            QRectF(lastWidget.x(), float(lastWidget.y()) + float(self.height()), self.childrenRect().width(),
+                   self.childrenRect().height()))
+        ani1.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani1.start()
+        ani11 = OpacityAnimation(lastWidget)
+        ani11.setStartValue(100)
+        ani11.setEndValue(0)
+        ani11.setDuration(500)
+        ani11.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani11.start()
+        QTimer.singleShot(500, lastWidget.hide)
+        currentWidget = w
+        ani2 = QPropertyAnimation(currentWidget, b"geometry", parent=currentWidget)
+        ani2.setDuration(500)
+        ani2.setStartValue(
+            QRectF(currentWidget.x(), float(currentWidget.y()) + float(self.height()), self.childrenRect().width(),
+                   self.childrenRect().height()))
+        ani2.setEndValue(QRectF(currentWidget.x(), float(currentWidget.y()), self.childrenRect().width(),
+                                self.childrenRect().height()))
+        ani2.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani2.start()
+        ani22 = OpacityAnimation(currentWidget)
+        ani22.setStartValue(0)
+        ani22.setEndValue(100)
+        ani22.setDuration(500)
+        ani22.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani22.start()
+        t = QTimer(self)
+        t.setInterval(1)
+        t.timeout.connect(lambda: self.update())
+        t.start()
+        QTimer.singleShot(500, lambda: t.stop())
+
+
+class ContentPanel(AnimatedStackedWidget, Panel):
+    pass
 
 
 class LoadingAnimation(QFrame):
@@ -242,7 +307,7 @@ class LoadingAnimation(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setStyleSheet("background: rgb(249, 249, 249);")
         self.__svgWidget = QSvgWidget(self)
-        self.__svgWidget.load(":/CMCL_loading.svg")
+        self.__svgWidget.load(":/CommonMinecraftLauncherLoading.svg")
         self.__svgWidget.setFixedSize(96, 96)
         self.__svgWidget.setStyleSheet("background: transparent;")
         dsg = QGraphicsDropShadowEffect(self.__svgWidget)
@@ -251,7 +316,7 @@ class LoadingAnimation(QFrame):
         dsg.setColor(QColor(0, 0, 0, 100))
         self.__svgWidget.setGraphicsEffect(dsg)
         self.__failedSvg = QSvgWidget(self.__svgWidget)
-        self.__failedSvg.load(":/CMCL_loading_failed.svg")
+        self.__failedSvg.load(":/CommonMinecraftLauncherLoadingFailed.svg")
         self.__failedSvg.setFixedSize(96, 96)
         self.__failedSvg.setStyleSheet("background: transparent;")
         self.__failedSvg.hide()
@@ -259,6 +324,7 @@ class LoadingAnimation(QFrame):
         self.__statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.__loadingTimer = QTimer(self)
         self.__loadingTimer.timeout.connect(self.__updateText)
+        self.destroyed.connect(self.__loadingTimer.stop)
         self.__counter = 0
         self.hide()
     
@@ -307,8 +373,8 @@ class LoadingAnimation(QFrame):
         self.setStyleSheet(
             f"background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});")
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text"))
-        self.__svgWidget.load(":/CMCL_loading.svg")
-        self.__failedSvg.load(":/CMCL_loading_failed.svg")
+        self.__svgWidget.load(":/CommonMinecraftLauncherLoading.svg")
+        self.__failedSvg.load(":/CommonMinecraftLauncherLoadingFailed.svg")
         self.__failedSvg.hide()
         if ani:
             self.setStyleSheet("background: transparent")
@@ -323,7 +389,9 @@ class LoadingAnimation(QFrame):
             if not failed:
                 if ani:
                     self.TransparencyAnimation(self, "out").start()
-                    self.HideAnimation(self).start()
+                    hideani = self.HideAnimation(self)
+                    self.destroyed.connect(hideani.terminate)
+                    hideani.start()
                 else:
                     self.hide()
                 self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.SuccessText"))
@@ -342,13 +410,6 @@ class LoadingAnimation(QFrame):
             self.deleteLater()
         except RuntimeError:
             pass
-    
-    def destroy(self, *args, **kwargs):
-        try:
-            self.__loadingTimer.stop()
-        except RuntimeError:
-            pass
-        super().destroy(*args, **kwargs)
 
 
 class LoginDialogue(RoundedDialogue):
@@ -419,11 +480,30 @@ class LoginDialogue(RoundedDialogue):
         w.exec()
     
     def paintEvent(self, a0, **kwargs):
-        painter = QPainter(self)
-        painter.fillRect(
-            QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
+        background = QPixmap(self.size())
+        p = QPainter(background)
+        x = 0 if self.isMaximized() else -self.geometry().x()
+        y = 0 if self.isMaximized() else -self.geometry().y()
+        p.fillRect(
+            QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.DeepBlue if getTheme() == Theme.Light else QGradient.Preset.PerfectBlue))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+        p.end()
+        scene = QGraphicsScene()
+        item = QGraphicsPixmapItem()
+        item.setPixmap(background)
+        blur = QGraphicsBlurEffect()
+        blur.setBlurRadius(settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"])
+        item.setGraphicsEffect(blur)
+        scene.addItem(item)
+        img = QPixmap(background.size())
+        img.fill(Qt.GlobalColor.transparent)
+        ptr = QPainter(img)
+        scene.render(ptr, QRectF(img.rect()), QRectF(img.rect()))
+        ptr.end()
+        painter = QPainter(self)
+        rect = QRect(-20, -20, self.width() + 40, self.height() + 40)
+        painter.drawPixmap(rect, img)
 
 
 class LoginWindow(RoundedDialogue):
@@ -462,7 +542,7 @@ class LoginWindow(RoundedDialogue):
         self.view.urlChanged.connect(self.assert_url)
         self.view.loadStarted.connect(self.loadStarted)
         self.view.loadFinished.connect(self.loadFinished)
-        self.view.page().profile().setHttpAcceptLanguage(language)
+        self.view.page().profile().setHttpAcceptLanguage(current_language)
         self.progress = LoadingAnimation(self)
         self.progress.hide()
         self.isFirstShow = False
@@ -501,11 +581,30 @@ class LoginWindow(RoundedDialogue):
         self.isFirstShow = False
     
     def paintEvent(self, a0, **kwargs):
-        painter = QPainter(self)
-        painter.fillRect(
-            QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
+        background = QPixmap(self.size())
+        p = QPainter(background)
+        x = 0 if self.isMaximized() else -self.geometry().x()
+        y = 0 if self.isMaximized() else -self.geometry().y()
+        p.fillRect(
+            QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.DeepBlue if getTheme() == Theme.Light else QGradient.Preset.PerfectBlue))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+        p.end()
+        scene = QGraphicsScene()
+        item = QGraphicsPixmapItem()
+        item.setPixmap(background)
+        blur = QGraphicsBlurEffect()
+        blur.setBlurRadius(settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"])
+        item.setGraphicsEffect(blur)
+        scene.addItem(item)
+        img = QPixmap(background.size())
+        img.fill(Qt.GlobalColor.transparent)
+        ptr = QPainter(img)
+        scene.render(ptr, QRectF(img.rect()), QRectF(img.rect()))
+        ptr.end()
+        painter = QPainter(self)
+        rect = QRect(-20, -20, self.width() + 40, self.height() + 40)
+        painter.drawPixmap(rect, img)
 
 
 # class MultiPageBase(QFrame):
@@ -513,12 +612,18 @@ class LoginWindow(RoundedDialogue):
 #         super().__init__(parent)
 #         self.verticalLayout = QVBoxLayout(self)
 #         self.verticalLayout.setObjectName(u"verticalLayout")
-#         self.frame = Panel(self)
-#         self.horizontalLayout = QHBoxLayout(self.frame)
-#         self.horizontalLayout.setObjectName(u"horizontalLayout")
+#         self.navigationFrame = Panel(self)
+#         self.navigationFrameScrollAreaLayout = QVBoxLayout(self.navigationFrame)
+#         self.navigationFrameScrollAreaLayout.setContentsMargins(0, 0, 0, 0)
+#         self.navigationFrameScrollArea = ScrollArea(self.navigationFrame)
+#         self.navigationFrameScrollAreaLayout.addWidget(self.navigationFrameScrollArea)
+#         self.navigationFrameScrollArea.setFixedHeight(self.navigationFrame.height() + 10)
+#         self.navigationFrameScrollAreaWidgetContent = QWidget()
+#         self.horizontalLayout = QHBoxLayout(self.navigationFrameScrollAreaWidgetContent)
+#         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
 #         self.pages = {}
 #
-#         self.pushButton = PushButton(self.frame)
+#         self.pushButton = PushButton(self.navigationFrameScrollAreaWidgetContent)
 #         self.pushButton.setObjectName(u"pushButton")
 #         self.pushButton.setCheckable(True)
 #         self.pushButton.setChecked(True)
@@ -527,7 +632,7 @@ class LoginWindow(RoundedDialogue):
 #
 #         self.horizontalLayout.addWidget(self.pushButton)
 #
-#         self.pushButton_2 = PushButton(self.frame)
+#         self.pushButton_2 = PushButton(self.navigationFrameScrollAreaWidgetContent)
 #         self.pushButton_2.setObjectName(u"pushButton_2")
 #         self.pushButton_2.setCheckable(True)
 #         self.pushButton_2.setAutoExclusive(True)
@@ -539,9 +644,12 @@ class LoginWindow(RoundedDialogue):
 #
 #         self.horizontalLayout.addItem(self.horizontalSpacer)
 #
-#         self.verticalLayout.addWidget(self.frame)
+#         self.navigationFrameScrollArea.setWidget(self.navigationFrameScrollAreaWidgetContent)
+#         self.navigationFrameScrollArea.setWidgetResizable(True)
 #
-#         self.stackedWidget = QStackedWidget(self)
+#         self.verticalLayout.addWidget(self.navigationFrame)
+#
+#         self.stackedWidget = AnimatedStackedWidget(self)
 #         self.stackedWidget.setObjectName(u"stackedWidget")
 #         self.page = QWidget()
 #         self.page.setObjectName(u"page")
@@ -552,7 +660,7 @@ class LoginWindow(RoundedDialogue):
 #         self.stackedWidget.addWidget(self.page_2)
 #         self.pages[self.pushButton_2] = self.page_2
 #
-#         self.verticalLayout.addWidget(self.stackedWidget)
+#         self.verticalLayout.addWidget(self.stackedWidget, 1)
 #
 #         self.retranslateUi()
 #         #
@@ -571,16 +679,155 @@ class LoginWindow(RoundedDialogue):
 
 class MainPage(QFrame):
     class VersionSettingsPage(QFrame):
+        frameClosed = pyqtSignal()
+        
+        class VersionDetailsPage(QFrame):
+            def __init__(self, parent=None, version=None):
+                super().__init__(parent)
+                self.version = version
+                
+                self.verticalLayout = QVBoxLayout(self)
+                
+                self.toolBox = ToolBox(self)
+                self.verticalLayout.addWidget(self.toolBox)
+                
+                self.versionDetails = QFrame(self.toolBox)
+                
+                self.verticalLayout_2 = QVBoxLayout(self.versionDetails)
+                
+                self.versionPanel = Panel(self.versionDetails)
+                
+                self.horizontalLayout_3 = QHBoxLayout(self.versionPanel)
+                
+                self.versionNameLabel = Label(self.versionPanel)
+                self.horizontalLayout_3.addWidget(self.versionNameLabel, 1)
+                
+                self.toolButton = ToolButton(self.versionDetails)
+                self.toolButton.setPopupMode(ToolButton.ToolButtonPopupMode.InstantPopup)
+                self.horizontalLayout_3.addWidget(self.toolButton)
+                
+                self.verticalLayout_2.addWidget(self.versionPanel)
+                
+                self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+                
+                self.verticalLayout_2.addItem(self.verticalSpacer)
+                
+                self.toolBox.addItem(self.versionDetails,
+                                     self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page2.Title"))
+                
+                self.retranslateUI()
+            
+            def retranslateUI(self):
+                self.versionNameLabel.setText(
+                    self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.versionNameLabel.Text").format(
+                        self.version))
+                self.toolButton.setText(
+                    self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.toolButton.Text"))
+                self.toolBox.setItemText(self.toolBox.indexOf(self.versionDetails),
+                                         self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page2.Title"))
+                self.generateMenu()
+            
+            def generateMenu(self):
+                menu = RoundedMenu(self.toolButton)
+                action1 = QAction(menu)
+                action1.setText(
+                    self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.toolButton.Item1.Text"))
+                action1.triggered.connect(self.openVersionFolder)
+                menu.addAction(action1)
+                action2 = QAction(menu)
+                action2.setText(
+                    self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.toolButton.Item2.Text"))
+                action2.triggered.connect(self.openVersionSettingsFile)
+                menu.addAction(action2)
+                menu.addSeparator()
+                action3 = QAction(menu)
+                action3.setText(
+                    self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.toolButton.Item3.Text"))
+                action3.triggered.connect(self.generateLaunchScript)
+                menu.addAction(action3)
+                self.toolButton.setMenu(menu)
+            
+            def openVersionFolder(self):
+                if self.version:
+                    if platform.system().lower() == "windows":
+                        os.startfile(minecraft_path / "versions" / self.version)
+                    elif platform.system().lower() == "linux":
+                        os.system(f"xdg-open \"{str((minecraft_path / 'versions' / self.version).absolute())}\"")
+            
+            def openVersionSettingsFile(self):
+                if self.version:
+                    if platform.system().lower() == "windows":
+                        os.startfile(minecraft_path / "options.txt")
+                    elif platform.system().lower() == "linux":
+                        os.system(f"xdg-open \"{str((minecraft_path / 'options.txt').absolute())}\"")
+            
+            def generateLaunchScript(self):
+                if self.version:
+                    # I've written the function for generating command.
+                    pass
+            
+            def paintEvent(self, a0):
+                painter = QPainter(self)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                colour = getBackgroundColour()
+                colour.setAlpha(128)
+                painter.setBrush(colour)
+                painter.drawRect(self.rect())
+        
         def __init__(self, parent=None):
             super().__init__(parent)
             self.verticalLayout = QVBoxLayout(self)
             
+            self.topPanel = Panel(self)
+            self.horizontalLayout = QHBoxLayout(self.topPanel)
+            
+            self.closeButton = CloseButton(self.topPanel)
+            self.closeButton.pressed.connect(self.closeFrame)
+            self.horizontalLayout.addWidget(self.closeButton)
+            
+            self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            self.horizontalLayout.addItem(self.horizontalSpacer)
+            
+            self.verticalLayout.addWidget(self.topPanel)
+            
             self.listWidget = ListWidget(self)
             
-            for version in GetVersionByScanDirectory(minecraft_path):
-                self.listWidget.addItem(version)
+            versions = GetVersionByScanDirectory(minecraft_path)
+            if versions:
+                for version in versions:
+                    self.listWidget.addItem(version)
+            
+            self.listWidget.itemDoubleClicked.connect(self.startSettings)
             
             self.verticalLayout.addWidget(self.listWidget)
+            
+            self.versionDetailsPage = None
+        
+        def paintEvent(self, a0):
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            colour = getBackgroundColour()
+            colour.setAlpha(128)
+            painter.setBrush(colour)
+            painter.drawRect(self.rect())
+        
+        def event(self, a0):
+            if hasattr(self, "versionDetailsPage") and self.versionDetailsPage:
+                self.versionDetailsPage.setGeometry(self.listWidget.geometry())
+                self.versionDetailsPage.raise_()
+            return super().event(a0)
+        
+        def closeFrame(self):
+            if not self.versionDetailsPage:
+                self.close()
+                self.frameClosed.emit()
+            else:
+                self.versionDetailsPage.close()
+                self.versionDetailsPage = None
+        
+        def startSettings(self, item):
+            self.versionDetailsPage = self.VersionDetailsPage(self, item.text())
+            self.versionDetailsPage.show()
     
     class LaunchThread(QThread):
         launched = pyqtSignal(tuple)
@@ -607,6 +854,7 @@ class MainPage(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.version = None
+        self.games = []
         
         self.verticalLayout = QVBoxLayout(self)
         self.scrollArea = ScrollArea(self)
@@ -641,15 +889,24 @@ class MainPage(QFrame):
         self.horizontalLayout.addWidget(self.settings_btn)
         spacer2 = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.horizontalLayout.addItem(spacer2)
+        self.stop_all_games_btn = ToolButton(self)
+        self.stop_all_games_btn.setFixedSize(QSize(64, 64))
+        self.stop_all_games_btn.setIconSize(QSize(54, 54))
+        self.stop_all_games_btn.pressed.connect(self.stop_all_games)
+        timer = QTimer(self)
+        timer.timeout.connect(self.update_icon)
+        timer.start(100)
         self.retranslateUI()
         self.bottomPanelIsShow = True
         self.versionSettings = None
+        self.versionSettingsY = None
     
     def retranslateUI(self):
         self.launch_btn.setText(self.tr("MainPage.launch_btn.Text"))
         self.select_version_btn.setText(self.version or self.tr("MainPage.select_version_btn.DefaultText"))
         self.change_dir_btn.setText(self.tr("MainPage.change_dir_btn.Text"))
-        self.settings_btn.setText("版本设置")  # self.tr("MainPage.settings_btn.Text")
+        self.settings_btn.setText(self.tr("MainPage.settings_btn.Text"))
+        self.stop_all_games_btn.setToolTip(self.tr("MainPage.stop_all_games_btn.ToolTip"))
     
     def select_version(self, version):
         self.version = version
@@ -658,13 +915,17 @@ class MainPage(QFrame):
     def launch(self):
         if self.version:
             self.launch_btn.setEnabled(False)
-            launch_thread = self.LaunchThread(minecraft_path, self.version, player, self)
-            launch_thread.launched.connect(lambda x: (self.launch_btn.setEnabled(True), self.launched(x)))
-            launch_thread.start()
+            try:
+                launch_thread = self.LaunchThread(minecraft_path, self.version, player, self)
+                launch_thread.launched.connect(lambda x: self.launched(x))
+                launch_thread.start()
+            finally:
+                self.launch_btn.setEnabled(True)
     
     def launched(self, result):
         print(result)
         if result[0] == "Successfully":
+            self.games.append(result[1])
             tip = PopupTip(frame)
             label = Label(tip)
             label.setText(self.tr("MainPage.VersionLaunchedTip.Label.Text"))
@@ -672,7 +933,17 @@ class MainPage(QFrame):
             tip.setCentralWidget(label)
             tip.setGeometry(QRect(0, 0, 300, 64))
             tip.tip(PopupTip.PopupPosition.RIGHT, 3000)
-            print(tip.geometry())
+            
+            # loggingwindow = GameLoggingWindow(None, result[1])
+            # loggingwindow.show()
+        else:
+            tip = PopupTip(frame)
+            label = Label(tip)
+            label.setText(self.tr("MainPage.VersionLaunchFailedTip.Label.Text").format(result[1]))
+            label.adjustSize()
+            tip.setCentralWidget(label)
+            tip.setGeometry(QRect(0, 0, 300, 64))
+            tip.tip(PopupTip.PopupPosition.RIGHT, 3000)
     
     def setMinecraftDir(self):
         global minecraft_path
@@ -696,7 +967,22 @@ class MainPage(QFrame):
         self.select_version_btn.setMenu(menu)
     
     def show_version_settings_page(self):
+        self.versionSettingsY = self.height()
         self.versionSettings = self.VersionSettingsPage(self)
+        self.versionSettings.frameClosed.connect(self.hide_version_settings_page)
+        self.versionSettings.show()
+    
+    def hide_version_settings_page(self):
+        self.versionSettings = None
+        self.versionSettingsY = None
+    
+    def stop_all_games(self):
+        for popen in self.games:
+            popen.kill()
+        self.games.clear()
+    
+    def update_icon(self):
+        self.stop_all_games_btn.setIcon(QIcon(f":/StopGame-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
     
     def resizeEvent(self, *args, **kwargs):
         super().resizeEvent(*args, **kwargs)
@@ -708,9 +994,23 @@ class MainPage(QFrame):
         else:
             if self.verticalLayout_2.indexOf(self.bottom_space) != -1:
                 self.verticalLayout_2.removeItem(self.bottom_space)
-        if self.versionSettings:
-            self.versionSettings.resize(self.width(), self.height())
+        self.stop_all_games_btn.setGeometry(
+            QRect(self.width() - self.stop_all_games_btn.width() - 10,
+                  self.height() - self.stop_all_games_btn.height() - 100,
+                  self.stop_all_games_btn.width(), self.stop_all_games_btn.height()))
+    
+    def event(self, a0):
+        if hasattr(self, "versionSettings") and self.versionSettings:
+            rect = self.rect().adjusted(1, 1, -1, -1)
+            rect.moveTo(0, self.versionSettingsY)
+            self.versionSettings.setGeometry(rect)
             self.versionSettings.raise_()
+        if hasattr(self, "versionSettingsY") and self.versionSettingsY:
+            if self.versionSettingsY > 0:
+                self.versionSettingsY -= self.versionSettingsY // 16 + 1
+            else:
+                self.versionSettingsY = 0
+        return super().event(a0)
 
 
 class DownloadPage(QFrame):
@@ -839,7 +1139,9 @@ class DownloadPage(QFrame):
             def paintEvent(self, a0):
                 painter = QPainter(self)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-                painter.setBrush(getBackgroundColour())
+                colour = getBackgroundColour()
+                colour.setAlpha(128)
+                painter.setBrush(colour)
                 painter.drawRect(self.rect())
         
         class GetVersionThread(QThread):
@@ -889,24 +1191,23 @@ class DownloadPage(QFrame):
             
             self.verticalLayout.addWidget(self.tableView)
             
-            self.frame = Panel(self)
-            self.frame.setObjectName(u"frame")
+            self.bottomFrame = Panel(self)
             sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
             sizePolicy1.setHorizontalStretch(0)
             sizePolicy1.setVerticalStretch(0)
-            sizePolicy1.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
-            self.frame.setSizePolicy(sizePolicy1)
-            self.horizontalLayout = QHBoxLayout(self.frame)
+            sizePolicy1.setHeightForWidth(self.bottomFrame.sizePolicy().hasHeightForWidth())
+            self.bottomFrame.setSizePolicy(sizePolicy1)
+            self.horizontalLayout = QHBoxLayout(self.bottomFrame)
             self.horizontalLayout.setObjectName(u"horizontalLayout")
             self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
             self.formLayout = QFormLayout()
             self.formLayout.setObjectName(u"formLayout")
-            self.label = Label(self.frame)
+            self.label = Label(self.bottomFrame)
             self.label.setObjectName(u"label")
             
             self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label)
             
-            self.comboBox = ComboBox(self.frame)
+            self.comboBox = ComboBox(self.bottomFrame)
             self.comboBox.setObjectName(u"comboBox")
             self.comboBox.addItem(self.tr("DownloadPage.DownloadVanilla.ComboBox.Item1.Text"))
             # self.comboBox.setEditable(True)
@@ -919,13 +1220,14 @@ class DownloadPage(QFrame):
             
             self.horizontalLayout.addItem(self.horizontalSpacer)
             
-            self.verticalLayout.addWidget(self.frame)
+            self.verticalLayout.addWidget(self.bottomFrame)
             
             self.retranslateUi()
             
             self.loadingAnimation = None
             self.getVersionThread = None
             self.downloadOptions = None
+            self.downloadOptionsY = None
             
             # QMetaObject.connectSlotsByName(self)
             # setupUi
@@ -943,8 +1245,15 @@ class DownloadPage(QFrame):
         
         def event(self, e):
             if hasattr(self, "downloadOptions") and self.downloadOptions:
-                self.downloadOptions.setGeometry(self.rect())
+                rect = self.rect().adjusted(1, 1, -1, -1)
+                rect.moveTo(0, self.downloadOptionsY)
+                self.downloadOptions.setGeometry(rect)
                 self.downloadOptions.raise_()
+            if hasattr(self, "downloadOptionsY") and self.downloadOptionsY:
+                if self.downloadOptionsY > 0:
+                    self.downloadOptionsY -= self.downloadOptionsY // 16 + 1
+                else:
+                    self.downloadOptionsY = 0
             return super().event(e)
         
         def showEvent(self, *args, **kwargs):
@@ -1114,15 +1423,43 @@ class DownloadPage(QFrame):
         def downloadOptionsOpen(self, value):
             data = self.tableView.model().item(value.row(), 0).text()
             print(data)
+            self.downloadOptionsY = self.height()
             self.downloadOptions = self.DownloadOptions(self, data)
             self.downloadOptions.frameClosed.connect(self.downloadOptionsClose)
             self.downloadOptions.show()
         
         def downloadOptionsClose(self):
             self.downloadOptions = None
+            self.downloadOptionsY = None
     
     class DownloadMods(QFrame):
         class ModInfoPage(QFrame):
+            class GetVersionsThread(QThread):
+                requested = pyqtSignal(list)
+                
+                def __init__(self, parent=None, mod_name=None):
+                    super().__init__(parent)
+                    self.mod_name = mod_name
+                
+                def run(self):
+                    try:
+                        content = ListModVersions(self.mod_name)
+                        self.requested.emit(content)
+                    except:
+                        self.requested.emit([])
+            
+            class DownloadThread(QThread):
+                def __init__(self, parent=None, mod_name=None, mod_version=None, target_path=None):
+                    super().__init__(parent)
+                    self.mod_name = mod_name
+                    self.mod_version = mod_version
+                    self.target_path = target_path
+                
+                def run(self):
+                    if self.mod_name and self.mod_version and self.target_path:
+                        print("started")
+                        DownloadMod(self.mod_name, self.mod_version, self.target_path)
+            
             class GetIconThread(QThread):
                 requested = pyqtSignal(bytes)
                 
@@ -1151,6 +1488,11 @@ class DownloadPage(QFrame):
                 thread = self.GetIconThread(self, self.mod_icon)
                 thread.requested.connect(self.updateIcon)
                 thread.start()
+                
+                self.mod_versions = []
+                thread_2 = self.GetVersionsThread(self, self.mod_name)
+                thread_2.requested.connect(self.updateVersions)
+                thread_2.start()
                 
                 self.verticalLayout = QVBoxLayout(self)
                 
@@ -1204,6 +1546,16 @@ class DownloadPage(QFrame):
                 
                 self.toolBox.addItem(self.modInfo, self.tr("DownloadPage.DownloadMods.ModInfoPage.Page1.Title"))
                 
+                self.modVersions = QFrame(self.toolBox)
+                
+                self.verticalLayout_4 = QVBoxLayout(self.modVersions)
+                
+                self.listWidget = ListWidget(self.modVersions)
+                self.listWidget.doubleClicked.connect(self.startDownloadMod)
+                self.verticalLayout_4.addWidget(self.listWidget)
+                
+                self.toolBox.addItem(self.modVersions, self.tr("DownloadPage.DownloadMods.ModInfoPage.Page2.Title"))
+                
                 self.verticalLayout.addWidget(self.toolBox)
                 
                 self.retranslateUI()
@@ -1213,6 +1565,8 @@ class DownloadPage(QFrame):
                 self.modDescription.setText(self.mod_description)
                 self.toolBox.setItemText(self.toolBox.indexOf(self.modInfo),
                                          self.tr("DownloadPage.DownloadMods.ModInfoPage.Page1.Title"))
+                self.toolBox.setItemText(self.toolBox.indexOf(self.modVersions),
+                                         self.tr("DownloadPage.DownloadMods.ModInfoPage.Page2.Title"))
             
             def updateIcon(self, icon):
                 try:
@@ -1224,15 +1578,32 @@ class DownloadPage(QFrame):
                     self.icon_temp = None
                 self.modIcon.setIcon(QIcon(self.icon_temp.name) if self.icon_temp else QIcon())
             
+            def updateVersions(self, versions):
+                self.listWidget.clear()
+                self.mod_versions = versions
+                for version in versions:
+                    self.listWidget.addItem(f"{version['name']}")
+            
+            def startDownloadMod(self, version):
+                download_path = QFileDialog.getExistingDirectory(self, self.tr(
+                    "DownloadPage.DownloadMods.ModInfoPage.Page2.DownloadPath"), str(Path(".").absolute()))
+                if download_path:
+                    version_text = self.listWidget.model().itemData(version)[0]
+                    thread = self.DownloadThread(self, self.mod_name, version_text, download_path)
+                    thread.start()
+            
             def paintEvent(self, a0):
                 painter = QPainter(self)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-                painter.setBrush(getBackgroundColour())
+                colour = getBackgroundColour()
+                colour.setAlpha(128)
+                painter.setBrush(colour)
                 painter.drawRect(self.rect())
             
             def closeEvent(self, *args, **kwargs):
                 super().closeEvent(*args, **kwargs)
-                self.icon_temp.close()
+                if self.icon_temp:
+                    self.icon_temp.close()
         
         class GetModThread(QThread):
             gotMod = pyqtSignal(dict)
@@ -1244,7 +1615,7 @@ class DownloadPage(QFrame):
             
             def run(self):
                 try:
-                    response = GetModsOnModrinth(limit=self.page_items, offset=(self.page - 1) * self.page_items)
+                    response = GetMods(limit=self.page_items, offset=(self.page - 1) * self.page_items)
                     if response:
                         self.gotMod.emit({"status": "successfully", "result": response})
                     else:
@@ -1333,6 +1704,10 @@ class DownloadPage(QFrame):
                 self.previousButton.setEnabled(False)
             else:
                 self.previousButton.setEnabled(True)
+            if self.searchLineEdit.text():
+                self.nextButton.setEnabled(False)
+            else:
+                self.nextButton.setEnabled(True)
         
         def loadPage(self):
             if self.currentPage in self.mods:
@@ -1454,14 +1829,20 @@ class DownloadPage(QFrame):
         super().__init__(parent)
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.frame = Panel(self)
-        self.horizontalLayout = QHBoxLayout(self.frame)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.navigationFrame = Panel(self)
+        self.navigationFrameScrollAreaLayout = QVBoxLayout(self.navigationFrame)
+        self.navigationFrameScrollAreaLayout.setContentsMargins(0, 0, 0, 0)
+        self.navigationFrameScrollArea = ScrollArea(self.navigationFrame)
+        self.navigationFrameScrollArea.setFixedHeight(self.navigationFrame.height() + 10)
+        self.navigationFrameScrollAreaLayout.addWidget(self.navigationFrameScrollArea)
+        self.navigationFrameScrollAreaWidgetContent = QWidget()
+        self.horizontalLayout = QHBoxLayout(self.navigationFrameScrollAreaWidgetContent)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.pages = {}
         
         self.page = self.DownloadVanilla()
         self.page.setObjectName(u"page")
-        self.pushButton = PushButton(self.frame)
+        self.pushButton = PushButton(self.navigationFrameScrollAreaWidgetContent)
         self.pushButton.setObjectName(u"pushButton")
         self.pushButton.setCheckable(True)
         self.pushButton.setChecked(True)
@@ -1473,7 +1854,7 @@ class DownloadPage(QFrame):
         
         self.page_2 = self.DownloadMods()
         self.page_2.setObjectName(u"page_2")
-        self.pushButton_2 = PushButton(self.frame)
+        self.pushButton_2 = PushButton(self.navigationFrameScrollAreaWidgetContent)
         self.pushButton_2.setObjectName(u"pushButton_2")
         self.pushButton_2.setCheckable(True)
         self.pushButton_2.setAutoExclusive(True)
@@ -1486,15 +1867,18 @@ class DownloadPage(QFrame):
         
         self.horizontalLayout.addItem(self.horizontalSpacer)
         
-        self.verticalLayout.addWidget(self.frame)
+        self.navigationFrameScrollArea.setWidget(self.navigationFrameScrollAreaWidgetContent)
+        self.navigationFrameScrollArea.setWidgetResizable(True)
         
-        self.stackedWidget = QStackedWidget(self)
+        self.verticalLayout.addWidget(self.navigationFrame)
+        
+        self.stackedWidget = AnimatedStackedWidget(self)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.addWidget(self.page)
         self.stackedWidget.addWidget(self.page_2)
         self.stackedWidget.setCurrentIndex(0)
         
-        self.verticalLayout.addWidget(self.stackedWidget)
+        self.verticalLayout.addWidget(self.stackedWidget, 1)
         
         self.retranslateUi()
         #
@@ -1527,8 +1911,13 @@ class SettingsPage(QFrame):
             
             self.lineEdit = LineEdit(self)
             self.lineEdit.setObjectName(u"lineEdit")
-            self.lineEdit.textChanged.connect(self.updatePresentsState)
+            self.lineEdit.setText(settings["Settings"]["GameSettings"]["ExtraGameCommand"])
+            self.lineEdit.textChanged.connect(self.updatePresetsState)
+            self.lineEdit.textChanged.connect(self.updateSettings)
             self.lineEdit.setClearButtonEnabled(True)
+            font = QFont("Consolas")
+            font.setPointSize(13)
+            self.lineEdit.setFont(font)
             
             self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.lineEdit)
             
@@ -1562,6 +1951,8 @@ class SettingsPage(QFrame):
             self.verticalLayout.addItem(self.verticalSpacer)
             
             self.retranslateUi()
+            
+            self.updatePresetsState()
             #
             # QMetaObject.connectSlotsByName(Form)
         
@@ -1569,7 +1960,7 @@ class SettingsPage(QFrame):
         
         def retranslateUi(self):
             self.label.setText(self.tr("SettingsPage.GameSettings.label.Text"))
-            self.groupBox.setTitle(self.tr("SettingsPage.GameSettings.gropuBox.Title"))
+            self.groupBox.setTitle(self.tr("SettingsPage.GameSettings.groupBox.Title"))
             self.checkBox.setText(self.tr("SettingsPage.GameSettings.checkBox.Text"))
             self.checkBox_2.setText(self.tr("SettingsPage.GameSettings.checkBox_2.Text"))
         
@@ -1587,11 +1978,14 @@ class SettingsPage(QFrame):
             command = shlex.join(splited_command)
             self.lineEdit.setText(command)
         
-        def updatePresentsState(self):
+        def updatePresetsState(self):
             text = self.lineEdit.text()
             splited_command = shlex.split(text)
             self.checkBox.setChecked("-demo" in splited_command)
             self.checkBox_2.setChecked("-fullscreen" in splited_command)
+        
+        def updateSettings(self, value):
+            settings["Settings"]["GameSettings"]["ExtraGameCommand"] = value
     
     class JavaSettings(QFrame):
         class SearchVersionThread(QThread):
@@ -1719,7 +2113,10 @@ class SettingsPage(QFrame):
         def retranslateUi(self):
             self.groupBox.setTitle(self.tr("SettingsPage.JavaSettings.groupBox.Text"))
             self.radioButton.setText(self.tr("SettingsPage.JavaSettings.radioButton.Text"))
+            self.radioButton.setToolTip(self.tr("SettingsPage.JavaSettings.radioButton.ToolTip"))
             self.radioButton_2.setText(self.tr("SettingsPage.JavaSettings.radioButton_2.Text"))
+            self.radioButton_2.setToolTip(
+                self.tr("SettingsPage.JavaSettings.radioButton_2.ToolTip"))
             self.label_2.setText(self.tr("SettingsPage.JavaSettings.label_2.Text"))
             self.pushButton_2.setText(self.tr("SettingsPage.JavaSettings.pushButton_2.Text"))
             self.pushButton_3.setText(self.tr("SettingsPage.JavaSettings.pushButton_3.Text"))
@@ -1765,8 +2162,14 @@ class SettingsPage(QFrame):
             thread.start()
         
         def applyJavaByUser(self):
+            file_filter = ""
+            match platform.system().lower():
+                case "windows":
+                    file_filter = "java.exe"
+                case "linux":
+                    file_filter = "java"
             java = QFileDialog.getOpenFileName(self, self.tr("SettingsPage.JavaSettings.applyJavaDialogue.Title"),
-                                               str(Path(".").absolute()), "java.exe")
+                                               str(Path(".").absolute()), file_filter)
             java_path = Path(java[0])
             self.comboBox.addItem(str(java_path))
         
@@ -1781,9 +2184,18 @@ class SettingsPage(QFrame):
             if self.radioButton_2.isChecked():
                 settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] = "server"
     
+    class JavaSettingsContainer(ScrollArea):
+        def __init__(self, parent, javasettings):
+            super().__init__(parent)
+            self.javaSettings = javasettings(self)
+            self.setWidget(self.javaSettings)
+            self.setWidgetResizable(True)
+    
     class CustomiseSettings(QFrame):
         def __init__(self, parent):
             super().__init__(parent)
+            self.setThemePreset(True, settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePreset"])
+            
             self.verticalLayout = QVBoxLayout(self)
             
             self.groupBox = GroupBox(self)
@@ -1793,22 +2205,22 @@ class SettingsPage(QFrame):
             
             self.group1_radioButton = RadioButton(self.groupBox)
             self.group1_radioButton.setChecked(
-                settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePresent"] == "CMCL_Blue")
-            self.group1_radioButton.toggled.connect(lambda state: self.setThemePresent(state, "CMCL_Blue"))
+                settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePreset"] == "PresetBlue")
+            self.group1_radioButton.toggled.connect(lambda state: self.setThemePreset(state, "PresetBlue"))
             
             self.girdLayout.addWidget(self.group1_radioButton, 0, 0)
             
             self.group1_radioButton_2 = RadioButton(self.groupBox)
             self.group1_radioButton_2.setChecked(
-                settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePresent"] == "CMCL_Pink")
-            self.group1_radioButton_2.toggled.connect(lambda state: self.setThemePresent(state, "CMCL_Pink"))
+                settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePreset"] == "PresetPink")
+            self.group1_radioButton_2.toggled.connect(lambda state: self.setThemePreset(state, "PresetPink"))
             
             self.girdLayout.addWidget(self.group1_radioButton_2, 0, 1)
             
             self.group1_radioButton_3 = RadioButton(self.groupBox)
-            self.group1_radioButton.setChecked(
-                settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePresent"] == "CMCL_Red")
-            self.group1_radioButton_3.toggled.connect(lambda state: self.setThemePresent(state, "CMCL_Red"))
+            self.group1_radioButton_3.setChecked(
+                settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePreset"] == "PresetRed")
+            self.group1_radioButton_3.toggled.connect(lambda state: self.setThemePreset(state, "PresetRed"))
             
             self.girdLayout.addWidget(self.group1_radioButton_3, 1, 0)
             
@@ -1817,15 +2229,62 @@ class SettingsPage(QFrame):
             
             self.verticalLayout_2 = QVBoxLayout(self.groupBox_2)
             
-            self.tipLabel = Label(self.groupBox_2)
-            self.verticalLayout_2.addWidget(self.tipLabel)
-            
             self.girdLayout_2 = QGridLayout()
             self.verticalLayout_2.addLayout(self.girdLayout_2)
             
             self.group2_radioButton = RadioButton(self.groupBox_2)
-            self.group2_radioButton.setChecked(True)
             self.girdLayout_2.addWidget(self.group2_radioButton, 0, 0)
+            
+            self.group2_radioButton_2 = RadioButton(self.groupBox_2)
+            self.group2_radioButton_2.setChecked(True)
+            self.girdLayout_2.addWidget(self.group2_radioButton_2, 0, 1)
+            
+            self.tipLabel = Label(self.groupBox_2)
+            self.verticalLayout_2.addWidget(self.tipLabel)
+            
+            self.formLayout = QFormLayout()
+            
+            self.label1 = Label(self.groupBox_2)
+            
+            self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label1)
+            
+            self.blurSlider = Slider(self.groupBox_2)
+            self.blurSlider.setOrientation(Qt.Orientation.Horizontal)
+            self.blurSlider.setMinimum(0)
+            self.blurSlider.setMaximum(100)
+            self.blurSlider.setValue(settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"])
+            self.blurSlider.valueChanged.connect(self.updateBackgroundBlur)
+            self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.blurSlider)
+            
+            self.verticalLayout_2.addLayout(self.formLayout)
+            
+            self.groupBox_3 = GroupBox(self)
+            self.verticalLayout.addWidget(self.groupBox_3)
+            
+            self.verticalLayout_3 = QVBoxLayout(self.groupBox_3)
+            
+            self.group3_checkBox = CheckBox(self.groupBox_3)
+            self.verticalLayout_3.addWidget(self.group3_checkBox)
+            
+            self.groupBox_4 = GroupBox(self)
+            self.verticalLayout.addWidget(self.groupBox_4)
+            
+            self.verticalLayout_4 = QVBoxLayout(self.groupBox_4)
+            
+            self.formLayout_2 = QFormLayout()
+            
+            self.label2 = Label(self.groupBox_4)
+            self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label2)
+            
+            self.comboBox = ComboBox(self.groupBox_4)
+            self.updateComboBoxLanguageList()
+            self.comboBox.currentIndexChanged.connect(self.comboBoxLanguageChanged)
+            self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.comboBox)
+            
+            self.verticalLayout_4.addLayout(self.formLayout_2)
+            
+            self.translationMayNotBeCorrectLabel = Label(self.groupBox_4)
+            self.verticalLayout_4.addWidget(self.translationMayNotBeCorrectLabel)
             
             self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
             self.verticalLayout.addItem(self.verticalSpacer)
@@ -1834,19 +2293,29 @@ class SettingsPage(QFrame):
         
         def retranslateUI(self):
             self.groupBox.setTitle(self.tr("SettingsPage.CustomiseSettings.groupBox.Title"))
-            self.group1_radioButton.setText("CMCL蓝")
-            self.group1_radioButton_2.setText("CMCL粉")
-            self.group1_radioButton_3.setText("CMCL红")
+            self.group1_radioButton.setText(self.tr("SettingsPage.CustomiseSettings.group1_radioButton.Text"))
+            self.group1_radioButton_2.setText(
+                self.tr("SettingsPage.CustomiseSettings.group1_radioButton_2.Text"))
+            self.group1_radioButton_3.setText(
+                self.tr("SettingsPage.CustomiseSettings.group1_radioButton_3.Text"))
             self.groupBox_2.setTitle(self.tr("SettingsPage.CustomiseSettings.groupBox_2.Title"))
-            self.tipLabel.setText(
-                "该部分的设置要重启启动器才能生效。")  # self.tr("SettingsPage.CustomiseSettings.tipLabel.Text")
-            self.group2_radioButton.setText("原生窗口")
+            self.group2_radioButton.setText(self.tr("SettingsPage.CustomiseSettings.group2_radioButton.Text"))
+            self.group2_radioButton_2.setText(
+                self.tr("SettingsPage.CustomiseSettings.group2_radioButton_2.Text"))
+            self.tipLabel.setText(self.tr("SettingsPage.CustomiseSettings.tipLabel.Text"))
+            self.label1.setText(self.tr("SettingsPage.CustomiseSettings.label1.Text"))
+            self.groupBox_3.setTitle(self.tr("SettingsPage.CustomiseSettings.groupBox_3.Title"))
+            self.group3_checkBox.setText(self.tr("SettingsPage.CustomiseSettings.group3_checkBox.Text"))
+            self.groupBox_4.setTitle(self.tr("SettingsPage.CustomiseSettings.groupBox_4.Title"))
+            self.label2.setText(self.tr("SettingsPage.CustomiseSettings.label2.Text"))
+            self.translationMayNotBeCorrectLabel.setText(
+                self.tr("SettingsPage.CustomiseSettings.translationMayNotBeCorrectLabel.Text"))
         
         @staticmethod
-        def setThemePresent(state, value):
+        def setThemePreset(state, value):
             if not state:
                 return
-            settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePresent"] = value
+            settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePreset"] = value
             if value in theme_colour_defines:
                 define = theme_colour_defines[value]
                 for theme in define:
@@ -1854,18 +2323,58 @@ class SettingsPage(QFrame):
                         for highlight in define[theme][role]:
                             setThemeColour(role, False, highlight, theme,
                                            theme_colour_defines[value][theme][role][highlight])
+        
+        def updateBackgroundBlur(self, value):
+            settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"] = value
+        
+        def updateComboBoxLanguageList(self):
+            self.comboBox.clear()
+            for language in languages_map:
+                self.comboBox.addItem(f"{languages_map[language]} ({language})")
+            self.comboBox.setCurrentIndex(tuple(languages_map.keys()).index(current_language))
+        
+        def comboBoxLanguageChanged(self):
+            global current_language
+            before_language = current_language
+            current_language = self.comboBox.currentText().split(" ")[-1][1:-1]
+            settings["Settings"]["LauncherSettings"]["CurrentLanguage"] = current_language
+            if before_language != current_language:
+                if "frame" in globals():
+                    tip = PopupTip(frame)
+                    label = Label(tip)
+                    label.setText(
+                        self.tr("SettingsPage.CustomiseSettings.LanguageChangedRestartTip.Label.Text"))
+                    label.adjustSize()
+                    tip.setCentralWidget(label)
+                    tip.setGeometry(QRect(0, 0, 300, 64))
+                    tip.tip(PopupTip.PopupPosition.RIGHT, 3000)
+                    # QTimer.singleShot(2000, lambda: subprocess.Popen(sys.orig_argv))
+                    QTimer.singleShot(3000, lambda: app.exit(0))
+    
+    class CustomiseSettingsContainer(ScrollArea):
+        def __init__(self, parent, customisesettings):
+            super().__init__(parent)
+            self.customiseSettings = customisesettings(self)
+            self.setWidget(self.customiseSettings)
+            self.setWidgetResizable(True)
     
     def __init__(self, parent):
         super().__init__(parent)
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.frame = Panel(self)
-        self.horizontalLayout = QHBoxLayout(self.frame)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.navigationFrame = Panel(self)
+        self.navigationFrameScrollAreaLayout = QVBoxLayout(self.navigationFrame)
+        self.navigationFrameScrollAreaLayout.setContentsMargins(0, 0, 0, 0)
+        self.navigationFrameScrollArea = ScrollArea(self.navigationFrame)
+        self.navigationFrameScrollAreaLayout.addWidget(self.navigationFrameScrollArea)
+        self.navigationFrameScrollArea.setFixedHeight(self.navigationFrame.height() + 10)
+        self.navigationFrameScrollAreaWidgetContent = QWidget()
+        self.horizontalLayout = QHBoxLayout(self.navigationFrameScrollAreaWidgetContent)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.pages = {}
         
         self.page = self.GameSettings(self)
-        self.pushButton = PushButton(self.frame)
+        self.pushButton = PushButton(self.navigationFrameScrollAreaWidgetContent)
         self.pushButton.setCheckable(True)
         self.pushButton.setChecked(True)
         self.pushButton.setAutoExclusive(True)
@@ -1874,8 +2383,8 @@ class SettingsPage(QFrame):
         self.horizontalLayout.addWidget(self.pushButton)
         self.pages[self.pushButton] = self.page
         
-        self.page_2 = self.JavaSettings(self)
-        self.pushButton_2 = PushButton(self.frame)
+        self.page_2 = self.JavaSettingsContainer(self, self.JavaSettings)
+        self.pushButton_2 = PushButton(self.navigationFrameScrollAreaWidgetContent)
         self.pushButton_2.setCheckable(True)
         self.pushButton_2.setAutoExclusive(True)
         self.pushButton_2.pressed.connect(lambda: self.update_page(self.pushButton_2))
@@ -1883,8 +2392,8 @@ class SettingsPage(QFrame):
         self.horizontalLayout.addWidget(self.pushButton_2)
         self.pages[self.pushButton_2] = self.page_2
         
-        self.page_3 = self.CustomiseSettings(self)
-        self.pushButton_3 = PushButton(self.frame)
+        self.page_3 = self.CustomiseSettingsContainer(self, self.CustomiseSettings)
+        self.pushButton_3 = PushButton(self.navigationFrameScrollAreaWidgetContent)
         self.pushButton_3.setCheckable(True)
         self.pushButton_3.setAutoExclusive(True)
         self.pushButton_3.pressed.connect(lambda: self.update_page(self.pushButton_3))
@@ -1896,15 +2405,18 @@ class SettingsPage(QFrame):
         
         self.horizontalLayout.addItem(self.horizontalSpacer)
         
-        self.verticalLayout.addWidget(self.frame)
+        self.navigationFrameScrollArea.setWidget(self.navigationFrameScrollAreaWidgetContent)
+        self.navigationFrameScrollArea.setWidgetResizable(True)
         
-        self.stackedWidget = QStackedWidget(self)
+        self.verticalLayout.addWidget(self.navigationFrame)
+        
+        self.stackedWidget = AnimatedStackedWidget(self)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.addWidget(self.page)
         self.stackedWidget.addWidget(self.page_2)
         self.stackedWidget.addWidget(self.page_3)
         
-        self.verticalLayout.addWidget(self.stackedWidget)
+        self.verticalLayout.addWidget(self.stackedWidget, 1)
         
         self.retranslateUi()
         #
@@ -1943,7 +2455,7 @@ class AboutPage(QFrame):
         self.horizontalLayout.addWidget(self.avatar1)
         
         self.label1 = Label(self.panel1)
-        self.label1.setText("chengwm\nCommon Minecraft Launcher 的作者。")
+        self.label1.setText("chengwm\n" + self.tr('AboutPage.label1.Text'))
         
         self.horizontalLayout.addWidget(self.label1, 1)
         
@@ -1960,7 +2472,9 @@ class AboutPage(QFrame):
         self.horizontalLayout_2.addWidget(self.avatar2)
         
         self.label2 = Label(self.panel2)
-        self.label2.setText("Minecraft_稻田\nCommon Minecraft Launcher 的策划。")
+        self.label2.setText(
+            self.tr('AboutPage.label2.Text.LocalisedName') + "\n" + self.tr(
+                'AboutPage.label2.Text'))
         
         self.horizontalLayout_2.addWidget(self.label2, 1)
         
@@ -1980,12 +2494,13 @@ class AboutPage(QFrame):
         self.cmcl_icon = ToolButton(self.panel_cmcl)
         self.cmcl_icon.setFixedSize(QSize(74, 74))
         self.cmcl_icon.setIconSize(QSize(64, 64))
-        self.cmcl_icon.setIcon(QIcon(":/CMCL_icon.svg"))
+        self.cmcl_icon.setIcon(QIcon(":/CommonMinecraftLauncherIcon.svg"))
         
         self.horizontalLayout_3.addWidget(self.cmcl_icon)
         
         self.cmcl_info = Label(self.panel_cmcl)
-        self.cmcl_info.setText(self.tr("AboutPage.Page2.CMCL_info").format(CMCL_version[0], CMCL_version[1], language))
+        self.cmcl_info.setText(
+            self.tr("AboutPage.Page2.CMCL_info").format(CMCL_version[0], CMCL_version[1], current_language))
         
         self.horizontalLayout_3.addWidget(self.cmcl_info, 1)
         
@@ -1999,13 +2514,14 @@ class AboutPage(QFrame):
         self.verticalLayout.addWidget(self.toolBox)
         
         # Special Thanks:
-        # 中文 Minecraft Wiki -> 提供教程。
+        # 中文 Minecraft Wiki -> 提供教程
         # 龙腾猫跃 -> PCL2启动器的作者
-        # zhiyiYo
+        # zhiyiYo -> 无边框窗口代码
         self.retranslateUI()
     
     def retranslateUI(self):
-        pass
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page1), self.tr("AboutPage.Page1.Title"))
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page2), self.tr("AboutPage.Page2.Title"))
 
 
 class OfflinePlayerCreationDialogue(RoundedDialogue):
@@ -2041,6 +2557,32 @@ class OfflinePlayerCreationDialogue(RoundedDialogue):
         player = create_offline_player(self.playernameLineEdit.text(), player.player_hasMC)
         frame.UserPage.user_datas[frame.UserPage.current_user] = player
         self.close()
+    
+    def paintEvent(self, a0, **kwargs):
+        background = QPixmap(self.size())
+        p = QPainter(background)
+        x = 0 if self.isMaximized() else -self.geometry().x()
+        y = 0 if self.isMaximized() else -self.geometry().y()
+        p.fillRect(
+            QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
+                  QGuiApplication.primaryScreen().geometry().height()),
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+        p.end()
+        scene = QGraphicsScene()
+        item = QGraphicsPixmapItem()
+        item.setPixmap(background)
+        blur = QGraphicsBlurEffect()
+        blur.setBlurRadius(settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"])
+        item.setGraphicsEffect(blur)
+        scene.addItem(item)
+        img = QPixmap(background.size())
+        img.fill(Qt.GlobalColor.transparent)
+        ptr = QPainter(img)
+        scene.render(ptr, QRectF(img.rect()), QRectF(img.rect()))
+        ptr.end()
+        painter = QPainter(self)
+        rect = QRect(-20, -20, self.width() + 40, self.height() + 40)
+        painter.drawPixmap(rect, img)
 
 
 class UserPage(QFrame):
@@ -2090,7 +2632,7 @@ class UserPage(QFrame):
         else:
             self.UserIcon.setText(self.tr("UserPage.UserIconNoUser.Text"))
         self.UserIcon.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.UserIcon.pressed.connect(self.startLogin)
+        self.UserIcon.pressed.connect(self.mainButtonPressed)
         self.horizontalLayout.addWidget(self.UserIcon)
         spacer2 = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.horizontalLayout.addItem(spacer2)
@@ -2219,6 +2761,11 @@ class UserPage(QFrame):
         self.current_user = max(0, min(len(self.user_datas) - 1, self.current_user))
         self.retranslateUI()
     
+    def mainButtonPressed(self):
+        if self.user_datas:
+            return
+        self.startLogin()
+    
     @staticmethod
     def startLogin():
         dialogue = LoginDialogue()
@@ -2234,7 +2781,7 @@ class MainWindow(window_class):
     def __init__(self):
         super().__init__()
         self.resize(800, 600)
-        self.setWindowIcon(QIcon(":/CMCL_icon.svg"))
+        self.setWindowIcon(QIcon(":/CommonMinecraftLauncherIcon.svg"))
         title = "Common Minecraft Launcher"
         if random.randint(1, 100) == random.randint(1, 100):
             title = "Chengwm's Minecraft Launcher"
@@ -2242,30 +2789,21 @@ class MainWindow(window_class):
             title = title.replace("Minecraft", "Minceraft")
         self.setWindowTitle(title)
         # self.setWindowOpacity(0.9)
-        self.titleBar.hide()
-        self.titleBar = StandardTitleBar(self)
-        self.titleBar.show()
-        self.titleBar.raise_()
-        self.titleBar.iconLabel.setPixmap(self.windowIcon().pixmap(20, 20))
-        self.titleBar.titleLabel.setText(self.windowTitle())
-        self.titleBar.titleLabel.setStyleSheet(
-            "background: transparent; padding: 0 4px; font: 13px 'Segoe UI'; color: black")
         self.setStyleSheet("background: transparent")
         self.centralwidget = QWidget(self)
         self.horizontalLayout = QVBoxLayout(self.centralwidget)
-        self.horizontalLayout.setContentsMargins(5, 37, 5, 5)
+        self.horizontalLayout.setContentsMargins(5, 35, 5, 5)
         self.horizontalLayout.setSpacing(10)
         self.topWidget = NavigationPanel(self.centralwidget)
         self.topWidget.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.HomePage = MainPage(self)
-        self.topWidget.addItem(self.HomePage, ":/Home.svg", self.tr("MainWindow.HomePage.Text"))
-        # self.tr("MainWindow.VersionSettingsPage.Text") = "版本设置"
+        self.topWidget.addItem(self.HomePage, "", self.tr("MainWindow.HomePage.Text"))
         self.DownloadPage = DownloadPage(self)
-        self.topWidget.addItem(self.DownloadPage, ":/Download.svg", self.tr("MainWindow.DownloadPage.Text"))
+        self.topWidget.addItem(self.DownloadPage, "", self.tr("MainWindow.DownloadPage.Text"))
         self.SettingsPage = SettingsPage(self)
-        self.topWidget.addItem(self.SettingsPage, ":/Settings.svg", self.tr("MainWindow.SettingsPage.Text"))
+        self.topWidget.addItem(self.SettingsPage, "", self.tr("MainWindow.SettingsPage.Text"))
         self.AboutPage = AboutPage(self)
-        self.topWidget.addItem(self.AboutPage, ":/About.svg", self.tr("MainWindow.AboutPage.Text"))
+        self.topWidget.addItem(self.AboutPage, "", self.tr("MainWindow.AboutPage.Text"))
         self.UserPage = UserPage(self)
         self.topWidget.addItem(self.UserPage, ":/user_icon-black.svg", self.tr("MainWindow.UserPage.Text"),
                                pos=NavigationPanel.NavigationItemPosition.Right)
@@ -2284,12 +2822,35 @@ class MainWindow(window_class):
         # popoutTip.tip()
         self.centralwidget.setLayout(self.horizontalLayout)
         self.setCentralWidget(self.centralwidget)
+        
+        # April FOOL Code:
+        if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
+            self.dx = self.dy = 10
+            t = QTimer(self)
+            t.timeout.connect(self.SUPERFOOL)
+            t.start(1)
+        else:
+            self.dx = self.dy = 0
     
-    def showCentre(self):
+    def SUPERFOOL(self):
+        self.move(self.x() + self.dx, self.y() + self.dy)
+        sg = QGuiApplication.primaryScreen().geometry()
+        if self.x() <= 0 or self.x() + self.width() >= sg.width():
+            self.dx = -self.dx
+        if self.y() <= 0 or self.y() + self.height() >= sg.height():
+            self.dy = -self.dy
+    
+    def mousePressEvent(self, a0):
+        super().mousePressEvent(a0)
+        if 0 <= a0.pos().x() - self.x() <= 10 and 0 <= a0.pos().y() - self.x() <= 10:
+            self.dx = self.dy = 0
+    
+    # End
+    
+    def setCentre(self):
         geometry = QGuiApplication.primaryScreen().geometry()
         point = QPoint(geometry.width() // 2 - self.width() // 2, geometry.height() // 2 - self.height() // 2)
         self.move(point)
-        self.showNormal()
     
     @staticmethod
     def toggle_theme():
@@ -2302,7 +2863,27 @@ class MainWindow(window_class):
         for window in QGuiApplication.allWindows():
             window.requestUpdate()
     
+    def update(self):
+        super().update()
+        try:
+            self.updateIcon()
+            self.titleBar.titleLabel.setStyleSheet(
+                f"background: transparent; padding: 0 4px; font: 13px 'Segoe UI'; color: rgb({str(getForegroundColour()).strip('()')})")
+        except AttributeError:
+            pass
+    
     def updateIcon(self):
+        if self.topWidget.button("1"):
+            self.topWidget.button("1").setIcon(QIcon(f":/Home-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
+        if self.topWidget.button("2"):
+            self.topWidget.button("2").setIcon(
+                QIcon(f":/Download-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
+        if self.topWidget.button("3"):
+            self.topWidget.button("3").setIcon(
+                QIcon(f":/Settings-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
+        if self.topWidget.button("4"):
+            self.topWidget.button("4").setIcon(
+                QIcon(f":/About-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
         if self.topWidget.button("5"):
             self.topWidget.button("5").setIcon(
                 QIcon(f":/user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
@@ -2313,11 +2894,30 @@ class MainWindow(window_class):
                     "MainPage.ToggleTheme.Dark.Text"))
     
     def paintEvent(self, a0, **kwargs):
-        painter = QPainter(self)
-        painter.fillRect(
-            QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
+        background = QPixmap(self.size())
+        p = QPainter(background)
+        x = 0 if self.isMaximized() else -self.geometry().x()
+        y = 0 if self.isMaximized() else -self.geometry().y()
+        p.fillRect(
+            QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.DeepBlue if getTheme() == Theme.Light else QGradient.Preset.PerfectBlue))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+        p.end()
+        scene = QGraphicsScene()
+        item = QGraphicsPixmapItem()
+        item.setPixmap(background)
+        blur = QGraphicsBlurEffect()
+        blur.setBlurRadius(settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"])
+        item.setGraphicsEffect(blur)
+        scene.addItem(item)
+        img = QPixmap(background.size())
+        img.fill(Qt.GlobalColor.transparent)
+        ptr = QPainter(img)
+        scene.render(ptr, QRectF(img.rect()), QRectF(img.rect()))
+        ptr.end()
+        painter = QPainter(self)
+        rect = QRect(-20, -20, self.width() + 40, self.height() + 40)
+        painter.drawPixmap(rect, img)
     
     def showEvent(self, a0):
         super().showEvent(a0)
@@ -2396,12 +2996,6 @@ class LoggingWindow(window_class):
             if not extra_globals:
                 extra_globals = {}
             
-            def __import__(name, *args, **kwargs):
-                raise RuntimeError("cannot use function `__import__` for safety")
-            
-            def exec(*args, **kwargs):
-                raise RuntimeError("cannot use function `exec` for safety")
-            
             self.__th = None
             
             def input(prompt=""):
@@ -2429,8 +3023,6 @@ class LoggingWindow(window_class):
                 self.__th.start()
             
             self.globals = {
-                "__import__": __import__,
-                "exec": exec,
                 "input": input,
                 "sys": sys,
                 "player": player,
@@ -2439,8 +3031,6 @@ class LoggingWindow(window_class):
             for i in extra_globals.items():
                 self.globals[i[0]] = i[1]
             self.locals = {
-                "__import__": __import__,
-                "exec": exec,
                 "input": input,
                 "sys": sys,
             }
@@ -2459,18 +3049,9 @@ class LoggingWindow(window_class):
     def __init__(self):
         super().__init__()
         self.resize(800, 600)
-        self.setWindowIcon(QIcon(":/CMCL_icon.svg"))
+        self.setWindowIcon(QIcon(":/CommonMinecraftLauncherIcon.svg"))
         self.setWindowTitle(self.tr("LoggingWindow.Title"))
-        self.titleBar.hide()
-        self.titleBar = StandardTitleBar(self)
-        self.titleBar.show()
-        self.titleBar.raise_()
-        self.titleBar.iconLabel.setPixmap(self.windowIcon().pixmap(20, 20))
-        self.titleBar.iconLabel.setStyleSheet("background: transparent;")
-        self.titleBar.titleLabel.setText(self.windowTitle())
-        self.titleBar.titleLabel.setStyleSheet(
-            "background: transparent; padding: 0 4px; font: 13px 'Segoe UI'; color: black")
-        self.setStyleSheet("background: white;")
+        self.setStyleSheet("background: transparent;")
         self.toolPanel = Panel(self)
         self.horizontalLayout = QHBoxLayout(self.toolPanel)
         self.stopOutputBtn = PushButton(self.toolPanel)
@@ -2500,9 +3081,7 @@ class LoggingWindow(window_class):
         import nothingtoseeheremovealong, hashlib
         self.cmd = self.Executer(
             {"frame": frame, "player": player,
-             hashlib.md5(b"1").hexdigest(): (lambda: nothingtoseeheremovealong.testtextof2233()),
-             hashlib.md5(b"2").hexdigest(): (lambda: nothingtoseeheremovealong.let2233banyou1()),
-             hashlib.md5(b"3").hexdigest(): (lambda: nothingtoseeheremovealong.let2233banyou2())})
+             hashlib.md5("SummonACreeperToYouHouse".encode()).hexdigest(): nothingtoseeheremovealong.creeper})
         self.history_command = []
         self.current_history = 0
     
@@ -2516,7 +3095,7 @@ class LoggingWindow(window_class):
         if self.canOutput:
             if self.bftext != output.getvalue() or self.loggingtext.toPlainText() != output.getvalue():
                 self.loggingtext.setText("")
-                self.loggingtext.textCursor().insertText(output.getvalue())
+                self.loggingtext.textCursor().insertText(output.getvalue().split("")[-1])
                 self.loggingtext.ensureCursorVisible()
                 self.bftext = output.getvalue()
     
@@ -2557,84 +3136,112 @@ class LoggingWindow(window_class):
                 self.inputtext.setText(self.history_command[int(f"-{self.current_history}")])
     
     def paintEvent(self, a0, **kwargs):
-        painter = QPainter(self)
-        painter.fillRect(
-            QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
+        background = QPixmap(self.size())
+        p = QPainter(background)
+        x = 0 if self.isMaximized() else -self.geometry().x()
+        y = 0 if self.isMaximized() else -self.geometry().y()
+        p.fillRect(
+            QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.DeepBlue if getTheme() == Theme.Light else QGradient.Preset.PerfectBlue))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+        p.end()
+        scene = QGraphicsScene()
+        item = QGraphicsPixmapItem()
+        item.setPixmap(background)
+        blur = QGraphicsBlurEffect()
+        blur.setBlurRadius(settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"])
+        item.setGraphicsEffect(blur)
+        scene.addItem(item)
+        img = QPixmap(background.size())
+        img.fill(Qt.GlobalColor.transparent)
+        ptr = QPainter(img)
+        scene.render(ptr, QRectF(img.rect()), QRectF(img.rect()))
+        ptr.end()
+        painter = QPainter(self)
+        rect = QRect(-20, -20, self.width() + 40, self.height() + 40)
+        painter.drawPixmap(rect, img)
 
 
-# class MidAutumnMsgDialogue(RoundedDialogue):
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.verticalLayout = QVBoxLayout(self)
-#         self.verticalLayout.setContentsMargins(11, 32, 11, 11)
-#         self.scrollArea = ScrollArea(self)
-#         self.verticalLayout.addWidget(self.scrollArea)
-#         self.scrollAreaContentWidget = QWidget()
-#         self.scrollArea.setStyleSheet("background: transparent;")
-#         self.verticalLayout_2 = QVBoxLayout(self.scrollAreaContentWidget)
-#         tip = Tip(self, False)
-#         self.tlabel = Label(tip)
-#         self.tlabel.setText(
-#             "<a href=\"https://www.bilibili.com/v/topic/detail/?topic_id=1227830&topic_name=%E4%B8%AD%E7%A7%8B%E6%BC%AB%E6%B8%B8%E5%A4%9C&spm_id_from=333.1369.opus.module_topic.click\">#中秋漫游夜#</a>")
-#         tip.setCentralWidget(self.tlabel)
-#         self.verticalLayout_2.addWidget(tip)
-#         self.label = Label(self.scrollAreaContentWidget)
-#         self.label.setText(f"""<!DOCTYPE html>
-#                         <html>
-#                             <head/>
-#                             <body>
-#                                 <p>
-#                                     <hr/>
-#                                     <del style="text-decoration: line-through;">是的，我又来了</del><br/>
-#                                     <h2>开头</h2>
-#                                     ---------<br/>
-#                                     大家都知道最近要过什么节日吧。<br/>
-#                                     要过中秋了，我绝对不能缺席。<br/>
-#                                     前几天，我去看22和33她们，发现她们新发了一个动态，<br/>
-#                                     在这：<a href="https://www.bilibili.com/opus/977006529028816946?spm_id_from=333.999.0.0">https://www.bilibili.com/opus/977006529028816946?spm_id_from=333.999.0.0</a>。<br/>
-#                                     然后呢？<small style="font-size: xx-small">（又来）</small>
-#                                     <h2>内容</h2>
-#                                     ---------<br/>
-#                                     先感谢22和33送上的中秋节祝福。<br/>
-#                                     然后......<br/>
-#                                     等一下，22，你说什么？<br/>
-#                                     你说今年有中秋晚会看？？？<br/>
-#                                     (内容见这里：<a href="https://www.bilibili.com/blackboard/zhongqiu2024.html">https://www.bilibili.com/blackboard/zhongqiu2024.html</a>)<br/>
-#                                     那么......<br/>
-#                                     16日晚上19:30锁定哔哩哔哩<a href="https://search.bilibili.com/all?keyword=%E8%8A%B1%E5%A5%BD%E6%9C%88%E5%9C%86%E4%BC%9A">#花好月圆会#</a>，2233陪你过。<br/>
-#                                     不过......<br/>
-#                                     有什么问题？？？<br/>
-#                                     我会不会....一不小心....就要......<br/>
-#                                     我懂你接下来要说的话，<br/>
-#                                     那么记得19:30过来！<br/>
-#                                 </p>
-#                             </body>
-#                         </html>""")
-#         self.label.setWordWrap(True)
-#         self.verticalLayout_2.addWidget(self.label)
-#         self.scrollArea.setWidget(self.scrollAreaContentWidget)
-#         self.scrollArea.setWidgetResizable(True)
-#         timer = QTimer(self)
-#         timer.timeout.connect(self.__a)
-#         timer.start(1)
-#         self.__o = False
-#
-#     def __a(self):
-#         self.tlabel.setText(
-#             f"<a href=\"https://www.bilibili.com/v/topic/detail/?topic_id=1227830&topic_name=%E4%B8%AD%E7%A7%8B%E6%BC%AB%E6%B8%B8%E5%A4%9C&spm_id_from=333.1369.opus.module_topic.click\">#中秋漫游夜#</a><br/>{(time.strftime('距离《花好月圆会·2024Bilibili中秋漫游会》开播还有%H时%M分%S秒', time.gmtime(time.mktime((2024, 9, 16, 19, 30, 0, 0, 0, 0)) - time.time()))) if time.mktime((2024, 9, 16, 19, 30, 0, 0, 0, 0)) - time.time() > 0 else '《花好月圆会·2024Bilibili中秋漫游会》已开播。'}")
-#
-#     def resizeEvent(self, a0, **kwargs):
-#         super().resizeEvent(a0)
-#         self.scrollArea.setGeometry(0, 32, self.width(), self.height() - 32)
-#
-#     def paintEvent(self, a0, **kwargs):
-#         painter = QPainter(self)
-#         painter.fillRect(
-#             QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
-#                   QGuiApplication.primaryScreen().geometry().height()),
-#             QGradient(QGradient.Preset.DeepBlue if getTheme() == Theme.Light else QGradient.Preset.PerfectBlue))
+class GameLoggingWindow(window_class):
+    def __init__(self, parent=None, popen_obj=None):
+        super().__init__(parent)
+        self.popen_obj = popen_obj
+        
+        self.resize(800, 600)
+        
+        self.textEdit = TextEdit(self)
+        
+        if popen_obj.stdout:
+            self.beforeText = popen_obj.stdout.read()
+        else:
+            self.beforeText = ""
+        
+        t = QTimer(self)
+        t.timeout.connect(self.updateLogs)
+        t.start(1000)
+    
+    def updateLogs(self):
+        if self.popen_obj.stdout:
+            if self.popen_obj.stdout.read() != self.beforeText:
+                self.textEdit.clear()
+                self.textEdit.append(self.popen_obj.stdout.read().decode("utf-8"))
+                self.beforeText = self.popen_obj.stdout.read()
+    
+    def resizeEvent(self, a0):
+        super().resizeEvent(a0)
+        if hasattr(self, "textEdit"):
+            self.textEdit.setGeometry(QRect(5, 37, self.width() - 10, self.height() - 42))
+    
+    def paintEvent(self, a0, **kwargs):
+        background = QPixmap(self.size())
+        p = QPainter(background)
+        x = 0 if self.isMaximized() else -self.geometry().x()
+        y = 0 if self.isMaximized() else -self.geometry().y()
+        p.fillRect(
+            QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
+                  QGuiApplication.primaryScreen().geometry().height()),
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+        p.end()
+        scene = QGraphicsScene()
+        item = QGraphicsPixmapItem()
+        item.setPixmap(background)
+        blur = QGraphicsBlurEffect()
+        blur.setBlurRadius(settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"])
+        item.setGraphicsEffect(blur)
+        scene.addItem(item)
+        img = QPixmap(background.size())
+        img.fill(Qt.GlobalColor.transparent)
+        ptr = QPainter(img)
+        scene.render(ptr, QRectF(img.rect()), QRectF(img.rect()))
+        ptr.end()
+        painter = QPainter(self)
+        rect = QRect(-20, -20, self.width() + 40, self.height() + 40)
+        painter.drawPixmap(rect, img)
+
+
+class SplashScreen(QSplashScreen):
+    def __init__(self):
+        super().__init__()
+        self.finish(frame)
+        
+        self.setFixedSize(QSize(96, 114))
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        
+        geometry = QGuiApplication.primaryScreen().geometry()
+        point = QPoint(geometry.width() // 2 - self.width() // 2, geometry.height() // 2 - self.height() // 2)
+        self.move(point)
+        
+        self.show()
+        self.update()
+    
+    def paintEvent(self, a0, **kwargs):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        QSvgRenderer(":/CommonMinecraftLauncherIcon.svg").render(painter, QRectF(0, 0, 96, 96))
+        painter.setPen(getForegroundColour())
+        painter.setFont(app.font())
+        painter.drawText(QRect(0, 96, 96, 18), Qt.AlignmentFlag.AlignCenter, self.tr("SplashScreen.LoadingText"))
 
 
 def login_user(name_or_token=b"", is_refresh_login=False):
@@ -2757,9 +3364,14 @@ else:
             },
             "LauncherSettings": {
                 "Customise": {
-                    "CurrentThemePresent": "CMCL_Blue",
-                    "CurrentTheme": "Light"
-                }
+                    "CurrentThemePreset": "PresetBlue",
+                    "CurrentTheme": "Light",
+                    "BackgroundBlur": 5
+                },
+                "ModSearching": {
+                    "OnePageModeNum": 10
+                },
+                "CurrentLanguage": "zh-cn"
             }
         }
     }
@@ -2773,7 +3385,8 @@ if font_id != -1:
         app.setFont(font)
 
 app.setDesktopSettingsAware(False)
-app.setEffectEnabled(Qt.UIEffect.UI_AnimateMenu)
+# app.setEffectEnabled(Qt.UIEffect.UI_AnimateMenu)
+app.setEffectEnabled(Qt.UIEffect.UI_FadeMenu)
 
 player = create_online_player(None, None, None, False)
 
@@ -2783,8 +3396,9 @@ player = create_online_player(None, None, None, False)
 
 # "%appdata%\Python\Python311\Scripts\pyside6-rcc.exe" resources.qrc -o resources.py
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-cn.ts
+current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
 translator = QTranslator()
-translator.load(":/CMCL_zh-cn.qm")
+translator.load(f":/CMCL_{current_language}.qm")
 app.installTranslator(translator)
 
 match settings["Settings"]["LauncherSettings"]["Customise"]["CurrentTheme"]:
@@ -2794,24 +3408,27 @@ match settings["Settings"]["LauncherSettings"]["Customise"]["CurrentTheme"]:
         setTheme(Theme.Dark)
 
 frame = MainWindow()
-frame.showCentre()
 if DEBUG:
     debug = LoggingWindow()
     debug.show()
-# Log Redirect Text
-# print("[2024/08/16][22:33:00 PM][INFO]:F22战斗姬！22是F！33也可以是F！\n"
-#       "[2024/08/16][22:33:00 PM][INFO]:在刚毅云音乐上，22娘这个账号有九首歌，\n"
-#       "[2024/08/16][22:33:00 PM][INFO]:33娘这个账号则有11首歌。\n"
-#       "[2024/08/16][22:33:00 PM][INFO]:她们还有个叫 22和33 的账号。\n"
-#       "[2024/08/16][22:33:00 PM][INFO]:让我们祝她们生日快乐！\n"
-#       "[2023/08/29][20:03:12 PM][INFO]:启动器的第一个文件创建！\n"
-#       "[2009/06/26][??:??:?? ??][INFO]:某个叫 Mikufans 的网站创建！（Mikufans 就是今天的 Bilibili！）\n"
-#       "[2008/??/??][??:??:?? ??][INFO]:Minecraft 前身 RubyDung 被 Markus Persson 创建！\n"
-#       "[2009/05/10][17:36:00 PM][INFO]:Minecraft 最早版本 rd-131655 的视频被上传！\n"
-#       "[2011/11/17][22:00:00 PM][INFO]:Minecraft 1.0.0 发布！")
-# END Text
 thread = LoginThread()
 thread.loginFinished.connect(update_user)
 thread.start()
+splash = SplashScreen()
+QTimer.singleShot(2999, lambda: (frame.show(), frame.resize(800, 600), frame.setCentre()))
+QTimer.singleShot(3000, splash.close)
+# April FOOL Code
+if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
+    def sttttttttttttttttttttttttttttttop():
+        frame.dy = frame.dx = 0
+        stopbutton.close()
+        frame.setWindowTitle(":D" * 15)
+    
+    
+    stopbutton = QPushButton("🏳️")
+    stopbutton.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+    stopbutton.pressed.connect(sttttttttttttttttttttttttttttttop)
+    stopbutton.show()
+# End
 app.exec()
 Path("settings.json").write_text(json.dumps(settings, indent=2))

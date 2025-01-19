@@ -28,7 +28,7 @@ class LineNumberTextEdit(TextEdit):
             super().paintEvent(a0)
             self.setFont(self.__codeEditor.font())
             painter = QPainter(self)
-            painter.setOpacity(self.property("Opacity"))
+            painter.setOpacity(self.property("windowOpacity"))
             painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
             pp = QPainterPath()
             painter.setPen(getBorderColour())
