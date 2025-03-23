@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import *
 from ..ThemeController import *
 from .ToolTip import ToolTip
 from CMCLWidgets.Windows import RoundedMenu
-from .ListView import ListWidget
+from .ListView import ListView
 
 
 class ComboBox(QComboBox):
@@ -23,16 +23,36 @@ class ComboBox(QComboBox):
             self.lineEdit().setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
             self.lineEdit().installEventFilter(ToolTip(self))
             self.lineEdit().setStyleSheet(
-                f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(0.6)}); background: transparent; border: none;")
+                f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(0.6)}); background: transparent; border: none; padding: 5px;")
             self.lineEdit().setFont(self.font())
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.installEventFilter(ToolTip(self))
         self.installEventFilter(self)
         self.setProperty("widgetOpacity", 0.6)
-        self.setView(ListWidget(self))
-        self.setModel(self.view().model())
-        self.view().setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
-        self.view().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setStyle(QStyleFactory.create("Windows"))
+        listView = ListView(self)
+        self.setView(listView)
+        self.view().parent().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.view().parent().setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint |
+            Qt.WindowType.Popup
+        )
+        self.view().parent().update()
+
+    def showPopup(self):
+        self.view().parent().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.view().parent().setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint |
+            Qt.WindowType.Popup
+        )
+        self.view().parent().update()
+        super().showPopup()
+        self.view().parent().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.view().parent().setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint |
+            Qt.WindowType.Popup
+        )
+        self.view().parent().update()
 
     def paintEvent(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -41,7 +61,7 @@ class ComboBox(QComboBox):
             self.lineEdit().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             self.lineEdit().setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
             self.lineEdit().setStyleSheet(
-                f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(self.property('widgetOpacity') or 1.0)}); background: transparent; border: none;")
+                f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(self.property('widgetOpacity') or 1.0)}); background: transparent; border: none; padding: 5px;")
             self.lineEdit().setFont(self.font())
         painter = QPainter(self)
         painter.setOpacity(self.property("widgetOpacity"))
@@ -65,9 +85,7 @@ class ComboBox(QComboBox):
         self.initStyleOption(op)
         op.palette.setColor(op.palette.ColorRole.Text, getForegroundColour())
         self.style().drawControl(QStyle.ControlElement.CE_ComboBoxLabel, op, painter, self)
-        self.view().setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
-        self.view().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.view().update()
+        self.setStyleSheet("padding: 5px;")
 
     def contextMenuEvent(self, e):
         if self.lineEdit() and self.isEditable():
@@ -94,6 +112,7 @@ class ComboBox(QComboBox):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -104,6 +123,7 @@ class ComboBox(QComboBox):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.Enter:
                 if self.isEnabled():
@@ -116,6 +136,7 @@ class ComboBox(QComboBox):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -126,6 +147,7 @@ class ComboBox(QComboBox):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
@@ -138,6 +160,7 @@ class ComboBox(QComboBox):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -148,10 +171,14 @@ class ComboBox(QComboBox):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.Leave:
                 if self.isEnabled():
-                    if not self.hasFocus():
+                    if not self.hasFocus() and \
+                            not (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and \
+                                          child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                          for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("widgetOpacity"))
@@ -160,6 +187,7 @@ class ComboBox(QComboBox):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -170,10 +198,14 @@ class ComboBox(QComboBox):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
-                    if not self.underMouse():
+                    if not self.underMouse() and \
+                            not (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and \
+                                          child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                          for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("widgetOpacity"))
@@ -182,6 +214,7 @@ class ComboBox(QComboBox):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -192,6 +225,7 @@ class ComboBox(QComboBox):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.EnabledChange:
                 match self.isEnabled():
@@ -204,6 +238,7 @@ class ComboBox(QComboBox):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                     case False:
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -214,10 +249,14 @@ class ComboBox(QComboBox):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
-            case QEvent.Type.Paint | QEvent.Type.UpdateRequest:
+            case QEvent.Type.Paint | QEvent.Type.UpdateRequest | QEvent.Type.UpdateLater | QEvent.Type.KeyPress | QEvent.Type.KeyRelease | QEvent.Type.MouseButtonPress | QEvent.Type.MouseButtonRelease:
                 if self.isEnabled():
-                    if self.underMouse() or self.hasFocus():
+                    if self.underMouse() or self.hasFocus() or \
+                            (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and \
+                                      child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                      for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         if self.property("widgetOpacity") != 1.0 and not bool(self.findChild(QPropertyAnimation)):
                             ani = QPropertyAnimation(self, b"widgetOpacity", self)
                             ani.setDuration(500)
@@ -227,6 +266,7 @@ class ComboBox(QComboBox):
                             ani.start()
                             anit = QTimer(self)
                             self.destroyed.connect(anit.stop)
+                            ani.destroyed.connect(anit.deleteLater)
                             anit.singleShot(ani.duration(), ani.deleteLater)
                     else:
                         if self.property("widgetOpacity") != 0.6 and not bool(self.findChild(QPropertyAnimation)):
@@ -238,6 +278,7 @@ class ComboBox(QComboBox):
                             ani.start()
                             anit = QTimer(self)
                             self.destroyed.connect(anit.stop)
+                            ani.destroyed.connect(anit.deleteLater)
                             anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     if self.property("widgetOpacity") != 0.3 and not bool(self.findChild(QPropertyAnimation)):
@@ -249,5 +290,6 @@ class ComboBox(QComboBox):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
         return super().eventFilter(a0, a1)

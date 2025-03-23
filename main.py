@@ -48,6 +48,9 @@ import requests
 from CMCLModding.GetMods import GetMods, ListModVersions
 from CMCLModding.DownloadMods import DownloadMod
 
+from CMCLSaveEditing.LevelDat import LoadData
+import nbtlib
+
 import resources
 
 try:
@@ -63,7 +66,7 @@ if DEBUG:
     sys.stdout = sys.stderr = output
     
     formatter = logging.Formatter("[%(asctime)s][%(levelname)s]:%(message)s")
-    formatter.datefmt = "%Y/%m/%d][%H:%M:%S %p"
+    formatter.datefmt = "%Y/%m/%d  %H:%M:%S %p"
     streamHandler = logging.StreamHandler(output)
     streamHandler.setFormatter(formatter)
     logging.root.addHandler(streamHandler)
@@ -73,7 +76,7 @@ if DEBUG:
     
     def log(type, context, msg):
         lock.lock()
-        print(time.strftime(f"[%Y/%m/%d][%H:%M:%S %p]"), end="")
+        print(time.strftime(f"[%Y/%m/%d  %H:%M:%S %p]"), end="")
         match type:
             case QtMsgType.QtDebugMsg:
                 print("[DEBUG]:", end="")
@@ -88,13 +91,14 @@ if DEBUG:
             case QtMsgType.QtSystemMsg:
                 print("[SYSTEM]:", end="")
         print(msg)
+        print(f"Context: {context.file}:{context.line}")
         lock.unlock()
     
     
     qInstallMessageHandler(log)
 
 CMCL_version = ("AlphaDev-25001", "Alpha Development-25001")
-minecraft_path = Path(r"D:\Program Files\minecraft")
+minecraft_path = Path(".")
 current_language = "zh-cn"
 
 theme_colour_defines = {
@@ -178,7 +182,7 @@ window_class = MainWindow
 
 
 class AcrylicBackground(QWidget):
-    def __init__(self, parent, tintColour, luminosityColour, blurRadius, noiseOpacity):
+    def __init__(self, parent, tintColour, luminosityColour=QColor(255, 255, 255, 0), blurRadius=10, noiseOpacity=0.03):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.tintColour = tintColour
@@ -187,32 +191,47 @@ class AcrylicBackground(QWidget):
         self.noiseOpacity = noiseOpacity
         self.img = QPixmap()
     
+    def setTintColour(self, colour):
+        self.tintColour = colour
+    
+    def setLuminosityColour(self, colour):
+        self.luminosityColour = colour
+    
+    def grabBehind(self):
+        image = self.window().grab(QRect(self.mapTo(self.window(), QPoint(0, 0)),
+                                         self.mapTo(self.window(), QPoint(self.width(), self.height()))))
+        self.img = image
+    
     def paintEvent(self, a0):
-        brush = self.createTexture()
+        brush = self.__createTexture()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
         item.setPixmap(self.img)
         blur = QGraphicsBlurEffect()
-        blur.setBlurRadius(30)
+        blur.setBlurRadius(self.blurRadius)
         item.setGraphicsEffect(blur)
         scene.addItem(item)
-        img = QPixmap(self.img.size())
+        img = QPixmap(self.size())
         img.fill(Qt.GlobalColor.transparent)
         ptr = QPainter(img)
         scene.render(ptr, QRectF(img.rect()), QRectF(img.rect()))
         ptr.end()
         painter = QPainter(self)
-        painter.drawImage(img)
-        painter.fillRect(img.rect(), brush)
+        painter.drawPixmap(self.rect(), img.scaled(self.size()))
+        painter.fillRect(self.rect(), brush)
     
-    def createTexture(self):
+    def __createTexture(self):
         acrylicTexture = QImage(64, 64, QImage.Format.Format_ARGB32_Premultiplied)
-        acrylicTexture.fill(self.luminosityColour)
+        luminosityColour = QColor.fromRgb(self.luminosityColour.rgb())
+        luminosityColour.setAlpha(10)
+        acrylicTexture.fill(luminosityColour)
         painter = QPainter(acrylicTexture)
-        painter.setOpacity(1.0)
-        painter.fillRect(acrylicTexture.rect(), self.tintColour)
+        tintColour = QColor.fromRgb(self.tintColour.rgb())
+        tintColour.setAlpha(150)
+        painter.fillRect(acrylicTexture.rect(), tintColour)
         painter.setOpacity(self.noiseOpacity)
         painter.drawImage(acrylicTexture.rect(), QImage(":/acrylic_noise.png"))
+        painter.end()
         
         brush = QBrush(acrylicTexture)
         return brush
@@ -236,16 +255,15 @@ class AnimatedStackedWidget(QStackedWidget):
         lastWidget = self.currentWidget()
         if lastWidget == w:
             return
-        super().setCurrentWidget(w)
+        self.setProperty("currentIndex", self.indexOf(w))
         lastWidget.show()
         w.stackUnder(lastWidget)
-        ani1 = QPropertyAnimation(lastWidget, b"geometry", parent=lastWidget)
+        ani1 = QPropertyAnimation(lastWidget, b"pos", parent=lastWidget)
         ani1.setDuration(500)
         ani1.setStartValue(
-            QRectF(lastWidget.x(), float(lastWidget.y()), self.childrenRect().width(), self.childrenRect().height()))
+            QPointF(lastWidget.x(), float(lastWidget.y())))
         ani1.setEndValue(
-            QRectF(lastWidget.x(), float(lastWidget.y()) + float(self.height()), self.childrenRect().width(),
-                   self.childrenRect().height()))
+            QPointF(lastWidget.x(), float(lastWidget.y()) + float(self.height())))
         ani1.setEasingCurve(QEasingCurve.Type.OutQuad)
         ani1.start()
         ani11 = OpacityAnimation(lastWidget)
@@ -256,13 +274,11 @@ class AnimatedStackedWidget(QStackedWidget):
         ani11.start()
         QTimer.singleShot(500, lastWidget.hide)
         currentWidget = w
-        ani2 = QPropertyAnimation(currentWidget, b"geometry", parent=currentWidget)
+        ani2 = QPropertyAnimation(currentWidget, b"pos", parent=currentWidget)
         ani2.setDuration(500)
         ani2.setStartValue(
-            QRectF(currentWidget.x(), float(currentWidget.y()) + float(self.height()), self.childrenRect().width(),
-                   self.childrenRect().height()))
-        ani2.setEndValue(QRectF(currentWidget.x(), float(currentWidget.y()), self.childrenRect().width(),
-                                self.childrenRect().height()))
+            QPointF(currentWidget.x(), float(currentWidget.y()) + float(self.height())))
+        ani2.setEndValue(QPointF(currentWidget.x(), float(currentWidget.y())))
         ani2.setEasingCurve(QEasingCurve.Type.OutQuad)
         ani2.start()
         ani22 = OpacityAnimation(currentWidget)
@@ -276,6 +292,7 @@ class AnimatedStackedWidget(QStackedWidget):
         t.timeout.connect(lambda: self.update())
         t.start()
         QTimer.singleShot(500, lambda: t.stop())
+        QTimer.singleShot(500, lambda: super(AnimatedStackedWidget, self).setCurrentWidget(w))
 
 
 class ContentPanel(AnimatedStackedWidget, Panel):
@@ -295,6 +312,7 @@ class LoadingAnimation(QFrame):
             self.setStartValue(0 if variant == "in" else 255)
             self.setEndValue(255 if variant == "in" else 0)
             self.setDuration(1000)
+            self.setEasingCurve(QEasingCurve.Type.OutQuad)
             self.valueChanged.connect(self.update_opacity)
         
         def update_opacity(self, value):
@@ -324,7 +342,7 @@ class LoadingAnimation(QFrame):
         self.__statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.__loadingTimer = QTimer(self)
         self.__loadingTimer.timeout.connect(self.__updateText)
-        self.destroyed.connect(self.__loadingTimer.stop)
+        self.destroyed.connect(lambda: (self.__loadingTimer.moveToThread(self.thread()), self.__loadingTimer.stop()))
         self.__counter = 0
         self.hide()
     
@@ -385,6 +403,7 @@ class LoadingAnimation(QFrame):
     
     def finish(self, ani=True, failed=False):
         try:
+            self.__loadingTimer.moveToThread(self.thread())
             self.__loadingTimer.stop()
             if not failed:
                 if ani:
@@ -407,12 +426,12 @@ class LoadingAnimation(QFrame):
     def hideEvent(self, *args, **kwargs):
         try:
             self.__loadingTimer.stop()
-            self.deleteLater()
+            self.destroy()
         except RuntimeError:
             pass
 
 
-class LoginDialogue(RoundedDialogue):
+class LoginDialogue(MaskedDialogue):
     class LoginThread(QThread):
         loginFinished = pyqtSignal()
         
@@ -476,7 +495,7 @@ class LoginDialogue(RoundedDialogue):
     
     def open_new_login(self):
         self.hide()
-        w = LoginWindow()
+        w = LoginWindow(frame)
         w.exec()
     
     def paintEvent(self, a0, **kwargs):
@@ -506,7 +525,7 @@ class LoginDialogue(RoundedDialogue):
         painter.drawPixmap(rect, img)
 
 
-class LoginWindow(RoundedDialogue):
+class LoginWindow(MaskedDialogue):
     class LoginThread(QThread):
         loginFinished = pyqtSignal()
         
@@ -574,11 +593,97 @@ class LoginWindow(RoundedDialogue):
     
     def resizeEvent(self, a0, **kwargs):
         super().resizeEvent(a0)
-        self.view.setGeometry(self.rect())
+        if hasattr(self, "view"):
+            self.view.setGeometry(self.rect())
     
     def showEvent(self, a0):
         super().showEvent(a0)
         self.isFirstShow = False
+    
+    def paintEvent(self, a0, **kwargs):
+        background = QPixmap(self.size())
+        p = QPainter(background)
+        x = 0 if self.isMaximized() else -self.geometry().x()
+        y = 0 if self.isMaximized() else -self.geometry().y()
+        p.fillRect(
+            QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
+                  QGuiApplication.primaryScreen().geometry().height()),
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+        p.end()
+        scene = QGraphicsScene()
+        item = QGraphicsPixmapItem()
+        item.setPixmap(background)
+        blur = QGraphicsBlurEffect()
+        blur.setBlurRadius(settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"])
+        item.setGraphicsEffect(blur)
+        scene.addItem(item)
+        img = QPixmap(background.size())
+        img.fill(Qt.GlobalColor.transparent)
+        ptr = QPainter(img)
+        scene.render(ptr, QRectF(img.rect()), QRectF(img.rect()))
+        ptr.end()
+        painter = QPainter(self)
+        rect = QRect(-20, -20, self.width() + 40, self.height() + 40)
+        painter.drawPixmap(rect, img)
+
+
+class SaveEditingWindow(RoundedDialogue):
+    def __init__(self, parent=None, savename="", savedir=None):
+        super().__init__(parent)
+        if not savedir:
+            savedir = minecraft_path / "saves"
+        self.savedir = savedir / savename
+        self.leveldata = LoadData(self.savedir / "level.dat")
+        
+        self.resize(800, 600)
+        
+        self.toolBox = ToolBox(self)
+        self.basicDataPage = QFrame(self.toolBox)
+        self.verticalLayout = QVBoxLayout(self.basicDataPage)
+        self.panel = Panel(self.basicDataPage)
+        self.verticalLayout_2 = QVBoxLayout(self.panel)
+        self.label = Label(self.panel)
+        self.label.setWordWrap(True)
+        self.verticalLayout_2.addWidget(self.label)
+        self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        self.verticalLayout_2.addItem(self.verticalSpacer)
+        self.verticalLayout.addWidget(self.panel)
+        self.toolBox.addItem(self.basicDataPage, "基础数据")
+        self.retranslateUI()
+    
+    def retranslateUI(self):
+        print(self.leveldata)
+        value_localisations = {
+            "difficulty": {
+                nbtlib.Byte(0): "和平",
+                nbtlib.Byte(1): "简单",
+                nbtlib.Byte(2): "普通",
+                nbtlib.Byte(3): "困难"
+            },
+            "gamemode": {
+                nbtlib.Int(0): "生存",
+                nbtlib.Int(1): "创造",
+                nbtlib.Int(2): "冒险",
+                nbtlib.Int(3): "旁观",
+                "hardcore": "极限"
+            }
+        }
+        self.label.setText(f"""<html><head/><body>
+存档名称：{self.leveldata['LevelName']}<br/>
+难度：{value_localisations['difficulty'][self.leveldata['Difficulty']] if not self.leveldata['hardcore'] else value_localisations['gamemode']['hardcore']}<br/>
+最后游玩时间：{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.leveldata['LastPlayed'] / 1000))}
+<hr/>
+玩家游戏模式：{value_localisations['gamemode'][self.leveldata['Player']['playerGameType']]}模式<br/>
+玩家血量：{self.leveldata['Player']['Health'] / 1}({self.leveldata['Player']['Health'] / 2}颗心)<br/>
+玩家饥饿度：{self.leveldata['Player']['foodLevel']}<br/>
+玩家位置：{list(self.leveldata['Player']['Pos'])}<br/>
+</body></html>
+""")
+        self.toolBox.setItemText(self.toolBox.indexOf(self.basicDataPage), "基础数据")
+    
+    def resizeEvent(self, a0):
+        super().resizeEvent(a0)
+        self.toolBox.setGeometry(0, 30, self.width(), self.height() - 30)
     
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
@@ -678,7 +783,7 @@ class LoginWindow(RoundedDialogue):
 
 
 class MainPage(QFrame):
-    class VersionSettingsPage(QFrame):
+    class VersionSettingsPage(AcrylicBackground):
         frameClosed = pyqtSignal()
         
         class VersionDetailsPage(QFrame):
@@ -713,6 +818,22 @@ class MainPage(QFrame):
                 self.verticalLayout_2.addItem(self.verticalSpacer)
                 
                 self.toolBox.addItem(self.versionDetails,
+                                     self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page1.Title"))
+                
+                self.versionSaves = QFrame(self.toolBox)
+                self.verticalLayout_3 = QVBoxLayout(self.versionSaves)
+                
+                self.listView = ListView(self.versionSaves)
+                self.listView.setEditTriggers(ListView.EditTrigger.NoEditTriggers)
+                self.listView.pressed.connect(self.startEditSave)
+                self.savesModel = QStandardItemModel()
+                self.listView.setModel(self.savesModel)
+                
+                self.verticalLayout_3.addWidget(self.listView)
+                
+                self.listSaves()
+                
+                self.toolBox.addItem(self.versionSaves,
                                      self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page2.Title"))
                 
                 self.retranslateUI()
@@ -724,6 +845,8 @@ class MainPage(QFrame):
                 self.toolButton.setText(
                     self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.toolButton.Text"))
                 self.toolBox.setItemText(self.toolBox.indexOf(self.versionDetails),
+                                         self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page1.Title"))
+                self.toolBox.setItemText(self.toolBox.indexOf(self.versionSaves),
                                          self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page2.Title"))
                 self.generateMenu()
             
@@ -766,6 +889,17 @@ class MainPage(QFrame):
                     # I've written the function for generating command.
                     pass
             
+            def listSaves(self):
+                self.savesModel.clear()
+                for idx, dire in enumerate(os.listdir(minecraft_path / "saves")):
+                    self.savesModel.setItem(idx, QStandardItem(dire))
+                self.listView.setModel(self.savesModel)
+            
+            def startEditSave(self, index):
+                saveName = self.savesModel.itemData(index)[0]
+                saveEditWindow = SaveEditingWindow(frame, saveName, minecraft_path / "saves")
+                saveEditWindow.show()
+            
             def paintEvent(self, a0):
                 painter = QPainter(self)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -775,7 +909,7 @@ class MainPage(QFrame):
                 painter.drawRect(self.rect())
         
         def __init__(self, parent=None):
-            super().__init__(parent)
+            super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
             self.verticalLayout = QVBoxLayout(self)
             
             self.topPanel = Panel(self)
@@ -804,12 +938,8 @@ class MainPage(QFrame):
             self.versionDetailsPage = None
         
         def paintEvent(self, a0):
-            painter = QPainter(self)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            colour = getBackgroundColour()
-            colour.setAlpha(128)
-            painter.setBrush(colour)
-            painter.drawRect(self.rect())
+            self.setTintColour(getBackgroundColour())
+            super().paintEvent(a0)
         
         def event(self, a0):
             if hasattr(self, "versionDetailsPage") and self.versionDetailsPage:
@@ -845,7 +975,8 @@ class MainPage(QFrame):
                 None if settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"] else
                 settings["Settings"]["JavaSettings"]["Java"]["Path"]["value"],
                 settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"],
-                CMCL_version[0], "CMCL", None, None, None,
+                CMCL_version[0], "CMCL", None, None, settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["value"],
+                settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["is_override"],
                 settings["Settings"]["GameSettings"]["ExtraGameCommand"], None, None,
                 self.player
             )
@@ -907,6 +1038,8 @@ class MainPage(QFrame):
         self.change_dir_btn.setText(self.tr("MainPage.change_dir_btn.Text"))
         self.settings_btn.setText(self.tr("MainPage.settings_btn.Text"))
         self.stop_all_games_btn.setToolTip(self.tr("MainPage.stop_all_games_btn.ToolTip"))
+        self.change_dir_btn.setToolTip(
+            self.tr("MainPage.change_dir_btn.ToolTip").format(str(minecraft_path.absolute())))
     
     def select_version(self, version):
         self.version = version
@@ -947,10 +1080,14 @@ class MainPage(QFrame):
     
     def setMinecraftDir(self):
         global minecraft_path
+        self.change_dir_btn.setDown(False)
         path = QFileDialog(self).getExistingDirectory(self, self.tr("MainPage.SelectDir.Title"), str(minecraft_path))
         if path:
             minecraft_path = Path(path)
+            settings["Settings"]["LauncherSettings"]["CurrentMinecraftDirectory"] = str(Path(path).absolute())
             self.update_menu()
+            self.change_dir_btn.setToolTip(
+                self.tr("MainPage.change_dir_btn.ToolTip").format(str(minecraft_path.absolute())))
     
     def update_menu(self):
         menu = RoundedMenu()
@@ -970,6 +1107,11 @@ class MainPage(QFrame):
         self.versionSettingsY = self.height()
         self.versionSettings = self.VersionSettingsPage(self)
         self.versionSettings.frameClosed.connect(self.hide_version_settings_page)
+        rect = self.rect().adjusted(1, 1, -1, -1)
+        self.versionSettings.setGeometry(rect)
+        self.versionSettings.grabBehind()
+        rect.moveTo(0, self.versionSettingsY)
+        self.versionSettings.setGeometry(rect)
         self.versionSettings.show()
     
     def hide_version_settings_page(self):
@@ -986,18 +1128,21 @@ class MainPage(QFrame):
     
     def resizeEvent(self, *args, **kwargs):
         super().resizeEvent(*args, **kwargs)
-        self.bottomPanel.setGeometry(
-            QRect(5, (self.height() - 80 if self.bottomPanelIsShow else self.height() + 62), self.width() - 10, 62))
-        if self.bottomPanelIsShow:
-            if self.verticalLayout_2.indexOf(self.bottom_space) == -1:
-                self.verticalLayout_2.addItem(self.bottom_space)
-        else:
-            if self.verticalLayout_2.indexOf(self.bottom_space) != -1:
-                self.verticalLayout_2.removeItem(self.bottom_space)
-        self.stop_all_games_btn.setGeometry(
-            QRect(self.width() - self.stop_all_games_btn.width() - 10,
-                  self.height() - self.stop_all_games_btn.height() - 100,
-                  self.stop_all_games_btn.width(), self.stop_all_games_btn.height()))
+        try:
+            self.bottomPanel.setGeometry(
+                QRect(5, (self.height() - 80 if self.bottomPanelIsShow else self.height() + 62), self.width() - 10, 62))
+            if self.bottomPanelIsShow:
+                if self.verticalLayout_2.indexOf(self.bottom_space) == -1:
+                    self.verticalLayout_2.addItem(self.bottom_space)
+            else:
+                if self.verticalLayout_2.indexOf(self.bottom_space) != -1:
+                    self.verticalLayout_2.removeItem(self.bottom_space)
+            self.stop_all_games_btn.setGeometry(
+                QRect(self.width() - self.stop_all_games_btn.width() - 10,
+                      self.height() - self.stop_all_games_btn.height() - 100,
+                      self.stop_all_games_btn.width(), self.stop_all_games_btn.height()))
+        except AttributeError:
+            pass
     
     def event(self, a0):
         if hasattr(self, "versionSettings") and self.versionSettings:
@@ -1015,7 +1160,7 @@ class MainPage(QFrame):
 
 class DownloadPage(QFrame):
     class DownloadVanilla(QFrame):
-        class DownloadOptions(QFrame):
+        class DownloadOptions(AcrylicBackground):
             frameClosed = pyqtSignal()
             
             class DownloadVersionThread(QThread):
@@ -1029,7 +1174,7 @@ class DownloadPage(QFrame):
                         DownloadMinecraft(self.__path, self.__version)
             
             def __init__(self, parent, version=None):
-                super().__init__(parent)
+                super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
                 self.version = version
                 
                 self.verticalLayout = QVBoxLayout(self)
@@ -1137,12 +1282,8 @@ class DownloadPage(QFrame):
                 del self
             
             def paintEvent(self, a0):
-                painter = QPainter(self)
-                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-                colour = getBackgroundColour()
-                colour.setAlpha(128)
-                painter.setBrush(colour)
-                painter.drawRect(self.rect())
+                self.setTintColour(getBackgroundColour())
+                super().paintEvent(a0)
         
         class GetVersionThread(QThread):
             gotVersion = pyqtSignal(dict)
@@ -1422,10 +1563,14 @@ class DownloadPage(QFrame):
         
         def downloadOptionsOpen(self, value):
             data = self.tableView.model().item(value.row(), 0).text()
-            print(data)
             self.downloadOptionsY = self.height()
             self.downloadOptions = self.DownloadOptions(self, data)
             self.downloadOptions.frameClosed.connect(self.downloadOptionsClose)
+            rect = self.rect().adjusted(1, 1, -1, -1)
+            self.downloadOptions.setGeometry(rect)
+            self.downloadOptions.grabBehind()
+            rect.moveTo(0, self.downloadOptionsY)
+            self.downloadOptions.setGeometry(rect)
             self.downloadOptions.show()
         
         def downloadOptionsClose(self):
@@ -1433,7 +1578,7 @@ class DownloadPage(QFrame):
             self.downloadOptionsY = None
     
     class DownloadMods(QFrame):
-        class ModInfoPage(QFrame):
+        class ModInfoPage(AcrylicBackground):
             class GetVersionsThread(QThread):
                 requested = pyqtSignal(list)
                 
@@ -1478,7 +1623,7 @@ class DownloadPage(QFrame):
             
             def __init__(self, parent=None, mod_name=None, mod_icon=None, mod_description=None,
                          mod_supported_version=None):
-                super().__init__(parent)
+                super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
                 self.mod_name = mod_name
                 self.mod_icon = mod_icon
                 self.mod_description = mod_description
@@ -1593,12 +1738,8 @@ class DownloadPage(QFrame):
                     thread.start()
             
             def paintEvent(self, a0):
-                painter = QPainter(self)
-                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-                colour = getBackgroundColour()
-                colour.setAlpha(128)
-                painter.setBrush(colour)
-                painter.drawRect(self.rect())
+                self.setTintColour(getBackgroundColour())
+                super().paintEvent(a0)
             
             def closeEvent(self, *args, **kwargs):
                 super().closeEvent(*args, **kwargs)
@@ -1641,6 +1782,7 @@ class DownloadPage(QFrame):
             self.verticalLayout.addWidget(self.contentTabel)
             self.contentTabel.verticalHeader().setVisible(False)
             self.contentTabel.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            self.contentTabel.setEditTriggers(TableView.EditTrigger.NoEditTriggers)
             self.contentTabel.pressed.connect(self.modInfoPageOpen)
             self.model = QStandardItemModel()
             self.model.setHorizontalHeaderLabels(
@@ -1673,6 +1815,7 @@ class DownloadPage(QFrame):
             self.loadingAnimation = None
             self.getModThread = None
             self.modInfoPage = None
+            self.modInfoPageY = None
             self.currentPage = 1
         
         def retranslateUI(self):
@@ -1721,8 +1864,15 @@ class DownloadPage(QFrame):
         
         def event(self, e):
             if hasattr(self, "modInfoPage") and self.modInfoPage:
-                self.modInfoPage.setGeometry(self.rect())
+                rect = self.rect().adjusted(1, 1, -1, -1)
+                rect.moveTo(0, self.modInfoPageY)
+                self.modInfoPage.setGeometry(rect)
                 self.modInfoPage.raise_()
+            if hasattr(self, "modInfoPageY") and self.modInfoPageY:
+                if self.modInfoPageY > 0:
+                    self.modInfoPageY -= self.modInfoPageY // 16 + 1
+                else:
+                    self.modInfoPageY = 0
             return super().event(e)
         
         def showEvent(self, a0):
@@ -1817,13 +1967,20 @@ class DownloadPage(QFrame):
                     if hit["title"] == data:
                         hit_data = hit
             if hit_data:
+                self.modInfoPageY = self.height()
                 self.modInfoPage = self.ModInfoPage(self, data, hit_data["icon_url"], hit_data["description"],
                                                     hit_data["versions"])
                 self.modInfoPage.closePage.connect(self.modInfoPageClose)
+                rect = self.rect().adjusted(1, 1, -1, -1)
+                self.modInfoPage.setGeometry(rect)
+                self.modInfoPage.grabBehind()
+                rect.moveTo(0, self.modInfoPageY)
+                self.modInfoPage.setGeometry(rect)
                 self.modInfoPage.show()
         
         def modInfoPageClose(self):
             self.modInfoPage = None
+            self.modInfoPageY = None
     
     def __init__(self, parent):
         super().__init__(parent)
@@ -2013,12 +2170,14 @@ class SettingsPage(QFrame):
             self.radioButton = RadioButton(self.groupBox)
             self.radioButton.setObjectName(u"radioButton")
             self.radioButton.setChecked(settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] == "client")
+            self.radioButton.toggled.connect(self.updateJavaLaunchMode)
             
             self.horizontalLayout.addWidget(self.radioButton)
             
             self.radioButton_2 = RadioButton(self.groupBox)
             self.radioButton_2.setObjectName(u"radioButton_2")
             self.radioButton_2.setChecked(settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] == "server")
+            self.radioButton_2.toggled.connect(self.updateJavaLaunchMode)
             
             self.horizontalLayout.addWidget(self.radioButton_2)
             
@@ -2085,13 +2244,16 @@ class SettingsPage(QFrame):
             self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
             self.lineEdit = LineEdit(self.widget)
             self.lineEdit.setObjectName(u"lineEdit")
+            self.lineEdit.setText(settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["value"])
             self.lineEdit.setFont(font)
+            self.lineEdit.editingFinished.connect(self.editingFinished)
             
             self.horizontalLayout_2.addWidget(self.lineEdit)
             
             self.pushButton = TogglePushButton(self.widget)
             self.pushButton.setObjectName(u"pushButton")
             self.pushButton.setChecked(settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["is_override"])
+            self.groupBox.setEnabled(not self.pushButton.isChecked())
             self.pushButton.toggled.connect(self.updateJVMArgIsOverride)
             
             self.horizontalLayout_2.addWidget(self.pushButton)
@@ -2143,7 +2305,8 @@ class SettingsPage(QFrame):
         
         def updateJavaSelectPaths(self, data):
             print(self.comboBox.currentText())
-            if self.comboBox.currentText() not in data and self.comboBox.currentText():
+            if self.comboBox.currentText() not in data and self.comboBox.currentText() and Path(
+                    self.comboBox.currentText()).exists():
                 data = [self.comboBox.currentText()] + data
             self.comboBox.clear()
             for i in data:
@@ -2172,10 +2335,12 @@ class SettingsPage(QFrame):
                                                str(Path(".").absolute()), file_filter)
             java_path = Path(java[0])
             self.comboBox.addItem(str(java_path))
+            self.comboBox.setCurrentText(str(java_path))
         
         def updateJVMArgIsOverride(self):
             global settings
             settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["is_override"] = self.pushButton.isChecked()
+            self.groupBox.setEnabled(not self.pushButton.isChecked())
             self.retranslateUi()
         
         def updateJavaLaunchMode(self):
@@ -2183,6 +2348,37 @@ class SettingsPage(QFrame):
                 settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] = "client"
             if self.radioButton_2.isChecked():
                 settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] = "server"
+        
+        def editingFinished(self):
+            if not self.lineEdit.text():
+                self.setJVMArgs(None)
+                return
+            dialogue = MaskedDialogue(frame)
+            label = Label(dialogue)
+            label.setText(
+                "注意：请谨慎配置JVM参数，如果你对这个不熟悉请勿随便添加/修改！\n单击“确定”表示继续修改，单击“取消”表示取消更改。")
+            label.adjustSize()
+            bottomPanel = Panel(dialogue)
+            horizontalLayout = QHBoxLayout(bottomPanel)
+            yesButton = PushButton(dialogue)
+            yesButton.setText("确定")
+            yesButton.pressed.connect(lambda: (dialogue.close(), self.setJVMArgs(self.lineEdit.text())))
+            horizontalLayout.addWidget(yesButton)
+            cancelButton = PushButton(dialogue)
+            cancelButton.setText("取消")
+            cancelButton.pressed.connect(lambda: (
+                dialogue.close(), self.lineEdit.setText(settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["value"])))
+            horizontalLayout.addWidget(cancelButton)
+            bottomPanel.adjustSize()
+            bottomPanel.setGeometry(QRect(10, label.y() + label.height() + 30, label.width(), bottomPanel.height()))
+            dialogue.setGeometry(
+                QRect(dialogue.x(), dialogue.y(), 20 + label.width(), 20 + label.height() + 10 + bottomPanel.height()))
+            label.move(10, 30)
+            dialogue.exec()
+        
+        def setJVMArgs(self, args):
+            global settings
+            settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["value"] = args
     
     class JavaSettingsContainer(ScrollArea):
         def __init__(self, parent, javasettings):
@@ -2500,7 +2696,8 @@ class AboutPage(QFrame):
         
         self.cmcl_info = Label(self.panel_cmcl)
         self.cmcl_info.setText(
-            self.tr("AboutPage.Page2.CMCL_info").format(CMCL_version[0], CMCL_version[1], current_language))
+            self.tr("AboutPage.Page2.CMCL_info").format(CMCL_version[0], CMCL_version[1],
+                                                        languages_map.get(current_language, current_language)))
         
         self.horizontalLayout_3.addWidget(self.cmcl_info, 1)
         
@@ -2524,7 +2721,7 @@ class AboutPage(QFrame):
         self.toolBox.setItemText(self.toolBox.indexOf(self.page2), self.tr("AboutPage.Page2.Title"))
 
 
-class OfflinePlayerCreationDialogue(RoundedDialogue):
+class OfflinePlayerCreationDialogue(MaskedDialogue):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet(f"background: {'white' if getTheme() == Theme.Light else 'black'}")
@@ -2540,6 +2737,7 @@ class OfflinePlayerCreationDialogue(RoundedDialogue):
         self.horizontalLayout = QHBoxLayout(self.bottomPanel)
         self.CancelButton = PushButton(self.bottomPanel)
         self.horizontalLayout.addWidget(self.CancelButton)
+        self.CancelButton.pressed.connect(self.close)
         self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.OKButton = PushButton(self.bottomPanel)
         self.horizontalLayout.addWidget(self.OKButton)
@@ -2768,13 +2966,36 @@ class UserPage(QFrame):
     
     @staticmethod
     def startLogin():
-        dialogue = LoginDialogue()
+        dialogue = LoginDialogue(frame)
         dialogue.exec()
     
     @staticmethod
     def startCreateOfflinePlayer():
-        dialogue = OfflinePlayerCreationDialogue()
+        dialogue = OfflinePlayerCreationDialogue(frame)
         dialogue.exec()
+
+
+class ErrorDialogue(MaskedDialogue):
+    def __init__(self, parent, errorMessage):
+        super().__init__(parent)
+        self.message = errorMessage
+        
+        self.label = Label(self)
+        self.label.setText(self.message)
+        
+        self.label.adjustSize()
+        rect = self.label.geometry().adjusted(-10, -40, 10, 10)
+        rect.moveTo(self.pos())
+        self.setGeometry(rect)
+        
+        geometry = self.parent().rect()
+        point = QPoint(geometry.width() // 2 - self.width() // 2, geometry.height() // 2 - self.height() // 2)
+        self.move(point)
+    
+    def resizeEvent(self, a0):
+        super().resizeEvent(a0)
+        if hasattr(self, "label"):
+            self.label.setGeometry(10, 40, self.width() - 20, self.height() - 50)
 
 
 class MainWindow(window_class):
@@ -2825,7 +3046,7 @@ class MainWindow(window_class):
         
         # April FOOL Code:
         if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
-            self.dx = self.dy = 10
+            self.dx = self.dy = 1
             t = QTimer(self)
             t.timeout.connect(self.SUPERFOOL)
             t.start(1)
@@ -2842,8 +3063,12 @@ class MainWindow(window_class):
     
     def mousePressEvent(self, a0):
         super().mousePressEvent(a0)
-        if 0 <= a0.pos().x() - self.x() <= 10 and 0 <= a0.pos().y() - self.x() <= 10:
+        if 0 <= a0.pos().x() - self.x() <= 16 and 0 <= a0.pos().y() - self.x() <= 16:
             self.dx = self.dy = 0
+        else:
+            if self.dx and self.dy:
+                self.dx += 1
+                self.dy += 1
     
     # End
     
@@ -2862,6 +3087,10 @@ class MainWindow(window_class):
             settings["Settings"]["LauncherSettings"]["Customise"]["CurrentTheme"] = "Light"
         for window in QGuiApplication.allWindows():
             window.requestUpdate()
+    
+    def errorDialogue(self, message):
+        dialogue = ErrorDialogue(self, message)
+        dialogue.exec()
     
     def update(self):
         super().update()
@@ -2918,6 +3147,9 @@ class MainWindow(window_class):
         painter = QPainter(self)
         rect = QRect(-20, -20, self.width() + 40, self.height() + 40)
         painter.drawPixmap(rect, img)
+        # painter.setPen(Qt.PenStyle.NoPen)
+        # painter.setBrush(QBrush(img))
+        # painter.drawRoundedRect(self.rect(), 10, 10)
     
     def showEvent(self, a0):
         super().showEvent(a0)
@@ -3058,6 +3290,10 @@ class LoggingWindow(window_class):
         self.stopOutputBtn.setText("")
         self.stopOutputBtn.pressed.connect(self.toggleOutput)
         self.horizontalLayout.addWidget(self.stopOutputBtn)
+        self.triggerExceptionBtn = PushButton(self.toolPanel)
+        self.triggerExceptionBtn.setText("")
+        self.triggerExceptionBtn.pressed.connect(self.triggerException)
+        self.horizontalLayout.addWidget(self.triggerExceptionBtn)
         spacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.horizontalLayout.addItem(spacer)
         self.loggingtext = self.LoggingText(self)
@@ -3088,6 +3324,7 @@ class LoggingWindow(window_class):
     def retranslateUI(self):
         self.stopOutputBtn.setText(self.tr("LoggingWindow.stopOutputBtn.StopOut.Text") if self.canOutput else self.tr(
             "LoggingWindow.stopOutputBtn.StartOut.Text"))
+        self.triggerExceptionBtn.setText(self.tr("LoggingWindow.triggerExceptionBtn.Text"))  # 触发异常（调试启动器报错处理）
     
     def updateText(self):
         if self.bftext != output.getvalue():
@@ -3104,6 +3341,9 @@ class LoggingWindow(window_class):
         self.stopOutputBtn.setText(self.tr("LoggingWindow.stopOutputBtn.StopOut.Text") if self.canOutput else self.tr(
             "LoggingWindow.stopOutputBtn.StartOut.Text"))
     
+    def triggerException(self):
+        print(error)
+    
     def process_command(self):
         if self.inputtext.text():
             self.history_command.append(self.inputtext.text())
@@ -3113,16 +3353,20 @@ class LoggingWindow(window_class):
     
     def closeEvent(self, a0):
         super().closeEvent(a0)
-        for i in QGuiApplication.allWindows():
-            i.close()
+        QApplication.closeAllWindows()
     
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
-        self.toolPanel.setGeometry(QRect(5, 32, self.width() - 10, 55))
-        self.loggingtext.setGeometry(self.rect().adjusted(0, 92, 0, -37))
-        self.inputtext.setGeometry(5, self.height() - 32 - 5,
-                                   self.width() - 10,
-                                   32)
+        if hasattr(self, "titleBar"):
+            self.titleBar.setGeometry(QRect(0, 0, self.width(), self.titleBar.height()))
+        try:
+            self.toolPanel.setGeometry(QRect(5, 32, self.width() - 10, 55))
+            self.loggingtext.setGeometry(self.rect().adjusted(0, 92, 0, -37))
+            self.inputtext.setGeometry(5, self.height() - 32 - 5,
+                                       self.width() - 10,
+                                       32)
+        except AttributeError:
+            pass
     
     def keyPressEvent(self, a0):
         super().keyPressEvent(a0)
@@ -3222,8 +3466,6 @@ class GameLoggingWindow(window_class):
 class SplashScreen(QSplashScreen):
     def __init__(self):
         super().__init__()
-        self.finish(frame)
-        
         self.setFixedSize(QSize(96, 114))
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -3242,6 +3484,10 @@ class SplashScreen(QSplashScreen):
         painter.setPen(getForegroundColour())
         painter.setFont(app.font())
         painter.drawText(QRect(0, 96, 96, 18), Qt.AlignmentFlag.AlignCenter, self.tr("SplashScreen.LoadingText"))
+    
+    def closeEvent(self, a0, **kwargs):
+        super().closeEvent(a0)
+        frame.show()
 
 
 def login_user(name_or_token=b"", is_refresh_login=False):
@@ -3315,16 +3561,25 @@ Path("error.log").write_text("", encoding="utf-8")
 Path("latest.log").write_text("", encoding="utf-8")
 
 
+class ExceptionEmitter(QObject):
+    errorSignal = pyqtSignal()
+    
+    def __init__(self, func):
+        super().__init__()
+        self.errorSignal.connect(func)
+        self.errorSignal.emit()
+
+
 def exception(*args, **kwargs):
     Path("settings.json").write_text(json.dumps(settings, indent=2))
+    # emitter = ExceptionEmitter(lambda: frame.errorDialogue("".join(traceback.format_exception(*args, **kwargs))))
+    frame.errorDialogue("".join(traceback.format_exception(*args, **kwargs)))
 
 
 def __excepthook__(*args, **kwargs):
-    try:
-        traceback.print_exception(*args, **kwargs)
-        exception(*args, **kwargs)
-    finally:
-        Path("error.log").open("a", encoding="utf-8").write("".join(traceback.format_exception(*args, **kwargs)))
+    Path("error.log").open("a", encoding="utf-8").write("".join(traceback.format_exception(*args, **kwargs)))
+    traceback.print_exception(*args, **kwargs)
+    exception(*args, **kwargs)
 
 
 sys.excepthook = __excepthook__
@@ -3336,7 +3591,7 @@ if platform.system().lower() == "windows":
 logging.basicConfig(
     level=logging.NOTSET,
     format="[%(asctime)s][%(levelname)s]:%(message)s",
-    datefmt="%Y/%m/%d][%H:%M:%S %p"
+    datefmt="%Y/%m/%d  %H:%M:%S %p"
 )
 if Path("settings.json").exists():
     settings = json.loads(Path("settings.json").read_text("utf-8"))
@@ -3371,10 +3626,16 @@ else:
                 "ModSearching": {
                     "OnePageModeNum": 10
                 },
-                "CurrentLanguage": "zh-cn"
+                "CurrentLanguage": "zh-cn",
+                "CurrentMinecraftDirectory": "."
             }
         }
     }
+minecraft_path = Path(settings["Settings"]["LauncherSettings"]["CurrentMinecraftDirectory"]).absolute()
+if not minecraft_path.exists():
+    minecraft_path = Path(".").absolute()
+    settings["Settings"]["LauncherSettings"]["CurrentMinecraftDirectory"] = str(minecraft_path)
+# QApplication.setDesktopSettingsAware(False)
 app = QApplication(sys.argv)
 app.setFont(QFont("Harmony OS Sans SC"))
 font_id = QFontDatabase.addApplicationFont(":/Unifont 13.0.01.ttf")
@@ -3384,9 +3645,8 @@ if font_id != -1:
         font = QFont(font_families[0])
         app.setFont(font)
 
-app.setDesktopSettingsAware(False)
 # app.setEffectEnabled(Qt.UIEffect.UI_AnimateMenu)
-app.setEffectEnabled(Qt.UIEffect.UI_FadeMenu)
+# app.setEffectEnabled(Qt.UIEffect.UI_FadeMenu)
 
 player = create_online_player(None, None, None, False)
 
@@ -3417,6 +3677,7 @@ thread.start()
 splash = SplashScreen()
 QTimer.singleShot(2999, lambda: (frame.show(), frame.resize(800, 600), frame.setCentre()))
 QTimer.singleShot(3000, splash.close)
+QTimer.singleShot(3001, frame.activateWindow)
 # April FOOL Code
 if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
     def sttttttttttttttttttttttttttttttop():

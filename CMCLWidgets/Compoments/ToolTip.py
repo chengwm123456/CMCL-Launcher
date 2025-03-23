@@ -4,22 +4,16 @@ from PyQt6.QtWidgets import *
 from ..ThemeController.ThemeControl import *
 
 
-class ToolTipWidget(QLabel):
+class ToolTipLabel(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
         self.setStyleSheet(
             f"background: transparent; color: {str(getForegroundColour(is_tuple=True)).strip('()')}")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
-        dsg = QGraphicsDropShadowEffect(self)
-        dsg.setBlurRadius(32)
-        dsg.setColor(QColor(0, 0, 0, 128))
-        dsg.setOffset(QPointF(5, 5))
-        self.setGraphicsEffect(dsg)
         self.setContentsMargins(5, 5, 5, 5)
-        self.hide()
-    
+        self.show()
+
     def paintEvent(self, a0):
         self.setStyleSheet("padding: 3px;")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -35,47 +29,65 @@ class ToolTipWidget(QLabel):
         super().paintEvent(a0)
 
 
+class ToolTipWidget(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setStyleSheet(f"background: transparent;")
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        self.setWindowFlag(Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint)
+        self.label = ToolTipLabel(self)
+        shadow = QGraphicsDropShadowEffect(self.label)
+        shadow.setBlurRadius(32)
+        shadow.setColor(QColor(0, 0, 0, 128))
+        shadow.setOffset(QPointF(5, 5))
+        self.label.setGraphicsEffect(shadow)
+        self.hide()
+
+    def paintEvent(self, a0):
+        self.label.adjustSize()
+        self.resize(self.label.graphicsEffect().boundingRect().size().toSize())
+
+    def setText(self, text):
+        self.label.setText(text)
+
+    def setFont(self, a0):
+        super().setFont(a0)
+        self.label.setFont(a0)
+
+
 class ToolTip(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.__tooltip = ToolTipWidget(self.parent().parent())
         self.__tooltip.setText(self.parent().toolTip())
         self.__tooltip.adjustSize()
-        pos = self.parent().mapTo(self.parent().parent(), QPoint(0, 0))
-        x = (
-                pos.x() + self.parent().width()) if pos.x() + self.parent().width() + self.__tooltip.width() <= self.parent().parent().width() else (
-                pos.x() - self.__tooltip.width())
-        y = pos.y() - 5 - self.__tooltip.height()
-        if y + self.__tooltip.height() >= self.parent().y() or y < 5:
-            y = self.parent().mapTo(self.parent().parent(), QPoint(0, self.parent().height())).y()
-        x = min(max(5, x), self.parent().parent().width() - self.__tooltip.width() - 5)
-        y = min(max(5, y), self.parent().parent().height() - self.__tooltip.height() - 5)
+        x = self.parent().mapToGlobal(QPoint(0, self.parent().height())).x()
+        y = self.parent().mapToGlobal(QPoint(0, self.parent().height())).y()
         self.__tooltip.move(x, y)
         self.__tooltip.raise_()
-    
+
+    def event(self, a0):
+        self.hide()
+        return super().event(a0)
+
     def eventFilter(self, a0, a1):
         match a1.type():
             case QEvent.Type.ToolTip:
                 if a0.toolTip():
-                    self.__tooltip.adjustSize()
-                    pos = a0.mapTo(a0.parent(), QPoint(0, 0))
-                    x = (
-                            pos.x() + a0.width()) if pos.x() + a0.width() + self.__tooltip.width() <= a0.parent().width() else (
-                            pos.x() - self.__tooltip.width())
-                    y = pos.y() - 5 - self.__tooltip.height()
-                    if y + self.__tooltip.height() >= a0.y() or y < 5:
-                        y = a0.mapTo(a0.parent(), QPoint(0, a0.height())).y()
-                    x = min(max(5, x), a0.parent().width() - self.__tooltip.width() - 5)
-                    y = min(max(5, y), a0.parent().height() - self.__tooltip.height() - 5)
-                    self.__tooltip.move(x, y)
-                    self.__tooltip.raise_()
-                    self.__tooltip.show()
-                    if a0.toolTipDuration() > 0:
-                        QTimer.singleShot(a0.toolTipDuration(), self.__tooltip.hide)
+                    if not self.__tooltip.isVisible():
+                        self.__tooltip.setText(a0.toolTip())
+                        self.__tooltip.adjustSize()
+                        x = a0.mapToGlobal(QPoint(0, a0.height())).x()
+                        y = a0.mapToGlobal(QPoint(0, a0.height())).y()
+                        self.__tooltip.move(x, y)
+                        self.__tooltip.raise_()
+                        self.__tooltip.show()
+                        if a0.toolTipDuration() > 0:
+                            QTimer.singleShot(a0.toolTipDuration(), self.__tooltip.hide)
                 return True
             case QEvent.Type.Leave:
-                if not self.__tooltip.underMouse():
-                    self.__tooltip.hide()
+                self.__tooltip.hide()
             case QEvent.Type.Hide:
                 self.__tooltip.hide()
             case QEvent.Type.ToolTipChange:

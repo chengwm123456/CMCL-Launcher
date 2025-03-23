@@ -28,13 +28,23 @@ class ScrollBar(QScrollBar):
         self.sliderPressed.connect(lambda: self.setSliderDown(True))
         self.sliderReleased.connect(lambda: self.setSliderDown(False))
 
-    def mousePressEvent(self, a0):
-        self.setSliderDown(True)
-        super().mousePressEvent(a0)
+    def mousePressEvent(self, ev):
+        super().mousePressEvent(ev)
+        if ev.button() == Qt.MouseButton.LeftButton:
+            self.setSliderDown(True)
 
-    def mouseReleaseEvent(self, a0):
+    def mouseReleaseEvent(self, ev):
+        super().mouseReleaseEvent(ev)
         self.setSliderDown(False)
-        super().mouseReleaseEvent(a0)
+
+    def keyPressEvent(self, ev):
+        super().keyPressEvent(ev)
+        if ev.key() in [16777234, 16777235, 16777236, 16777237]:
+            self.setSliderDown(True)
+
+    def keyReleaseEvent(self, ev):
+        super().keyPressEvent(ev)
+        self.setSliderDown(False)
 
     def paintEvent(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -110,9 +120,9 @@ class ScrollBar(QScrollBar):
                            int(self.style().sliderValueFromPosition(
                                self.minimum(),
                                self.maximum(),
-                               QCursor.pos().x() - self.mapToGlobal(QPoint(0,
-                                                                           0)).x() if self.orientation() == Qt.Orientation.Horizontal else QCursor.pos().y() - self.mapToGlobal(
-                                   QPoint(0, 0)).y(),
+                               self.mapFromGlobal(
+                                   QCursor.pos()).x() if self.orientation() == Qt.Orientation.Horizontal else self.mapFromGlobal(
+                                   QCursor.pos()).y(),
                                self.width() if self.orientation() == Qt.Orientation.Horizontal else self.height(),
                            ))))
         menu.addSeparator()
@@ -140,6 +150,7 @@ class ScrollBar(QScrollBar):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -150,6 +161,7 @@ class ScrollBar(QScrollBar):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.Enter:
                 if self.isEnabled():
@@ -162,6 +174,7 @@ class ScrollBar(QScrollBar):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -172,6 +185,7 @@ class ScrollBar(QScrollBar):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
@@ -184,6 +198,7 @@ class ScrollBar(QScrollBar):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -194,10 +209,14 @@ class ScrollBar(QScrollBar):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.Leave:
                 if self.isEnabled():
-                    if not self.hasFocus():
+                    if not self.hasFocus() and \
+                            not (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and \
+                                          child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                          for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("widgetOpacity"))
@@ -206,6 +225,7 @@ class ScrollBar(QScrollBar):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -216,10 +236,14 @@ class ScrollBar(QScrollBar):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
-                    if not self.underMouse():
+                    if not self.underMouse() and \
+                            not (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and \
+                                          child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                          for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("widgetOpacity"))
@@ -228,6 +252,7 @@ class ScrollBar(QScrollBar):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -238,6 +263,7 @@ class ScrollBar(QScrollBar):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.EnabledChange:
                 match self.isEnabled():
@@ -250,6 +276,7 @@ class ScrollBar(QScrollBar):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                     case False:
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -260,10 +287,14 @@ class ScrollBar(QScrollBar):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
-            case QEvent.Type.Paint | QEvent.Type.UpdateRequest:
+            case QEvent.Type.Paint | QEvent.Type.UpdateRequest | QEvent.Type.UpdateLater | QEvent.Type.KeyPress | QEvent.Type.KeyRelease | QEvent.Type.MouseButtonPress | QEvent.Type.MouseButtonRelease:
                 if self.isEnabled():
-                    if self.underMouse() or self.hasFocus():
+                    if self.underMouse() or self.hasFocus() or \
+                            (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and \
+                                      child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                      for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         if self.property("widgetOpacity") != 1.0 and not bool(self.findChild(QPropertyAnimation)):
                             ani = QPropertyAnimation(self, b"widgetOpacity", self)
                             ani.setDuration(500)
@@ -273,6 +304,7 @@ class ScrollBar(QScrollBar):
                             ani.start()
                             anit = QTimer(self)
                             self.destroyed.connect(anit.stop)
+                            ani.destroyed.connect(anit.deleteLater)
                             anit.singleShot(ani.duration(), ani.deleteLater)
                     else:
                         if self.property("widgetOpacity") != 0.6 and not bool(self.findChild(QPropertyAnimation)):
@@ -284,6 +316,7 @@ class ScrollBar(QScrollBar):
                             ani.start()
                             anit = QTimer(self)
                             self.destroyed.connect(anit.stop)
+                            ani.destroyed.connect(anit.deleteLater)
                             anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     if self.property("widgetOpacity") != 0.3 and not bool(self.findChild(QPropertyAnimation)):
@@ -295,6 +328,7 @@ class ScrollBar(QScrollBar):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
         return super().eventFilter(a0, a1)
 

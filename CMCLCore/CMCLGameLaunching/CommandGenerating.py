@@ -43,10 +43,10 @@ def GenerateMinecraftLaunchCommand(
             downloads = mc_lib.get("downloads", {})
             if downloads.get("artifact") and allow:
                 mc_lib_jar_names = mc_lib.get("name", ":::").split(":")
-                mc_lib_jar_name = f"{'-'.join(mc_lib_jar_names[1:])}.jar"
+                mc_lib_jar_file = PurePath(" .jar").with_stem("-".join(mc_lib_jar_names[1:]))
                 mc_lib_path = Path(
                     Path(mc_lib_jar_names[0].replace(".", os.sep)) / mc_lib_jar_names[1] / mc_lib_jar_names[
-                        2] / mc_lib_jar_name)
+                        2] / mc_lib_jar_file)
                 mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mc_lib_path)
                 if len(mc_lib_jar_names) > 3:
                     mc_lib_name_id = tuple(mc_lib_jar_names[:-2] + [mc_lib_jar_names[-1]])
@@ -59,10 +59,10 @@ def GenerateMinecraftLaunchCommand(
                 mc_libraries_files_names[mc_lib_name_id] = len(mc_libraries_files) - 1
         else:
             mc_lib_jar_names = mc_lib.get("name", ":::").split(":")
-            mc_lib_jar_name = f"{'-'.join(mc_lib_jar_names[1:])}.jar"
+            mc_lib_jar_file = PurePath(" .jar").with_stem("-".join(mc_lib_jar_names[1:]))
             mc_lib_path = Path(
                 Path(mc_lib_jar_names[0].replace(".", os.sep)) / mc_lib_jar_names[1] / mc_lib_jar_names[
-                    2] / mc_lib_jar_name)
+                    2] / mc_lib_jar_file)
             mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mc_lib_path)
             if len(mc_lib_jar_names) > 3:
                 mc_lib_name_id = tuple(mc_lib_jar_names[:-2] + [mc_lib_jar_names[-1]])
@@ -203,5 +203,6 @@ def GenerateMinecraftLaunchCommand(
         )
     else:
         mc_authlib_injector_command = ""
-    command = [f'"{java_path.strip(chr(34))}"', mc_authlib_injector_command, mc_jvm_command, mc_game_command]
+    mc_jvm_command = mc_authlib_injector_command + mc_jvm_command
+    command = [f'"{java_path.strip(chr(34))}"', mc_jvm_command, mc_game_command]
     return " ".join(command)

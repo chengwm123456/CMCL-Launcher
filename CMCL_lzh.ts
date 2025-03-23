@@ -365,12 +365,12 @@
     <message>
         <location filename="main.py" line="2122"/>
         <source>SettingsPage.JavaSettings.pushButton_2.Text</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">自擇爪哇</translation>
     </message>
     <message>
         <location filename="main.py" line="2123"/>
         <source>SettingsPage.JavaSettings.pushButton_3.Text</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">加一爪哇</translation>
     </message>
     <message>
         <location filename="main.py" line="2125"/>
@@ -429,6 +429,11 @@
         <location filename="main.py" line="3091"/>
         <location filename="main.py" line="3106"/>
         <source>LoggingWindow.stopOutputBtn.StartOut.Text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="3140"/>
+        <source>LoggingWindow.triggerExceptionBtn.Text</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -497,6 +502,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="main.py" line="916"/>
+        <location filename="main.py" line="964"/>
+        <source>MainPage.change_dir_btn.ToolTip</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="main.py" line="932"/>
         <source>MainPage.VersionLaunchedTip.Label.Text</source>
         <translation type="unfinished"></translation>
@@ -509,7 +520,7 @@
     <message>
         <location filename="main.py" line="951"/>
         <source>MainPage.SelectDir.Title</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">擇一文件夾</translation>
     </message>
     <message>
         <location filename="main.py" line="967"/>
@@ -684,6 +695,12 @@
     <message>
         <location filename="main.py" line="717"/>
         <location filename="main.py" line="728"/>
+        <source>MainPage.VersionSettingsPage.VersionDetailsPage.Page1.Title</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="736"/>
+        <location filename="main.py" line="749"/>
         <source>MainPage.VersionSettingsPage.VersionDetailsPage.Page2.Title</source>
         <translation type="unfinished"></translation>
     </message>

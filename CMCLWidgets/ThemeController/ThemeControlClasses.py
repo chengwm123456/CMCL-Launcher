@@ -17,12 +17,12 @@ class ColourRole(Enum):
 class LightDarkDict(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    
+
     def __getitem__(self, item):
         if item not in [Theme.Dark, Theme.Light]:
             raise KeyError(item)
         return super().__getitem__(item)
-    
+
     def __setitem__(self, key, value):
         if key not in [Theme.Dark, Theme.Light]:
             raise KeyError(key)
@@ -32,12 +32,12 @@ class LightDarkDict(dict):
 class HighlightsDict(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    
+
     def __getitem__(self, item):
         if item not in [True, False]:
             raise KeyError(item)
         return LightDarkDict(super().__getitem__(item))
-    
+
     def __setitem__(self, key, value):
         if key not in [True, False]:
             raise KeyError(key)
@@ -47,12 +47,12 @@ class HighlightsDict(dict):
 class ThemeColours(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    
+
     def __getitem__(self, item):
         if item not in [ColourRole.Foreground, ColourRole.Background, ColourRole.Border]:
             raise KeyError(item)
         return HighlightsDict(super().__getitem__(item))
-    
+
     def __setitem__(self, key, value):
         if key not in [ColourRole.Foreground, ColourRole.Background, ColourRole.Border]:
             raise KeyError(key)
@@ -60,13 +60,19 @@ class ThemeColours(dict):
 
 
 class Colour(QColor):
+    def __bool__(self):
+        return self.isValid()
+
     def __str__(self):
         return f"({self.red()}, {self.green()}, {self.blue()})"
-    
+
     def __repr__(self):
         return repr(self.__str__())
-    
+
     def __iter__(self):
         yield self.red()
         yield self.green()
         yield self.blue()
+
+    def __eq__(self, other):
+        return self.red() == other.red() and self.green() == other.green() and self.blue() == other.blue()

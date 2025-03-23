@@ -5,6 +5,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .ToolTip import ToolTip
 from .Button import CloseButton
+from .ListView import ListView
 from ..Windows import RoundedMenu
 from ..ThemeController import *
 
@@ -36,11 +37,21 @@ class LineEdit(QLineEdit):
             new_button.setEnabled(old_button.isVisible())
             new_button.setProperty("widgetOpacity", 0.3 if not self.text() else 0.6)
             new_button.clicked.connect(old_button.clicked.emit)
-            op = QGraphicsOpacityEffect(old_button)
-            op.setOpacity(0.0)
-            old_button.setGraphicsEffect(op)
+            old_button.setVisible(False)
         else:
-            self.findChild(CloseButton).deleteLater()
+            self.findChild(CloseButton).destroy()
+
+    def setCompleter(self, completer):
+        super().setCompleter(completer)
+        if completer:
+            completer.setWidget(self)
+            completerMenu = ListView(self)
+            completerMenu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            completerMenu.setWindowFlags(
+                Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint |
+                Qt.WindowType.Popup | Qt.WindowType.Sheet
+            )
+            completer.setPopup(completerMenu)
 
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -51,6 +62,7 @@ class LineEdit(QLineEdit):
             new_button.setFixedSize(QSize(old_button.height(), old_button.height()))
             new_button.move(old_button.x(), old_button.y())
             new_button.setEnabled(old_button.isVisible())
+            old_button.setVisible(False)
         painter = QPainter(self)
         painter.setOpacity(self.property("widgetOpacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -85,6 +97,7 @@ class LineEdit(QLineEdit):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -95,6 +108,7 @@ class LineEdit(QLineEdit):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.Enter:
                 if self.isEnabled():
@@ -107,6 +121,7 @@ class LineEdit(QLineEdit):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -117,6 +132,7 @@ class LineEdit(QLineEdit):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
@@ -129,6 +145,7 @@ class LineEdit(QLineEdit):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -139,10 +156,14 @@ class LineEdit(QLineEdit):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.Leave:
                 if self.isEnabled():
-                    if not self.hasFocus():
+                    if not self.hasFocus() and \
+                            not (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and \
+                                          child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                          for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("widgetOpacity"))
@@ -151,6 +172,7 @@ class LineEdit(QLineEdit):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -161,10 +183,14 @@ class LineEdit(QLineEdit):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
-                    if not self.underMouse():
+                    if not self.underMouse() and \
+                            not (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and \
+                                          child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                          for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("widgetOpacity"))
@@ -173,6 +199,7 @@ class LineEdit(QLineEdit):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -183,6 +210,7 @@ class LineEdit(QLineEdit):
                     ani.start()
                     anit = QTimer(self)
                     self.destroyed.connect(anit.stop)
+                    ani.destroyed.connect(anit.deleteLater)
                     anit.singleShot(ani.duration(), ani.deleteLater)
             case QEvent.Type.EnabledChange:
                 match self.isEnabled():
@@ -195,6 +223,7 @@ class LineEdit(QLineEdit):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
                     case False:
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -205,10 +234,14 @@ class LineEdit(QLineEdit):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
-            case QEvent.Type.Paint | QEvent.Type.UpdateRequest:
+            case QEvent.Type.Paint | QEvent.Type.UpdateRequest | QEvent.Type.UpdateLater | QEvent.Type.KeyPress | QEvent.Type.KeyRelease | QEvent.Type.MouseButtonPress | QEvent.Type.MouseButtonRelease:
                 if self.isEnabled():
-                    if self.underMouse() or self.hasFocus():
+                    if self.underMouse() or self.hasFocus() or \
+                            (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and \
+                                      child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                      for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         if self.property("widgetOpacity") != 1.0 and not bool(self.findChild(QPropertyAnimation)):
                             ani = QPropertyAnimation(self, b"widgetOpacity", self)
                             ani.setDuration(500)
@@ -218,6 +251,7 @@ class LineEdit(QLineEdit):
                             ani.start()
                             anit = QTimer(self)
                             self.destroyed.connect(anit.stop)
+                            ani.destroyed.connect(anit.deleteLater)
                             anit.singleShot(ani.duration(), ani.deleteLater)
                     else:
                         if self.property("widgetOpacity") != 0.6 and not bool(self.findChild(QPropertyAnimation)):
@@ -229,6 +263,7 @@ class LineEdit(QLineEdit):
                             ani.start()
                             anit = QTimer(self)
                             self.destroyed.connect(anit.stop)
+                            ani.destroyed.connect(anit.deleteLater)
                             anit.singleShot(ani.duration(), ani.deleteLater)
                 else:
                     if self.property("widgetOpacity") != 0.3 and not bool(self.findChild(QPropertyAnimation)):
@@ -240,5 +275,6 @@ class LineEdit(QLineEdit):
                         ani.start()
                         anit = QTimer(self)
                         self.destroyed.connect(anit.stop)
+                        ani.destroyed.connect(anit.deleteLater)
                         anit.singleShot(ani.duration(), ani.deleteLater)
         return super().eventFilter(a0, a1)

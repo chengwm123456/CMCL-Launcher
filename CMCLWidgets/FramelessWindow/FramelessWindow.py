@@ -132,7 +132,10 @@ class FramelessWindow(QWidget):
         self.__objc = None
         self.__cocoa = None
         self.__nsWindow = None
-        self.__Xlib = None
+        self.__windowSystem = None
+        self.__xcffib = None
+        self.__xproto = None
+        self.__pywayland = None
         match self.__platform.system().lower():
             case "windows":
                 ctypes = __import__("ctypes")
@@ -176,20 +179,29 @@ class FramelessWindow(QWidget):
                 self.__cocoa = __import__("Cocoa")
                 self.__nsWindow = self.__objc.objc_object(c_void_p=self.winId().__int__()).window()
             case "linux":
-                self.__Xlib = __import__("Xlib")
+                os = __import__("os")
+                self.__windowSystem = os.getenv("XDG_SESSION_TYPE").lower()
+                if self.__windowSystem == "x11":
+                    self.__xcffib = __import__("xcffib")
+                    self.__xproto = __import__("xcffib.xproto", fromlist=("xcffib",))
+                if self.__windowSystem == "wayland":
+                    self.__pywayland = __import__("pywayland")
         self.setProperty("resizeEnabled", True)
         self.setProperty("systemTitleBarButtonVisible", True)
-        self.__updateFrameless()
+        self.__updateWindowFrameless()
 
-    def __updateFrameless(self):
+    def __updateWindowFrameless(self):
         match self.__platform.system().lower():
             case "windows":
-                self.__updateWindowFrameless()
+                self.__updateWin32Frameless()
                 self.windowHandle().screenChanged.connect(self.__onScreenChanged)
             case "darwin":
                 self.__updateNSWindowFrameless()
             case "linux":
-                self.__updateX11WindowFrameless()
+                if self.__windowSystem == "x11":
+                    self.__updateX11WindowFrameless()
+                if self.__windowSystem == "wayland":
+                    self.__updateWaylandWindowFrameless()
         self.__updateShadow()
         self.update()
         self.updateGeometry()
@@ -205,7 +217,7 @@ class FramelessWindow(QWidget):
             case "linux":
                 pass
 
-    def __updateWindowFrameless(self):
+    def __updateWin32Frameless(self):
         if self.__platform.system().lower() == "windows":
             super(FramelessWindow, self).setWindowFlag(Qt.WindowType.FramelessWindowHint, False)
             super(FramelessWindow, self).setWindowFlags(self.windowFlags() & ~Qt.WindowType.FramelessWindowHint)
@@ -312,10 +324,17 @@ class FramelessWindow(QWidget):
 
     def __updateX11WindowFrameless(self):
         if self.__platform.system().lower() == "linux":
-            super(FramelessWindow, self).setWindowFlag(Qt.WindowType.X11BypassWindowManagerHint, True)
-            super(FramelessWindow, self).setWindowFlag(Qt.WindowType.FramelessWindowHint, False)
-            super(FramelessWindow, self).setWindowFlags(
-                self.windowFlags() & ~Qt.WindowType.FramelessWindowHint | Qt.WindowType.X11BypassWindowManagerHint)
+            if self.__windowSystem == "x11":
+                super(FramelessWindow, self).setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint)
+                connection = self.__xcffib.connect()
+                connection.core.ChangeWindowAttributes(int(self.winId()), self.__xproto.CW.OverrideRedirect, [0])
+                connection.flush()
+
+    def __updateWaylandWindowFrameless(self):
+        if self.__platform.system().lower() == "linux":
+            if self.__windowSystem == "wayland":
+                super(FramelessWindow, self).setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint)
+                # self.__pywayland.lib.wl_shell_surface.set_toplevel(self.__pywayland.wl_compositor)
 
     def __onScreenChanged(self):
         match self.__platform.system().lower():
@@ -329,6 +348,66 @@ class FramelessWindow(QWidget):
 
     def event(self, e):
         self.update()
+        self.updateGeometry()
+        if e.type() == 129:
+            if not self.property("resizeEnabled"):
+                self.setCursor(Qt.CursorShape.ArrowCursor)
+                return super(FramelessWindow, self).event(e)
+            if self.isMaximized():
+                self.setCursor(Qt.CursorShape.ArrowCursor)
+                return super(FramelessWindow, self).event(e)
+            pos = QCursor.pos() - self.mapToGlobal(QPoint(0, 0))
+            verBorder = max(self.frameGeometry().x() - self.geometry().x(),
+                            self.frameGeometry().y() - self.geometry().y())
+            horBorder = max(self.frameGeometry().x() - self.geometry().x(),
+                            self.frameGeometry().y() - self.geometry().y())
+            if 0 <= pos.x() <= verBorder:
+                if 0 <= pos.y() <= horBorder:
+                    self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+                elif self.height() - horBorder <= pos.y() <= self.height():
+                    self.setCursor(Qt.CursorShape.SizeBDiagCursor)
+                else:
+                    self.setCursor(Qt.CursorShape.SizeHorCursor)
+            elif self.width() - verBorder <= pos.x() <= self.width():
+                if 0 <= pos.y() <= horBorder:
+                    self.setCursor(Qt.CursorShape.SizeBDiagCursor)
+                elif self.height() - horBorder <= pos.y() <= self.height():
+                    self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+                else:
+                    self.setCursor(Qt.CursorShape.SizeHorCursor)
+            elif 0 <= pos.y() <= horBorder or self.height() - horBorder <= pos.y() <= self.height():
+                self.setCursor(Qt.CursorShape.SizeVerCursor)
+            else:
+                self.setCursor(Qt.CursorShape.ArrowCursor)
+        if e.type() == QEvent.Type.MouseButtonPress:
+            if not self.property("resizeEnabled"):
+                return super(FramelessWindow, self).event(e)
+            if self.isMaximized():
+                return super(FramelessWindow, self).event(e)
+            if e.button() == Qt.MouseButton.LeftButton:
+                pos = QCursor.pos() - self.mapToGlobal(QPoint(0, 0))
+                verBorder = max(self.frameGeometry().x() - self.geometry().x(),
+                                self.frameGeometry().y() - self.geometry().y())
+                horBorder = max(self.frameGeometry().x() - self.geometry().x(),
+                                self.frameGeometry().y() - self.geometry().y())
+                if 0 <= pos.x() <= verBorder:
+                    if 0 <= pos.y() <= horBorder:
+                        self.windowHandle().startSystemResize(Qt.Edge.LeftEdge | Qt.Edge.TopEdge)
+                    elif self.height() - horBorder <= pos.y() <= self.height():
+                        self.windowHandle().startSystemResize(Qt.Edge.LeftEdge | Qt.Edge.BottomEdge)
+                    else:
+                        self.windowHandle().startSystemResize(Qt.Edge.LeftEdge)
+                elif self.width() - verBorder <= pos.x() <= self.width():
+                    if 0 <= pos.y() <= horBorder:
+                        self.windowHandle().startSystemResize(Qt.Edge.RightEdge | Qt.Edge.TopEdge)
+                    elif self.height() - horBorder <= pos.y() <= self.height():
+                        self.windowHandle().startSystemResize(Qt.Edge.RightEdge | Qt.Edge.BottomEdge)
+                    else:
+                        self.windowHandle().startSystemResize(Qt.Edge.RightEdge)
+                elif 0 <= pos.y() <= horBorder:
+                    self.windowHandle().startSystemResize(Qt.Edge.TopEdge)
+                elif self.height() - horBorder <= pos.y() <= self.height():
+                    self.windowHandle().startSystemResize(Qt.Edge.BottomEdge)
         return super(FramelessWindow, self).event(e)
 
     def paintEvent(self, a0):
@@ -367,32 +446,6 @@ class FramelessWindow(QWidget):
                 match winmsg.message:
                     case self.__win32con.WM_NCACTIVATE:
                         return True, self.__win32gui.DefWindowProc(winmsg.hWnd, winmsg.message, winmsg.wParam, -1)
-                    case self.__win32con.WM_NCHITTEST:
-                        if self.property("resizeEnabled"):
-                            pos = QCursor.pos() - QPoint(self.geometry().x(), self.geometry().y())
-                            w, h = self.frameGeometry().width(), self.frameGeometry().height()
-                            xw = getResizeBorderThickness(int(self.winId()), False)
-                            yw = getResizeBorderThickness(int(self.winId()), True)
-                            lx = pos.x() < xw // 2
-                            rx = pos.x() > w + xw // 2
-                            ty = pos.y() < yw
-                            by = pos.y() > h
-                            if lx and ty:
-                                return True, self.__win32con.HTTOPLEFT
-                            elif rx and by:
-                                return True, self.__win32con.HTBOTTOMRIGHT
-                            elif rx and ty:
-                                return True, self.__win32con.HTTOPRIGHT
-                            elif lx and by:
-                                return True, self.__win32con.HTBOTTOMLEFT
-                            elif ty:
-                                return True, self.__win32con.HTTOP
-                            elif by:
-                                return True, self.__win32con.HTBOTTOM
-                            elif lx:
-                                return True, self.__win32con.HTLEFT
-                            elif rx:
-                                return True, self.__win32con.HTRIGHT
                     case self.__win32con.WM_NCCALCSIZE:
                         match bool(winmsg.wParam):
                             case True:
@@ -434,15 +487,17 @@ class FramelessWindow(QWidget):
                         return True, 0 if not bool(winmsg.wParam) else self.__win32con.WVR_VREDRAW
                 result = super(FramelessWindow, self).nativeEvent(eventType, message)
                 return result[0], result[1] or 0
+            case b"xcb_generic_event_t", "linux":
+                return False, 0
         return super(FramelessWindow, self).nativeEvent(eventType, message)
 
     def setWindowFlag(self, flag, on=True):
         super(FramelessWindow, self).setWindowFlag(flag, on)
-        self.__updateFrameless()
+        self.__updateWindowFrameless()
 
     def setWindowFlags(self, flags):
         super(FramelessWindow, self).setWindowFlags(flags)
-        self.__updateFrameless()
+        self.__updateWindowFrameless()
 
     def resizeEnabled(self):
         return self.property("resizeEnabled")
@@ -452,7 +507,7 @@ class FramelessWindow(QWidget):
             self.setProperty("resizeEnabled", bool(value))
         else:
             raise TypeError(f"'{type(value)}' object cannot be interpreted as a bool.")
-        self.__updateFrameless()
+        self.__updateWindowFrameless()
 
     def systemTitleBarButtonVisible(self):
         if platform.system().lower() == "darwin":
@@ -465,7 +520,7 @@ class FramelessWindow(QWidget):
                 self.setProperty("systemTitleBarButtonVisible", bool(value))
             else:
                 raise TypeError(f"'{type(value)}' object cannot be interpreted as a bool.")
-        self.__updateFrameless()
+        self.__updateWindowFrameless()
 
 
 class FramelessMainWindow(QMainWindow, FramelessWindow):

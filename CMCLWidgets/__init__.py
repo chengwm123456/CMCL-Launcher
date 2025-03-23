@@ -8,4 +8,4 @@ from .Compoments import *
 from .NagivationItem import NavigationItem
 from .NagivationPanel import NavigationPanel
 from .ThemeController import *
-from .Windows import MainWindow, RoundedWindow, RoundedDialogue, RoundedMenu
+from .Windows import MainWindow, RoundedWindow, RoundedDialogue, RoundedMenu, TitleBar, MaskedDialogue

@@ -44,13 +44,15 @@ def GetJavaPath(version: Union[str, int]) -> Optional[Union[str, Path]]:
                 try:
                     version_data = \
                         subprocess.check_output([i, "--version"], stderr=subprocess.STDOUT,
-                                                creationflags=subprocess.CREATE_NO_WINDOW).decode().splitlines()[
+                                                creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess,
+                                                                                                     "CREATE_NO_WINDOW") else 0).decode().splitlines()[
                             0].split(
                             " ")[1].split(".")[0].lstrip('"')
                 except subprocess.CalledProcessError:
                     version_data = \
                         subprocess.check_output([i, "-version"], stderr=subprocess.STDOUT,
-                                                creationflags=subprocess.CREATE_NO_WINDOW).decode().splitlines()[
+                                                creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess,
+                                                                                                     "CREATE_NO_WINDOW") else 0).decode().splitlines()[
                             0].split(
                             " ")[2].split(".")[1].lstrip('"')
                 if str(version) == version_data:
@@ -61,7 +63,9 @@ def GetJavaPath(version: Union[str, int]) -> Optional[Union[str, Path]]:
         if Path(java_path).is_file():
             version_data = \
                 subprocess.check_output([java_path, "--version"], stderr=subprocess.STDOUT,
-                                        creationflags=subprocess.CREATE_NO_WINDOW).decode().split("\r\n")[
+                                        creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess,
+                                                                                             "CREATE_NO_WINDOW") else 0).decode().split(
+                    "\r\n")[
                     0].split(" ")[1].split(".")[0].lstrip('"')
             if str(version) == version_data:
                 return java_path
@@ -188,7 +192,8 @@ def LaunchMinecraft(
         launcher_name="CMCL",
         initial_memory=None,
         max_memory=None,
-        jvm_arg_options=None,
+        jvm_args=None,
+        override_default_jvm_args=False,
         extra_game_command="",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -248,7 +253,7 @@ def LaunchMinecraft(
     # info = os.linesep.join(info)
     # with open(os.path.join(minecraft_path, "options.txt"), "w", encoding="utf-8") as file:
     #     file.write(info)
-    jvm_args = [
+    default_jvm_args = [
         f'-{launch_mode}',
         '-XX:+UseG1GC',
         '-XX:+UseAdaptiveSizePolicy',
@@ -285,6 +290,13 @@ def LaunchMinecraft(
         '-Dorg.lwjgl.util.DebugLoader=true',
         '-Dorg.lwjgl.util.Debug=true',
     ]
+    if jvm_args:
+        if override_default_jvm_args:
+            jvm_args = shlex.split(jvm_args)
+        else:
+            jvm_args = default_jvm_args + shlex.split(jvm_args)
+    else:
+        jvm_args = default_jvm_args
     minecraft = Minecraft.Minecraft(version=version_launch, game_work_dir=minecraft_path,
                                     game_jar=minecraft_path / "versions" / version_launch / f"{version_launch}.jar",
                                     game_json=minecraft_path / "versions" / version_launch / f"{version_launch}.json",
