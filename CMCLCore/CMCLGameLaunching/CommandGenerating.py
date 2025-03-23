@@ -89,12 +89,12 @@ def GenerateMinecraftLaunchCommand(
         mc_arguments = mc_json["arguments"]
         mc_game_arguments = mc_arguments["game"]
         mc_game_command = []
-        for arg in mc_game_arguments:
-            if isinstance(arg, dict):
-                if arg.get("value") == "--demo" and player_data.player_hasMC:
+        for gameArgument in mc_game_arguments:
+            if isinstance(gameArgument, dict):
+                if gameArgument.get("value") == "--demo" and player_data.player_hasMC:
                     continue
-                rules = arg.get("rules", [{}])[0]
-                value = arg.get("value", "")
+                rules = gameArgument.get("rules", [{}])[0]
+                value = gameArgument.get("value", "")
                 features = rules.get("features", {})
                 if features.values():
                     if isinstance(value, list):
@@ -118,33 +118,23 @@ def GenerateMinecraftLaunchCommand(
                         str_arg = str_arg.replace("${resolution_height}", "480")
                         mc_game_command.append(str_arg)
             else:
-                str_arg = arg
-                str_arg = str_arg.replace("${auth_player_name}", f'"{player_data.player_name}"')
-                str_arg = str_arg.replace("${version_name}", f'"{minecraft.mc_gameVersion}"')
-                str_arg = str_arg.replace("${game_directory}", f'"{minecraft_path}"')
-                str_arg = str_arg.replace("${assets_root}", f'"{minecraft.mc_gameAssetsDir}"')
-                str_arg = str_arg.replace("${assets_index_name}", f'"{assets}"')
-                str_arg = str_arg.replace("${auth_uuid}", f'"{player_data.player_uuid}"')
-                str_arg = str_arg.replace("${auth_access_token}", f'"{player_data.player_accessToken}"')
-                str_arg = str_arg.replace("${clientid}", f"${{clientid}}")
-                str_arg = str_arg.replace("${auth_xuid}", f"${{auth_xuid}}")
-                str_arg = str_arg.replace("${user_type}", f'"{player_data.player_accountType[1]}"')
-                str_arg = str_arg.replace("${version_type}", f'"{version_type}"')
-                mc_game_command.append(str_arg)
+                mc_game_command.append(
+                    MinecraftArgumentTemplateFilling(gameArgument, player_data, minecraft, minecraft_path, assets,
+                                                     version_type))
         if extra_game_command:
             mc_game_command.append(extra_game_command.strip(" "))
         mc_game_command = " ".join(mc_game_command)
         mc_jvm_arguments = mc_arguments.get("jvm", [])
-        for arg in mc_jvm_arguments:
-            if isinstance(arg, dict):
-                rules = arg["rules"][0]
+        for jvmArgument in mc_jvm_arguments:
+            if isinstance(jvmArgument, dict):
+                rules = jvmArgument["rules"][0]
                 os_data = GetOperationSystem.GetOperationSystemInMojangApi()
                 os_rules = rules["os"]
                 if os_rules.get("name") and os_rules["name"] != os_data[0]:
                     continue
                 if os_rules.get("arch") and os_data[1] != os_rules["arch"]:
                     continue
-                value = arg["value"]
+                value = jvmArgument["value"]
                 if isinstance(value, list):
                     for one_val in value:
                         if " " in one_val and '"' not in one_val:
@@ -153,7 +143,7 @@ def GenerateMinecraftLaunchCommand(
                 else:
                     mc_jvm_command.append(value)
             else:
-                str_arg = arg
+                str_arg = jvmArgument
                 if " " in str_arg:
                     str_arg = f'"{shlex.quote(str_arg)[1:-1]}"'
                 str_arg = str_arg.replace("${natives_directory}", f'"{minecraft.mc_gameNativesDir}"')
@@ -206,3 +196,23 @@ def GenerateMinecraftLaunchCommand(
     mc_jvm_command = mc_authlib_injector_command + mc_jvm_command
     command = [f'"{java_path.strip(chr(34))}"', mc_jvm_command, mc_game_command]
     return " ".join(command)
+
+
+def JVMArgumentTemplateFilling(argument):
+    pass
+
+
+def MinecraftArgumentTemplateFilling(argument, player_data, minecraft, minecraft_path, assets_index,
+                                     version_type="release"):
+    argument = argument.replace("${auth_player_name}", f'"{player_data.player_name}"')
+    argument = argument.replace("${version_name}", f'"{minecraft.mc_gameVersion}"')
+    argument = argument.replace("${game_directory}", f'"{minecraft_path}"')
+    argument = argument.replace("${assets_root}", f'"{minecraft.mc_gameAssetsDir}"')
+    argument = argument.replace("${assets_index_name}", f'"{assets_index}"')
+    argument = argument.replace("${auth_uuid}", f'"{player_data.player_uuid}"')
+    argument = argument.replace("${auth_access_token}", f'"{player_data.player_accessToken}"')
+    argument = argument.replace("${clientid}", f"${{clientid}}")
+    argument = argument.replace("${auth_xuid}", f"${{auth_xuid}}")
+    argument = argument.replace("${user_type}", f'"{player_data.player_accountType[1]}"')
+    argument = argument.replace("${version_type}", f'"{version_type}"')
+    return argument

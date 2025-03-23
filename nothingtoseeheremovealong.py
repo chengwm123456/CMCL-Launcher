@@ -20,7 +20,7 @@ class TextDialogueBase(RoundedDialogue):
         painter.fillRect(
             QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
 
 
 def creeper():

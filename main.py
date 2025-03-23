@@ -506,7 +506,7 @@ class LoginDialogue(MaskedDialogue):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -608,7 +608,7 @@ class LoginWindow(MaskedDialogue):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -693,7 +693,7 @@ class SaveEditingWindow(RoundedDialogue):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -2976,21 +2976,54 @@ class UserPage(QFrame):
 
 
 class ErrorDialogue(MaskedDialogue):
+    class ErrorText(HighlightTextEdit):
+        class Highlighter(HighlightTextEdit.Highlighter):
+            def __init__(self, document):
+                super().__init__(document)
+                
+                string = QTextCharFormat()
+                string.setForeground(QColor(0, 170, 9))
+                
+                url = QTextCharFormat()
+                url.setForeground(QColor(100, 80, 255))
+                url.setFontUnderline(True)
+                
+                self.highlight_styles["string"] = string
+                self.highlight_styles["url"] = url
+                
+                stringprefix = r"(?i:r|u|f|fr|rf|b|br|rb)?"
+                sqstring = stringprefix + r"'[^'\\\n]*(\\.[^'\\\n]*)*'?"
+                dqstring = stringprefix + r'"[^"\\\n]*(\\.[^"\\\n]*)*"?'
+                sq3string = stringprefix + r"'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
+                dq3string = stringprefix + r'"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
+                string = "|".join([sqstring, dqstring, sq3string, dq3string])
+                
+                self.rules.extend([
+                    (string, 0, "string"),
+                    (r"http[s]?://(.+|\[.+\])(:[0-9]+)?(/(.+|#))?", 0, "url")
+                ])
+        
+        Default_Highlighter = Highlighter
+    
     def __init__(self, parent, errorMessage):
         super().__init__(parent)
         self.message = errorMessage
         
-        self.label = Label(self)
+        self.label = self.ErrorText(self)
         self.label.setText(self.message)
+        self.label.setReadOnly(True)
+        self.label.setLineWrapMode(self.ErrorText.LineWrapMode.NoWrap)
         
-        self.label.adjustSize()
-        rect = self.label.geometry().adjusted(-10, -40, 10, 10)
+        rect = self.label.fontMetrics().boundingRect(self.label.rect(), self.label.alignment(),
+                                                     self.label.toPlainText())
         rect.moveTo(self.pos())
         self.setGeometry(rect)
         
         geometry = self.parent().rect()
         point = QPoint(geometry.width() // 2 - self.width() // 2, geometry.height() // 2 - self.height() // 2)
         self.move(point)
+        
+        self.setMaximumSize(QGuiApplication.primaryScreen().geometry().size())
     
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
@@ -3130,7 +3163,7 @@ class MainWindow(window_class):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -3342,7 +3375,55 @@ class LoggingWindow(window_class):
             "LoggingWindow.stopOutputBtn.StartOut.Text"))
     
     def triggerException(self):
-        print(error)
+        def trigger1():
+            trigger2()
+        
+        def trigger2():
+            trigger3()
+        
+        def trigger3():
+            trigger4()
+        
+        def trigger4():
+            trigger5()
+        
+        def trigger5():
+            trigger6()
+        
+        def trigger6():
+            error
+        
+        try:
+            trigger1()
+        except NameError as n:
+            try:
+                raise ZeroDivisionError() from n
+            except ZeroDivisionError as z:
+                try:
+                    raise SyntaxError()
+                except SyntaxError as s:
+                    try:
+                        raise ArithmeticError() from s
+                    except ArithmeticError as a:
+                        try:
+                            raise MemoryError()
+                        except MemoryError as m:
+                            try:
+                                raise SystemError() from m
+                            except SystemError as s:
+                                try:
+                                    raise ArithmeticError() from s
+                                except ArithmeticError as a:
+                                    try:
+                                        raise MemoryError()
+                                    except MemoryError as m:
+                                        try:
+                                            raise SystemError() from m
+                                        except SystemError as s:
+                                            try:
+                                                raise ArithmeticError() from s
+                                            except ArithmeticError as a:
+                                                raise MemoryError()
     
     def process_command(self):
         if self.inputtext.text():
@@ -3387,7 +3468,7 @@ class LoggingWindow(window_class):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -3444,7 +3525,7 @@ class GameLoggingWindow(window_class):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
