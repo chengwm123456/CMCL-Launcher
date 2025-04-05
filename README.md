@@ -19,13 +19,13 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 
 - Any bug can be reported through the "Issues" tab.
 
-- You can help me translate this launcher in more languages. (English translations: CMCL_en-gb.ts / CMCL_en-us.ts, Chinese translations: CMCL_zh-cn.ts / CMCL_zh-hk.ts / CMCL_zh-tw.ts / CMCL_lzh.ts, Other translations make a Pull request.)
+- You can help me translate this launcher in more languages. (English translations: CMCL_en-gb.ts / CMCL_en-us.ts, Chinese translations: CMCL_zh-cn.ts / CMCL_zh-hk.ts / CMCL_zh-tw.ts / CMCL_lzh.ts, Other translations please make a Pull request.)
 <h5>How to run this launcher</h5>
 
 1. You can download the releases from the "Releases" on the right side.
 
 2. You can download the source code.
-   - Code -> Download ZIP
+   - Click "Code" -> "Download ZIP" to download the source code's zip.
 
    - Extract the zip file
 
@@ -39,6 +39,6 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 
 - You can download the source code, but you **shouldn't** edit it.
 
-- You **can** copy a little from each file but **don't** Ctrl + C and Ctrl + V and **don't** use in business thank you.
+- You **can** copy a little from each file but **don't** Ctrl + C and Ctrl + V and **don't** use in business, thanks for your cooperation.
 
 - Don't distribute any file in this project except the executable file of the launcher.
