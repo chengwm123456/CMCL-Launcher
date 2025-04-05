@@ -2,6 +2,7 @@
 from pathlib import Path, PurePath
 from typing import *
 import os
+import json
 
 
 class Minecraft:
@@ -19,8 +20,10 @@ class Minecraft:
         self.__mc_gameWorkDir = None
         self.__mc_gameJarFile = None
         self.__mc_gameJsonFile = None
+        self.__mc_gameJsonFileInfo = None
         self.__mc_gameNativesDir = None
         self.__mc_gameAssetsDir = None
+        self.__mc_gameAssetsIndex = None
         self.__mc_gameLibrariesDir = None
         if game_version:
             self.__mc_gameVersion = game_version
@@ -30,10 +33,13 @@ class Minecraft:
             self.__mc_gameJarFile = PurePath(game_jar)
         if Path(game_json).is_file() and Path(game_json).suffix == ".json":
             self.__mc_gameJsonFile = PurePath(game_json)
+            self.__mc_gameJsonFileInfo = json.loads(Path(self.__mc_gameJsonFile).read_text(encoding="utf-8"))
         if Path(game_natives_dir).is_dir():
             self.__mc_gameNativesDir = PurePath(game_natives_dir)
         if Path(game_asset_dir).is_dir():
             self.__mc_gameAssetsDir = PurePath(game_asset_dir)
+            if self.__mc_gameJsonFileInfo:
+                self.__mc_gameAssetsIndex = self.__mc_gameJsonFileInfo.get("assets")
         if Path(game_libs).is_dir():
             self.__mc_gameLibrariesDir = PurePath(game_libs)
     
@@ -52,12 +58,12 @@ class Minecraft:
     
     def __getitem__(self, item: str) -> Optional[Any]:
         try:
-            return eval(f"self.__mc_{item}")
+            return eval(f"self.__mc_{item}", globals(), locals())
         finally:
             pass
     
     def __setitem__(self, key: str, value: Any):
-        exec(f"self.__mc_{key} = {value}")
+        exec(f"self.__mc_{key} = {value}", globals(), locals())
     
     def __cmp__(self, other: Any) -> bool:
         if isinstance(other, Minecraft):
@@ -96,6 +102,17 @@ class Minecraft:
     @mc_gameJsonFile.setter
     def mc_gameJsonFile(self, value: Union[str, Path, PurePath, os.PathLike, LiteralString]):
         self.__mc_gameJsonFile = value
+        self.__mc_gameJsonFileInfo = None
+        if Path(self.__mc_gameJsonFile).is_file() and Path(self.__mc_gameJsonFile).suffix == ".json":
+            self.__mc_gameJsonFileInfo = json.loads(Path(self.__mc_gameJsonFile).read_text(encoding="utf-8"))
+            if self.__mc_gameJsonFileInfo:
+                self.__mc_gameAssetsIndex = self.__mc_gameJsonFileInfo.get("assets")
+            else:
+                self.__mc_gameAssetsIndex = None
+    
+    @property
+    def mc_gameJsonFileInfo(self) -> Optional[Union[str, dict]]:
+        return self.__mc_gameJsonFileInfo
     
     @property
     def mc_gameNativesDir(self) -> Optional[Union[str, Path, PurePath, os.PathLike, LiteralString]]:
@@ -112,6 +129,14 @@ class Minecraft:
     @mc_gameAssetsDir.setter
     def mc_gameAssetsDir(self, value: Union[str, Path, PurePath, os.PathLike, LiteralString]):
         self.__mc_gameAssetsDir = value
+        if self.__mc_gameJsonFileInfo:
+            self.__mc_gameAssetsIndex = self.__mc_gameJsonFileInfo.get("assets")
+        else:
+            self.__mc_gameAssetsIndex = None
+    
+    @property
+    def mc_gameAssetsIndex(self) -> Optional[str]:
+        return self.__mc_gameAssetsIndex
     
     @property
     def mc_gameLibrariesDir(self) -> Union[str, Path, PurePath, os.PathLike, LiteralString]:
