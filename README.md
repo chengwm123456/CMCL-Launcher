@@ -14,6 +14,7 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 - There're full of bugs in these files......(for example, close a window may cause the RuntimeError or the launcher crashes, click a button may cause the launcher crashes, the launcher's windows is very slow, etc.)
 
 - I'm weak in English so these files may have a lot of incorrect spelling, spelling by pinyin or spelling which is very confusing. (for example, "recommend"[correct] -> "recommand"[incorrect], "a"[in CMCLCore/CMCLGameLaunching/CommandGenerating.py] -> "argument"[meaning], etc.)
+  
 <h5>Tip</h5>
 
 - Any bug can be reported through the "Issues" tab.
@@ -33,6 +34,7 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
    - Run `pip install -r requirements.txt`
 
    - Run `python main.py`
+   
 <h5>IMPORTANT MESSAGE</h5>
 
 - You can download the source code, but you **shouldn't** edit it.
