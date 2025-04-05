@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help us improve / 帮助我们改进启动器
 title: ''
-labels: ''
+labels: Bug / 程序错误
 assignees: ''
 
 ---

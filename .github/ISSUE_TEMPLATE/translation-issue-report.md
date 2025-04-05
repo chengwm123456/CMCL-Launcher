@@ -2,7 +2,7 @@
 name: Translation issue report
 about: Help us find the translation issues in our launcher / 帮助我们找出启动器翻译的错误
 title: ''
-labels: ''
+labels: Bug / 程序错误, Translation Mistake / 翻译错误
 assignees: ''
 
 ---
