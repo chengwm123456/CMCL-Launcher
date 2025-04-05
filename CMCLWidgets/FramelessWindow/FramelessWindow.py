@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import ctypes
 import platform
 
 from PyQt6.QtCore import *
@@ -8,11 +9,13 @@ from PyQt6.QtWidgets import *
 from ctypes import *
 
 if platform.system().lower() == "windows":
-    from qframelesswindow.utils.win32_utils import Taskbar
+    from ctypes.wintypes import *
+
     import win32api
     import win32con
     import win32gui
     import win32print
+    from win32comext.shell import shellcon
 
     from PyQt6.QtGui import QGuiApplication
 
@@ -118,6 +121,67 @@ if platform.system().lower() == "windows":
         bResult = c_int(0)
         windll.dwmapi.DwmIsCompositionEnabled(byref(bResult))
         return bool(bResult.value)
+
+
+    def isGreaterEqualVersion(version):
+        return QOperatingSystemVersion.current() >= version
+
+
+    class TaskBar:
+        class TaskBarPosition:
+            LEFT = 0
+            TOP = 1
+            RIGHT = 2
+            BOTTOM = 3
+            NOPOSITION = 4
+
+        AUTO_HIDE_THICKNESS = 2
+
+        class APPBARDATA(Structure):
+            _fields_ = [
+                ('cbSize', DWORD),
+                ('hWnd', HWND),
+                ('uCallbackMessage', UINT),
+                ('uEdge', UINT),
+                ('rc', RECT),
+                ('lParam', LPARAM)
+            ]
+
+        @classmethod
+        def isAutoHide(cls):
+            appbarData = cls.APPBARDATA(sizeof(cls.APPBARDATA), 0, 0, 0, RECT(0, 0, 0, 0), 0)
+            taskbarState = windll.shell32.SHAppBarMessage(shellcon.ABM_GETSTATE, byref(appbarData))
+            return taskbarState == shellcon.ABS_AUTOHIDE
+
+        @classmethod
+        def getPosition(cls, hwnd):
+            if isGreaterEqualVersion(QOperatingSystemVersion.Windows8_1):
+                monitorInfo = getMonitorInfo(hwnd, win32con.MONITOR_DEFAULTTONEAREST)
+                if not monitorInfo:
+                    return cls.TaskBarPosition.NOPOSITION
+                monitor = RECT(*monitorInfo["Monitor"])
+                appbarData = cls.APPBARDATA(sizeof(cls.APPBARDATA), 0, 0, 0, monitor, 0)
+                for pos in [cls.TaskBarPosition.LEFT, cls.TaskBarPosition.TOP, cls.TaskBarPosition.RIGHT,
+                            cls.TaskBarPosition.BOTTOM]:
+                    appbarData.uEdge = pos
+                    if windll.shell32.SHAppBarMessage(11, byref(appbarData)):
+                        return pos
+
+                return cls.TaskBarPosition.NOPOSITION
+
+            appbarData = cls.APPBARDATA(sizeof(cls.APPBARDATA), win32gui.FindWindow("Shell_TrayWnd", None), 0, 0,
+                                        RECT(0, 0, 0, 0), 0)
+            if appbarData.hWnd:
+                windowMonitor = win32api.MonitorFromWindow(hwnd, win32con.MONITOR_DEFAULTTONEAREST)
+                if not windowMonitor:
+                    return cls.TaskBarPosition.NOPOSITION
+                taskbarMonitor = win32api.MonitorFromWindow(appbarData.hWnd, win32con.MONITOR_DEFAULTTOPRIMARY)
+                if not taskbarMonitor:
+                    return cls.TaskBarPosition.NOPOSITION
+                if taskbarMonitor == windowMonitor:
+                    windll.shell32.SHAppBarMessage(shellcon.ABM_GETTASKBARPOS, byref(appbarData))
+                    return appbarData.uEdge
+            return cls.TaskBarPosition.NOPOSITION
 
 
 class FramelessWindow(QWidget):
@@ -471,16 +535,16 @@ class FramelessWindow(QWidget):
                             rect.left += bx
                             rect.right -= bx
 
-                        if (isMaximized(winmsg.hWnd) or isFullScreen(winmsg.hWnd)) and Taskbar.isAutoHide():
-                            position = Taskbar.getPosition(winmsg.hWnd)
-                            if position == Taskbar.TOP:
-                                rect.top += Taskbar.AUTO_HIDE_THICKNESS
-                            elif position == Taskbar.BOTTOM:
-                                rect.bottom -= Taskbar.AUTO_HIDE_THICKNESS
-                            elif position == Taskbar.LEFT:
-                                rect.left += Taskbar.AUTO_HIDE_THICKNESS
-                            elif position == Taskbar.RIGHT:
-                                rect.right -= Taskbar.AUTO_HIDE_THICKNESS
+                        if (isMaximized(winmsg.hWnd) or isFullScreen(winmsg.hWnd)) and TaskBar.isAutoHide():
+                            position = TaskBar.getPosition(winmsg.hWnd)
+                            if position == TaskBar.TaskBarPosition.TOP:
+                                rect.top += TaskBar.AUTO_HIDE_THICKNESS
+                            elif position == TaskBar.TaskBarPosition.BOTTOM:
+                                rect.bottom -= TaskBar.AUTO_HIDE_THICKNESS
+                            elif position == TaskBar.TaskBarPosition.LEFT:
+                                rect.left += TaskBar.AUTO_HIDE_THICKNESS
+                            elif position == TaskBar.TaskBarPosition.RIGHT:
+                                rect.right -= TaskBar.AUTO_HIDE_THICKNESS
 
                         if bool(winmsg.wParam):
                             self.update()

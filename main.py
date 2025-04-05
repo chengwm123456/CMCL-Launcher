@@ -323,7 +323,6 @@ class LoadingAnimation(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        self.setStyleSheet("background: rgb(249, 249, 249);")
         self.__svgWidget = QSvgWidget(self)
         self.__svgWidget.load(":/CommonMinecraftLauncherLoading.svg")
         self.__svgWidget.setFixedSize(96, 96)
@@ -342,7 +341,7 @@ class LoadingAnimation(QFrame):
         self.__statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.__loadingTimer = QTimer(self)
         self.__loadingTimer.timeout.connect(self.__updateText)
-        self.destroyed.connect(lambda: (self.__loadingTimer.moveToThread(self.thread()), self.__loadingTimer.stop()))
+        self.destroyed.connect(lambda: self.__loadingTimer.stop())
         self.__counter = 0
         self.hide()
     
@@ -388,8 +387,6 @@ class LoadingAnimation(QFrame):
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text") + "." * (self.__counter % 4))
     
     def start(self, ani=True):
-        self.setStyleSheet(
-            f"background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});")
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text"))
         self.__svgWidget.load(":/CommonMinecraftLauncherLoading.svg")
         self.__failedSvg.load(":/CommonMinecraftLauncherLoadingFailed.svg")
@@ -397,6 +394,9 @@ class LoadingAnimation(QFrame):
         if ani:
             self.setStyleSheet("background: transparent")
             self.TransparencyAnimation(self, "in").start()
+        else:
+            self.setStyleSheet(
+                f"background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});")
         self.__counter = 0
         self.__loadingTimer.start(1000)
         self.show()
@@ -3016,6 +3016,8 @@ class ErrorDialogue(MaskedDialogue):
         
         rect = self.label.fontMetrics().boundingRect(self.label.rect(), self.label.alignment(),
                                                      self.label.toPlainText())
+        rect.setSize(
+            rect.size() + QSize(self.label.verticalScrollBar().width(), self.label.horizontalScrollBar().height()))
         rect.moveTo(self.pos())
         self.setGeometry(rect)
         
@@ -3547,7 +3549,15 @@ class GameLoggingWindow(window_class):
 class SplashScreen(QSplashScreen):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(QSize(96, 114))
+        self.setFixedSize(
+            QSize(
+                max(
+                    96,
+                    QFontMetrics(app.font()).boundingRect(self.rect(), Qt.AlignmentFlag.AlignCenter,
+                                                          self.tr("SplashScreen.LoadingText")).width()
+                ),
+                114)
+        )
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
@@ -3561,10 +3571,11 @@ class SplashScreen(QSplashScreen):
     def paintEvent(self, a0, **kwargs):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        QSvgRenderer(":/CommonMinecraftLauncherIcon.svg").render(painter, QRectF(0, 0, 96, 96))
+        QSvgRenderer(":/CommonMinecraftLauncherIcon.svg").render(painter, QRectF(self.width() // 2 - 48, 0, 96, 96))
         painter.setPen(getForegroundColour())
         painter.setFont(app.font())
-        painter.drawText(QRect(0, 96, 96, 18), Qt.AlignmentFlag.AlignCenter, self.tr("SplashScreen.LoadingText"))
+        painter.drawText(QRect(0, 96, self.width(), 18), Qt.AlignmentFlag.AlignCenter,
+                         self.tr("SplashScreen.LoadingText"))
     
     def closeEvent(self, a0, **kwargs):
         super().closeEvent(a0)
@@ -3736,7 +3747,10 @@ player = create_online_player(None, None, None, False)
 #                           "https://littleskin.cn/api/yggdrasil", True)
 
 # "%appdata%\Python\Python311\Scripts\pyside6-rcc.exe" resources.qrc -o resources.py
+
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-cn.ts
+# "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-hk.ts
+# "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-tw.ts
 current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
 translator = QTranslator()
 translator.load(f":/CMCL_{current_language}.qm")

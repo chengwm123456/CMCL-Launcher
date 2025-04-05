@@ -286,7 +286,7 @@ def LaunchMinecraft(
         '-Dfile.encoding=UTF-8',
         '-Dstdout.encoding=UTF-8',
         '-Dstderr.encoding=UTF-8',
-
+        
         '-Dorg.lwjgl.util.DebugLoader=true',
         '-Dorg.lwjgl.util.Debug=true',
     ]
@@ -297,7 +297,7 @@ def LaunchMinecraft(
             jvm_args = default_jvm_args + shlex.split(jvm_args)
     else:
         jvm_args = default_jvm_args
-    minecraft = Minecraft.Minecraft(version=version_launch, game_work_dir=minecraft_path,
+    minecraft = Minecraft.Minecraft(game_version=version_launch, game_work_dir=minecraft_path,
                                     game_jar=minecraft_path / "versions" / version_launch / f"{version_launch}.jar",
                                     game_json=minecraft_path / "versions" / version_launch / f"{version_launch}.json",
                                     game_natives_dir=minecraft_path / "versions" / version_launch / f"{version_launch}-natives",
