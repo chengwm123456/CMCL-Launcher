@@ -1,7 +1,7 @@
 <h1 align="center">Common Minecraft Launcher</h1>
 <h5>Description</h5>
 
-This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (in launcher my nickname is "chengwm")
+This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (in launcher my nickname is "chengwm").
 
 <h5>Note</h5>
 
@@ -27,15 +27,15 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 2. You can download the source code.
    - Click "Code" -> "Download ZIP" to download the source code's zip.
 
-   - Extract the zip file
+   - Extract the zip file.
 
-   - Download Python 3.12 if you don't already have one
+   - Download Python 3.12 if you don't already have one.
 
-   - Run `pip install -r requirements.txt`
+   - Run `pip install -r requirements.txt`.
 
-   - Run `python main.py`
+   - Run `python main.py`.
    
-<h5>IMPORTANT MESSAGE</h5>
+<h5>IMPORTANT MESSAGES</h5>
 
 - You can download the source code, but you **shouldn't** edit it.
 
