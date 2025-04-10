@@ -21,64 +21,81 @@ class NavigationPanel(Panel):
         self.items = {}
         self.roles = {}
         self.__verticalLayout = QHBoxLayout(self)
+        self.__leftLayout = QHBoxLayout()
+        self.__verticalLayout.addLayout(self.__leftLayout)
         spacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.__verticalLayout.addItem(spacer)
+        self.__centreLayout = QHBoxLayout()
+        self.__verticalLayout.addLayout(self.__centreLayout)
+        spacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.__verticalLayout.addItem(spacer)
+        self.__rightLayout = QHBoxLayout()
+        self.__verticalLayout.addLayout(self.__rightLayout)
         self.__content_widget = content_widget
     
     def addItem(self, page, icon=None, text="", role=None, pos=NavigationItemPosition.Left):
-        item = NavigationItem(self, icon, text)
-        if not bool(len(self.items)):
-            item.setChecked(True)
-            self.selectAt(page)
         page.setParent(self.__content_widget)
-        item.pressed.connect(lambda: self.selectAt(page))
-        self.items[item] = page
         page.hide()
-        match pos:
-            case self.NavigationItemPosition.Left:
-                pos = self.__verticalLayout.count() - 1
-            case self.NavigationItemPosition.Right:
-                pos = -1
-            case _:
-                pos = self.__verticalLayout.count() - 1
-        self.__verticalLayout.insertWidget(pos, item)
-        role = role or str(self.__verticalLayout.count() - 1)
-        self.roles[role] = item
+        btnrole = self.addButton(icon, text, role, pos, page=page, selectable=True)
+        self.items[self.roles[btnrole]] = page
     
     def removeItem(self, data):
         if isinstance(data, int):
             if data < len(self.items):
-                self.__verticalLayout.removeWidget(self.items[list(self.items.keys())[data]])
+                if self.items[list(self.items.keys())[data]] in self.__leftLayout.children():
+                    self.__leftLayout.removeWidget(self.items[list(self.items.keys())[data]])
+                if self.items[list(self.items.keys())[data]] in self.__centreLayout.children():
+                    self.__centreLayout.removeWidget(self.items[list(self.items.keys())[data]])
+                if self.items[list(self.items.keys())[data]] in self.__rightLayout.children():
+                    self.__rightLayout.removeWidget(self.items[list(self.items.keys())[data]])
         elif isinstance(data, str):
             if data in self.roles.keys():
-                self.__verticalLayout.removeWidget(self.roles[data])
+                print(self.roles[data])
+                if self.roles[data] in self.__leftLayout.children():
+                    self.__leftLayout.removeWidget(self.roles[data])
+                if self.roles[data] in self.__centreLayout.children():
+                    self.__centreLayout.removeWidget(self.roles[data])
+                if self.roles[data] in self.__rightLayout.children():
+                    self.__rightLayout.removeWidget(self.roles[data])
         else:
-            if data in self.__verticalLayout.children():
-                self.__verticalLayout.removeWidget(data)
+            if data in self.__leftLayout.children() + self.__centreLayout.children() + self.__rightLayout.children():
+                if data in self.__leftLayout.children():
+                    self.__leftLayout.removeWidget(data)
+                if data in self.__centreLayout.children():
+                    self.__centreLayout.removeWidget(data)
+                if data in self.__rightLayout.children():
+                    self.__rightLayout.removeWidget(data)
             if data in self.items.keys():
                 self.__verticalLayout.removeWidget(data)
             if data in self.items.values():
                 widgets = {j: i for i, j in self.items.items()}
-                self.__verticalLayout.removeWidget(widgets[data])
+                if widgets[data] in self.__leftLayout.children():
+                    self.__leftLayout.removeWidget(widgets[data])
+                if widgets[data] in self.__centreLayout.children():
+                    self.__centreLayout.removeWidget(widgets[data])
+                if widgets[data] in self.__rightLayout.children():
+                    self.__rightLayout.removeWidget(widgets[data])
     
     def addButton(self, icon=None, text="", role=None, pos=NavigationItemPosition.Left, **kwargs):
         btn = NavigationItem(self, icon, text)
-        btn.setCheckable(kwargs.get("selectable"))
+        btn.setCheckable(kwargs.get("selectable", False))
         if kwargs.get("page"):
             self.items[btn] = kwargs.get("page")
             btn.pressed.connect(lambda: self.selectAt(kwargs.get("page")))
         if kwargs.get("pressed"):
             btn.pressed.connect(kwargs.get("pressed"))
+        layout = self.__leftLayout
         match pos:
             case self.NavigationItemPosition.Left:
-                pos = self.__verticalLayout.count() - 1
+                layout = self.__leftLayout
             case self.NavigationItemPosition.Right:
-                pos = -1
-            case _:
-                pos = self.__verticalLayout.count() - 1
-        self.__verticalLayout.insertWidget(pos, btn)
-        role = role or str(self.__verticalLayout.count() - 1)
+                layout = self.__rightLayout
+            case self.NavigationItemPosition.Centre:
+                layout = self.__centreLayout
+        layout.addWidget(btn)
+        role = role or str(self.__leftLayout.count() + self.__centreLayout.count() + self.__rightLayout.count())
         self.roles[role] = btn
+        return role
     
     def button(self, data):
         if isinstance(data, int):
@@ -88,7 +105,7 @@ class NavigationPanel(Panel):
             if data in self.roles.keys():
                 return self.roles[data]
         else:
-            if data in self.__verticalLayout.children():
+            if data in self.__leftLayout.children() + self.__centreLayout.children() + self.__rightLayout.children():
                 return data
             if data in self.items.keys():
                 return data
@@ -125,8 +142,3 @@ class NavigationPanel(Panel):
         if not show and len(self.items):
             list(self.items.keys())[0].setChecked(True)
             self.selectAt(self.items[list(self.items.keys())[0]])
-    
-    def paintEvent(self, a0, **kwargs):
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        super().paintEvent(a0)

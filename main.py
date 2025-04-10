@@ -1715,10 +1715,9 @@ class DownloadPage(QFrame):
             
             def updateIcon(self, icon):
                 try:
-                    self.icon_temp = tempfile.NamedTemporaryFile(mode="wb+", suffix=".png")
-                    self.icon_temp.write(requests.get(self.mod_icon).content)
-                    self.icon_temp.flush()
-                    self.icon_temp.seek(0)
+                    with tempfile.NamedTemporaryFile(mode="wb+", suffix=".png", delete=False) as self.icon_temp:
+                        self.icon_temp.write(requests.get(self.mod_icon).content)
+                        self.icon_temp.flush()
                 except:
                     self.icon_temp = None
                 self.modIcon.setIcon(QIcon(self.icon_temp.name) if self.icon_temp else QIcon())
@@ -1744,7 +1743,7 @@ class DownloadPage(QFrame):
             def closeEvent(self, *args, **kwargs):
                 super().closeEvent(*args, **kwargs)
                 if self.icon_temp:
-                    self.icon_temp.close()
+                    Path(self.icon_temp.name).unlink(missing_ok=True)
         
         class GetModThread(QThread):
             gotMod = pyqtSignal(dict)
@@ -2646,7 +2645,7 @@ class AboutPage(QFrame):
         self.avatar1 = ToolButton(self.panel1)
         self.avatar1.setFixedSize(QSize(42, 42))
         self.avatar1.setIconSize(QSize(32, 32))
-        self.avatar1.setIcon(QIcon(":/chengwm_headimage.png"))
+        self.avatar1.setIcon(QIcon(":/chengwm_avatar.png"))
         
         self.horizontalLayout.addWidget(self.avatar1)
         
@@ -2663,7 +2662,7 @@ class AboutPage(QFrame):
         self.avatar2 = ToolButton(self.panel2)
         self.avatar2.setFixedSize(QSize(42, 42))
         self.avatar2.setIconSize(QSize(32, 32))
-        self.avatar2.setIcon(QIcon())
+        self.avatar2.setIcon(QIcon(":/mcdaotian_avatar.png"))
         
         self.horizontalLayout_2.addWidget(self.avatar2)
         
@@ -3066,6 +3065,7 @@ class MainWindow(window_class):
         self.topWidget.addButton("", "", selectable=False, pressed=self.toggle_theme,
                                  pos=NavigationPanel.NavigationItemPosition.Right)
         self.horizontalLayout.addWidget(self.topWidget)
+        # self.topWidget.removeButton(1)
         self.content = ContentPanel(self.centralwidget)
         self.horizontalLayout.addWidget(self.content, 1)
         self.topWidget.setContentWidget(self.content)

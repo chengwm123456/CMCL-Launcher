@@ -279,7 +279,7 @@ For further syntax, search online.</translation>
         <location filename="main.py" line="1511"/>
         <location filename="main.py" line="1535"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Release</source>
-        <translation>Release Version(s)</translation>
+        <translation>Release</translation>
     </message>
     <message>
         <location filename="main.py" line="1438"/>
@@ -287,28 +287,28 @@ For further syntax, search online.</translation>
         <location filename="main.py" line="1516"/>
         <location filename="main.py" line="1537"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Snapshot</source>
-        <translation>Snapshot Version(s)</translation>
+        <translation>Snapshot</translation>
     </message>
     <message>
         <location filename="main.py" line="1440"/>
         <location filename="main.py" line="1491"/>
         <location filename="main.py" line="1539"/>
         <source>DownloadPage.DownloadVanilla.VersionType.OldBeta</source>
-        <translation>Old Beta Version(s)</translation>
+        <translation>Old Beta</translation>
     </message>
     <message>
         <location filename="main.py" line="1442"/>
         <location filename="main.py" line="1493"/>
         <location filename="main.py" line="1541"/>
         <source>DownloadPage.DownloadVanilla.VersionType.OldAlpha</source>
-        <translation>Old Alpha Version(s)</translation>
+        <translation>Old Alpha</translation>
     </message>
     <message>
         <location filename="main.py" line="1451"/>
         <location filename="main.py" line="1498"/>
         <location filename="main.py" line="1546"/>
         <source>DownloadPage.DownloadVanilla.VersionType.AprilFool</source>
-        <translation>April Fools&apos; Day Version(s)</translation>
+        <translation>April Fools&apos; Day Version</translation>
     </message>
 </context>
 <context>
@@ -370,7 +370,7 @@ For further syntax, search online.</translation>
     <message>
         <location filename="main.py" line="2282"/>
         <source>SettingsPage.JavaSettings.label_2.Text</source>
-        <translation>Java Path</translation>
+        <translation>Java Path: </translation>
     </message>
     <message>
         <location filename="main.py" line="2283"/>

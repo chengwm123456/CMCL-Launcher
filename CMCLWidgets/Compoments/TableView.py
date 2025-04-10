@@ -11,20 +11,20 @@ from .Widget import Widget
 class HeaderView(QHeaderView, Widget):
     def __init__(self, orientation, parent):
         super().__init__(orientation, parent)
-        rect = self.fontMetrics().boundingRect(str(self.count()))
         match self.orientation():
             case Qt.Orientation.Horizontal:
-                self.setFixedHeight(rect.height() + 10)
+                self.adjustSize()
+                self.setFixedHeight(self.height())
         self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
         self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))
     
     def paintEvent(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        rect = self.fontMetrics().boundingRect(str(self.count()))
         match self.orientation():
             case Qt.Orientation.Horizontal:
-                self.setFixedHeight(rect.height() + 10)
+                self.adjustSize()
+                self.setFixedHeight(self.height())
         painter = QPainter(self.viewport())
         painter.setOpacity(self.property("widgetOpacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -36,10 +36,9 @@ class HeaderView(QHeaderView, Widget):
         rect.setX(1)
         rect.setY(1)
         painter.drawRoundedRect(rect, 10, 10)
-        # self.setStyleSheet(
-        #     f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(painter.opacity())}); background: transparent; border: none;")
-        # super().paintEvent(e)
-        # return
+        pp = QPainterPath()
+        pp.addRoundedRect(QRectF(rect).adjusted(.625, .625, -.625, -.625), 10, 10)
+        painter.setClipPath(pp)
         for section in range(self.count()):
             op = QStyleOptionHeader()
             op.initFrom(self)
@@ -57,23 +56,26 @@ class HeaderView(QHeaderView, Widget):
                     op.position = QStyleOptionHeader.SectionPosition.End
             else:
                 op.position = QStyleOptionHeader.SectionPosition.OnlyOneSection
-            size = self.style().sizeFromContents(QStyle.ContentsType.CT_HeaderSection, op, self.size(), self)
             x = y = width = height = 0
             match self.orientation():
                 case Qt.Orientation.Horizontal:
                     x = self.parent().columnViewportPosition(section)
-                    height = self.height()
                     width = self.parent().columnWidth(section)
+                    y += 2
+                    height = self.height()
+                    op.textAlignment = op.textAlignment | Qt.AlignmentFlag.AlignCenter
                 case Qt.Orientation.Vertical:
                     y = self.parent().rowViewportPosition(section)
-                    width = self.width()
                     height = self.parent().rowHeight(section)
-            op.rect = QRect(x + 1, y + 1, width, height)
+                    x -= 3
+                    width = self.width()
+                    op.textAlignment = op.textAlignment | Qt.AlignmentFlag.AlignCenter
+            op.rect = QRect(x, y, width, height).adjusted(1, 1, -1, -1)
             
             op.palette.setColor(op.palette.ColorRole.Text, getForegroundColour())
             painter.save()
             painter.setPen(getForegroundColour())
-            painter.drawText(op.rect, op.textAlignment, op.text)
+            painter.drawText(op.rect, Qt.AlignmentFlag.AlignHCenter, op.text)
             painter.restore()
 
 

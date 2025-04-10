@@ -24,6 +24,7 @@
         <file>user_icon-black.svg</file>
         <file>user_icon-white.svg</file>
         <file>acrylic_noise.png</file>
-        <file>chengwm_headimage.png</file>
+        <file>chengwm_avatar.png</file>
+        <file>mcdaotian_avatar.png</file>
     </qresource>
 </RCC>

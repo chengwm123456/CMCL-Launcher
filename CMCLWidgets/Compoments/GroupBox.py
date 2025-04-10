@@ -44,7 +44,7 @@ class GroupBox(QGroupBox, Widget):
                 self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
                                             QStyle.SubControl.SC_GroupBoxLabel).united(
                     self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
-                                                QStyle.SubControl.SC_GroupBoxCheckBox)),
+                                                QStyle.SubControl.SC_GroupBoxCheckBox)).adjusted(1, 1, -1, -1),
                 10, 10)
         if self.title():
             painter.save()
