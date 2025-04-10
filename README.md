@@ -5,7 +5,7 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 
 <h5>Note</h5>
 
-- Some file is not the project's file **so you don't need to see them**. You can see these file's name in .gitignore file.
+- Some file is not the project's file **so you don't have to see them**. You can see these file's name in .gitignore file.
 
 - You can also call the author "chengwm".
 
@@ -13,7 +13,7 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 
 - There're full of bugs in these files......(for example, close a window may cause the RuntimeError or the launcher crashes, click a button may cause the launcher crashes, the launcher's windows is very slow, etc.)
 
-- I'm weak in English so these files may have a lot of incorrect spelling, spelling by pinyin or spelling which is very confusing. (for example, "recommend"[correct] -> "recommand"[incorrect], "a"[in CMCLCore/CMCLGameLaunching/CommandGenerating.py] -> "argument"[meaning], etc.)
+- I'm weak in English so these files may have a lot of incorrect spelling, spelling mistake, spelling by pinyin or spelling which is very confusing. (for example, "recommend"[correct] -> "recommand"[incorrect], "a"[in CMCLCore/CMCLGameLaunching/CommandGenerating.py] -> "argument"[its meaning], etc.)
   
 <h5>Tip</h5>
 
@@ -41,4 +41,4 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 
 - You **can** copy a little from each file but **don't** Ctrl + C and Ctrl + V and **don't** use in business, thanks for your cooperation.
 
-- Don't distribute any file in this project except the executable file of the launcher.
+- **Don't** distribute any file in this project except the executable file of the launcher.
