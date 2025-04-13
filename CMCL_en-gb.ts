@@ -88,7 +88,7 @@ Language: {}</translation>
     <message>
         <location filename="main.py" line="2503"/>
         <source>SettingsPage.CustomiseSettings.groupBox_3.Title</source>
-        <translation>Animation</translation>
+        <translation>Animations</translation>
     </message>
     <message>
         <location filename="main.py" line="2504"/>
@@ -460,7 +460,7 @@ For further syntax, search online.</translation>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body style=&quot;margin: 0px&quot;&gt;&lt;p style=&quot;margin: 0px&quot;&gt;
                 Login steps:&lt;/p&gt;
                 &lt;p style=&quot;margin: 0px&quot;&gt;1, The launcher will open a webpage, please login your account in that page.&lt;/p&gt;
-                &lt;p style=&quot;margin: 0px&quot;&gt;If the launcher forget to open the page, or you close the page accidentally, please click the &quot;Reopen Webpage&quot; below or manually open:&lt;/p&gt;&lt;br/&gt;
+                &lt;p style=&quot;margin: 0px&quot;&gt;If the webpage doesn&apos;t open automatically, or you close the page accidentally, please click the &quot;Reopen Webpage&quot; below or manually open:&lt;/p&gt;&lt;br/&gt;
                    &lt;a href=&quot;https://login.live.com/oauth20_authorize.srf?client_id=00000000402b5328&amp;response_type=code&amp;scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL&amp;redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf&quot;&gt;
         https://login.live.com/oauth20_authorize.srf?&lt;br/&gt;
         client_id=00000000402b5328&lt;br/&gt;

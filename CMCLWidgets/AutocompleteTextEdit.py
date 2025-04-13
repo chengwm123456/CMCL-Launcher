@@ -14,8 +14,8 @@ class AutocompleteTextEdit(TextEdit):
     
     def __init__(self, *args):
         super().__init__(*args)
-        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.__complete_panel = self.Default_Complete_Panel(self)
+        self.__complete_panel.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.Sheet)
     
     def __complete(self, start, end, text):
         length = end - start
@@ -30,7 +30,7 @@ class AutocompleteTextEdit(TextEdit):
         possibilities = []
         for i in self.Complete_List:
             pattern = fr"\b({'|'.join([i[:j] for j in range(1, len(i))])})\b"
-            result = re.search(pattern, cursor.block().text())
+            result = re.search(pattern, cursor.block().text()[:cursor.positionInBlock()])
             if result:
                 possibilities.append((result, i))
         
@@ -39,13 +39,19 @@ class AutocompleteTextEdit(TextEdit):
             for i in possibilities:
                 result = i[0]
                 start, end = result.start(), result.end()
-                action = QAction(i[1])
-                action.triggered.connect(lambda _, s=start, e=end, text=i[1]: self.__complete(s, e, text))
+                action = QAction(i[1], self.__complete_panel)
+                action.triggered.connect(
+                    lambda _, s=start, e=end, text=i[1]: (self.__complete(s, e, text), self.__complete_panel.hide()))
                 self.__complete_panel.addAction(action)
             fm = QFontMetrics(self.font())
-            h = fm.height()
-            w = fm.boundingRect(cursor.block().text()).width()
-            self.__complete_panel.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            self.setFocus()
+            h = int(cursor.block().layout().position().y() + fm.height())
+            w = fm.boundingRect(cursor.block().text()[:cursor.positionInBlock()]).width()
+            self.__complete_panel.adjustSize()
+            self.__complete_panel.move(self.mapToGlobal(QPoint(w, h)))
+            self.__complete_panel.setVisible(True)
         else:
             self.__complete_panel.hide()
+    
+    def focusOutEvent(self, e):
+        super().focusOutEvent(e)
+        self.__complete_panel.hide()

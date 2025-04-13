@@ -58,7 +58,7 @@ try:
 except ImportError:
     import pytz as tz
 
-DEBUG = True
+DEBUG = "--debug" in sys.argv
 
 output = StringIO()
 
@@ -70,32 +70,32 @@ if DEBUG:
     streamHandler = logging.StreamHandler(output)
     streamHandler.setFormatter(formatter)
     logging.root.addHandler(streamHandler)
-    
-    lock = QMutex()
-    
-    
-    def log(type, context, msg):
-        lock.lock()
-        print(time.strftime(f"[%Y/%m/%d  %H:%M:%S %p]"), end="")
-        match type:
-            case QtMsgType.QtDebugMsg:
-                print("[DEBUG]:", end="")
-            case QtMsgType.QtInfoMsg:
-                print("[INFO]:", end="")
-            case QtMsgType.QtWarningMsg:
-                print("[WARNING]:", end="")
-            case QtMsgType.QtCriticalMsg:
-                print("[CRITICAL]:", end="")
-            case QtMsgType.QtFatalMsg:
-                print("[FATAL]:", end="")
-            case QtMsgType.QtSystemMsg:
-                print("[SYSTEM]:", end="")
-        print(msg)
-        print(f"Context: {context.file}:{context.line}")
-        lock.unlock()
-    
-    
-    qInstallMessageHandler(log)
+
+lock = QMutex()
+
+
+def log(type, context, msg):
+    lock.lock()
+    print(time.strftime(f"[%Y/%m/%d  %H:%M:%S %p]"), end="")
+    match type:
+        case QtMsgType.QtDebugMsg:
+            print("[DEBUG]:", end="")
+        case QtMsgType.QtInfoMsg:
+            print("[INFO]:", end="")
+        case QtMsgType.QtWarningMsg:
+            print("[WARNING]:", end="")
+        case QtMsgType.QtCriticalMsg:
+            print("[CRITICAL]:", end="")
+        case QtMsgType.QtFatalMsg:
+            print("[FATAL]:", end="")
+        case QtMsgType.QtSystemMsg:
+            print("[SYSTEM]:", end="")
+    print(msg)
+    print(f"Context: {context.file}:{context.line}")
+    lock.unlock()
+
+
+qInstallMessageHandler(log)
 
 CMCL_version = ("AlphaDev-25001", "Alpha Development-25001")
 minecraft_path = Path(".")
@@ -320,6 +320,20 @@ class LoadingAnimation(QFrame):
             self.parent().setStyleSheet(
                 f"background: rgba({str(getBackgroundColour(is_tuple=True)).strip('()')}, {colour / 255})")
     
+    class SizingAnimation(QVariantAnimation):
+        def __init__(self, parent=None, variant="in"):
+            super().__init__(parent)
+            size = parent.size()
+            self.setStartValue(QSize(0, 0) if variant == "in" else size)
+            self.setEndValue(size if variant == "in" else QSize(0, 0))
+            self.setKeyValueAt(0.6 if variant == "in" else 0.4, size + QSize(30, 30))
+            self.setDuration(1000)
+            self.setEasingCurve(QEasingCurve.Type.OutQuad)
+            self.valueChanged.connect(self.update_size)
+        
+        def update_size(self, value):
+            self.parent().setFixedSize(value)
+    
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
@@ -387,6 +401,7 @@ class LoadingAnimation(QFrame):
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text") + "." * (self.__counter % 4))
     
     def start(self, ani=True):
+        self.__svgWidget.setFixedSize(96, 96)
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text"))
         self.__svgWidget.load(":/CommonMinecraftLauncherLoading.svg")
         self.__failedSvg.load(":/CommonMinecraftLauncherLoadingFailed.svg")
@@ -394,6 +409,7 @@ class LoadingAnimation(QFrame):
         if ani:
             self.setStyleSheet("background: transparent")
             self.TransparencyAnimation(self, "in").start()
+            self.SizingAnimation(self.__svgWidget, "in").start()
         else:
             self.setStyleSheet(
                 f"background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});")
@@ -408,6 +424,7 @@ class LoadingAnimation(QFrame):
             if not failed:
                 if ani:
                     self.TransparencyAnimation(self, "out").start()
+                    self.SizingAnimation(self.__svgWidget, "out").start()
                     hideani = self.HideAnimation(self)
                     self.destroyed.connect(hideani.terminate)
                     hideani.start()
@@ -506,7 +523,7 @@ class LoginDialogue(MaskedDialogue):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
+            QGradient(QGradient.Preset.FreshOasis if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -608,7 +625,7 @@ class LoginWindow(MaskedDialogue):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
+            QGradient(QGradient.Preset.FreshOasis if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -683,7 +700,8 @@ class SaveEditingWindow(RoundedDialogue):
     
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
-        self.toolBox.setGeometry(0, 30, self.width(), self.height() - 30)
+        if hasattr(self, "toolBox"):
+            self.toolBox.setGeometry(5, 35, self.width() - 10, self.height() - 40)
     
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
@@ -693,7 +711,7 @@ class SaveEditingWindow(RoundedDialogue):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
+            QGradient(QGradient.Preset.FreshOasis if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -1006,7 +1024,7 @@ class MainPage(QFrame):
         self.spacerItem = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.horizontalLayout.addItem(self.spacerItem)
         self.launch_btn = PushButton(self.bottomPanel)
-        self.launch_btn.pressed.connect(self.launch)
+        self.launch_btn.pressed.connect(self.b4launch)
         self.horizontalLayout.addWidget(self.launch_btn)
         self.select_version_btn = ToolButton(self.bottomPanel)
         self.select_version_btn.setPopupMode(ToolButton.ToolButtonPopupMode.InstantPopup)
@@ -1044,6 +1062,13 @@ class MainPage(QFrame):
     def select_version(self, version):
         self.version = version
         self.select_version_btn.setText(self.version or self.tr("MainPage.select_version_btn.DefaultText"))
+    
+    def b4launch(self):
+        if not player:
+            UserPage.startLogin()
+            if not player:
+                return
+        self.launch()
     
     def launch(self):
         if self.version:
@@ -2355,7 +2380,7 @@ class SettingsPage(QFrame):
             dialogue = MaskedDialogue(frame)
             label = Label(dialogue)
             label.setText(
-                "注意：请谨慎配置JVM参数，如果你对这个不熟悉请勿随便添加/修改！\n单击“确定”表示继续修改，单击“取消”表示取消更改。")
+                "注意：请谨慎配置JVM参数，如果你对这个不熟悉请勿随便添加/修改！\n单击“确定”表示继续修改，单击“取消”表示取消更改。\n关闭？还是取消！")
             label.adjustSize()
             bottomPanel = Panel(dialogue)
             horizontalLayout = QHBoxLayout(bottomPanel)
@@ -2367,6 +2392,8 @@ class SettingsPage(QFrame):
             cancelButton.setText("取消")
             cancelButton.pressed.connect(lambda: (
                 dialogue.close(), self.lineEdit.setText(settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["value"])))
+            dialogue.closeEvent = lambda e: self.lineEdit.setText(
+                settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["value"])
             horizontalLayout.addWidget(cancelButton)
             bottomPanel.adjustSize()
             bottomPanel.setGeometry(QRect(10, label.y() + label.height() + 30, label.width(), bottomPanel.height()))
@@ -2535,16 +2562,18 @@ class SettingsPage(QFrame):
             settings["Settings"]["LauncherSettings"]["CurrentLanguage"] = current_language
             if before_language != current_language:
                 if "frame" in globals():
+                    saveSettings()
+                    self.comboBox.setEnabled(False)
                     tip = PopupTip(frame)
                     label = Label(tip)
                     label.setText(
                         self.tr("SettingsPage.CustomiseSettings.LanguageChangedRestartTip.Label.Text"))
                     label.adjustSize()
                     tip.setCentralWidget(label)
-                    tip.setGeometry(QRect(0, 0, 300, 64))
+                    tip.setMinimumSize(QSize(300, 64))
                     tip.tip(PopupTip.PopupPosition.RIGHT, 3000)
-                    # QTimer.singleShot(2000, lambda: subprocess.Popen(sys.orig_argv))
-                    QTimer.singleShot(3000, lambda: app.exit(0))
+                    QTimer.singleShot(2500, lambda: os.execv(sys.executable, ('python',) + tuple(
+                        map(lambda x: f'"{shlex.quote(x).strip("'")}"', sys.argv))))
     
     class CustomiseSettingsContainer(ScrollArea):
         def __init__(self, parent, customisesettings):
@@ -2763,7 +2792,7 @@ class OfflinePlayerCreationDialogue(MaskedDialogue):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.PlumPlate))
+            QGradient(QGradient.Preset.FreshOasis if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -3098,12 +3127,18 @@ class MainWindow(window_class):
     
     def mousePressEvent(self, a0):
         super().mousePressEvent(a0)
-        if 0 <= a0.pos().x() - self.x() <= 16 and 0 <= a0.pos().y() - self.x() <= 16:
+        if 0 <= a0.pos().x() - self.x() <= 100 and 0 <= a0.pos().y() - self.x() <= 100:
             self.dx = self.dy = 0
         else:
             if self.dx and self.dy:
-                self.dx += 1
-                self.dy += 1
+                if self.dx > 0:
+                    self.dx += 1
+                else:
+                    self.dx -= 1
+                if self.dy > 0:
+                    self.dy += 1
+                else:
+                    self.dy -= 1
     
     # End
     
@@ -3126,15 +3161,6 @@ class MainWindow(window_class):
     def errorDialogue(self, message):
         dialogue = ErrorDialogue(self, message)
         dialogue.exec()
-    
-    def update(self):
-        super().update()
-        try:
-            self.updateIcon()
-            self.titleBar.titleLabel.setStyleSheet(
-                f"background: transparent; padding: 0 4px; font: 13px 'Segoe UI'; color: rgb({str(getForegroundColour()).strip('()')})")
-        except AttributeError:
-            pass
     
     def updateIcon(self):
         if self.topWidget.button("1"):
@@ -3165,7 +3191,7 @@ class MainWindow(window_class):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
+            QGradient(QGradient.Preset.FreshOasis if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -3453,14 +3479,19 @@ class LoggingWindow(window_class):
     
     def keyPressEvent(self, a0):
         super().keyPressEvent(a0)
+        if not self.history_command:
+            return
         if a0.key() == 16777235:
             if self.history_command and self.current_history < len(self.history_command):
                 self.current_history += 1
-                self.inputtext.setText(self.history_command[int(f"-{self.current_history}")])
+                self.inputtext.setText(self.history_command[-self.current_history])
         if a0.key() == 16777237:
             if self.history_command and self.current_history > 1:
                 self.current_history -= 1
-                self.inputtext.setText(self.history_command[int(f"-{self.current_history}")])
+                self.inputtext.setText(self.history_command[-self.current_history])
+            if self.current_history == 1:
+                self.current_history = 0
+                self.inputtext.setText("")
     
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
@@ -3470,7 +3501,7 @@ class LoggingWindow(window_class):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
+            QGradient(QGradient.Preset.FreshOasis if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -3527,7 +3558,7 @@ class GameLoggingWindow(window_class):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
+            QGradient(QGradient.Preset.FreshOasis if getTheme() == Theme.Light else QGradient.Preset.NightSky))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()
@@ -3662,8 +3693,12 @@ class ExceptionEmitter(QObject):
         self.errorSignal.emit()
 
 
-def exception(*args, **kwargs):
+def saveSettings():
     Path("settings.json").write_text(json.dumps(settings, indent=2))
+
+
+def exception(*args, **kwargs):
+    saveSettings()
     # emitter = ExceptionEmitter(lambda: frame.errorDialogue("".join(traceback.format_exception(*args, **kwargs))))
     frame.errorDialogue("".join(traceback.format_exception(*args, **kwargs)))
 
@@ -3675,11 +3710,7 @@ def __excepthook__(*args, **kwargs):
 
 
 sys.excepthook = __excepthook__
-if platform.system().lower() == "windows":
-    if not ctypes.windll.shell32.IsUserAnAdmin():
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv),
-                                            str(Path(".").absolute()), 1)
-        sys.exit(0)
+
 logging.basicConfig(
     level=logging.NOTSET,
     format="[%(asctime)s][%(levelname)s]:%(message)s",
@@ -3776,9 +3807,10 @@ QTimer.singleShot(3001, frame.activateWindow)
 # April FOOL Code
 if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
     def sttttttttttttttttttttttttttttttop():
-        frame.dy = frame.dx = 0
+        if frame.dx and frame.dy:
+            frame.dy = frame.dx = 0
+            frame.setWindowTitle(":D" * 15)
         stopbutton.close()
-        frame.setWindowTitle(":D" * 15)
     
     
     stopbutton = QPushButton("🏳️")
@@ -3787,4 +3819,4 @@ if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
     stopbutton.show()
 # End
 app.exec()
-Path("settings.json").write_text(json.dumps(settings, indent=2))
+saveSettings()

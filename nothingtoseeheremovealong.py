@@ -20,7 +20,7 @@ class TextDialogueBase(RoundedDialogue):
         painter.fillRect(
             QRect(-self.geometry().x(), -self.geometry().y(), QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.LandingAircraft if getTheme() == Theme.Light else QGradient.Preset.NightSky))
+            QGradient(QGradient.Preset.FreshOasis if getTheme() == Theme.Light else QGradient.Preset.NightSky))
 
 
 def creeper():
@@ -34,7 +34,7 @@ def creeper():
 
         def verifyText(self):
             text = self.input.text()
-            if text == "Aw man":
+            if set(text) == set("Aw man"):
                 self.close()
             else:
                 exit(1975848830)

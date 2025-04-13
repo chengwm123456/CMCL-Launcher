@@ -16,8 +16,9 @@ class HighlightTextEdit(TextEdit):
         def highlightBlock(self, text):
             rules_compiled = [(QRegularExpression(pat, QRegularExpression.PatternOption.DontCaptureOption), index,
                                fmt if isinstance(fmt, QTextCharFormat) else self.highlight_styles[
-                                   fmt] if fmt in self.highlight_styles.keys() else QTextCharFormat())
-                              for pat, index, fmt in self.rules]
+                                   fmt] if isinstance(fmt,
+                                                      str) and fmt in self.highlight_styles.keys() else QTextCharFormat())
+                              for pat, index, fmt in sorted(self.rules, key=lambda item: item[1])]
             for expression, nth, fmt in rules_compiled:
                 matchIterator = expression.globalMatch(text)
                 while matchIterator.hasNext():

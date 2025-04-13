@@ -14,35 +14,33 @@ class AutoIndentTextEdit(TextEdit):
     
     def keyPressEvent(self, e):
         super().keyPressEvent(e)
+        if not self.Indent_Pattern:
+            return
         cursor = self.textCursor()
         if cursor.atBlockStart() and not cursor.atStart() and e.key() == 16777220:
             previous_block_text = cursor.block().previous().text()
             if previous_block_text.startswith(" "):
                 self.__indenting = True
-                result = re.match(self.Indent_Pattern.removeprefix(r"\b").removesuffix(r"\b"),
-                                  previous_block_text[self.__indent * self.Indent_Length:], re.UNICODE)
-                while not result and len("    " * self.__indent) < len(cursor.block().text()):
-                    self.__indent += 1
-                    result = re.match(self.Indent_Pattern.removeprefix(r"\b").removesuffix(r"\b"),
-                                      previous_block_text[self.__indent * self.Indent_Length:], re.UNICODE)
-                self.__indent -= len(cursor.block().text())
+                result = re.match(self.Indent_Pattern.strip(r"\b"),
+                                  previous_block_text.lstrip(), re.UNICODE)
                 if result:
-                    self.__indent += 1
+                    self.__indent = ((len(previous_block_text) - len(
+                        previous_block_text.lstrip())) // self.Indent_Length) + 1
+                else:
+                    self.__indent = ((len(previous_block_text) - len(
+                        previous_block_text.lstrip())) // self.Indent_Length)
             else:
-                if re.match(self.Indent_Pattern.removeprefix(r"\b").removesuffix(r"\b"), previous_block_text,
+                if re.match(self.Indent_Pattern.strip(r"\b"), previous_block_text,
                             re.UNICODE):
                     self.__indent = 1
                     self.__indenting = True
                 else:
                     self.__indent = 1
-                    result = re.match(self.Indent_Pattern.removeprefix(r"\b").removesuffix(r"\b"),
-                                      previous_block_text[self.__indent * self.Indent_Length:], re.UNICODE)
-                    while not result and len("    " * self.__indent) < len(previous_block_text):
-                        self.__indent += 1
-                        result = re.match(self.Indent_Pattern.removeprefix(r"\b").removesuffix(r"\b"),
-                                          previous_block_text[self.__indent * self.Indent_Length:], re.UNICODE)
-                    if len("    " * self.__indent) < len(previous_block_text):
-                        self.__indent = self.__indent + 1
+                    result = re.match(self.Indent_Pattern.strip(r"\b"),
+                                      previous_block_text.lstrip(), re.UNICODE)
+                    if result:
+                        self.__indent = ((len(previous_block_text) - len(
+                            previous_block_text.lstrip())) // self.Indent_Length) + 1
                         self.__indenting = True
                     else:
                         self.__indent = 0

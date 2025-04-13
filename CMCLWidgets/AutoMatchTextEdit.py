@@ -10,8 +10,11 @@ class AutoMatchTextEdit(TextEdit):
         self.__yuechu = True
     
     def keyPressEvent(self, e):
-        super().keyPressEvent(e)
         cursor = self.textCursor()
+        prevChar = ""
+        if cursor.block().text():
+            prevChar = cursor.block().text()[cursor.positionInBlock() - 1]
+        super().keyPressEvent(e)
         try:
             if chr(e.key()) in self.need_match.keys():
                 cursor.insertText(self.need_match[chr(e.key())])
@@ -34,15 +37,9 @@ class AutoMatchTextEdit(TextEdit):
         except ValueError:
             if e.key() == 16777219:
                 if not cursor.atBlockEnd():
-                    if cursor.block().text()[cursor.positionInBlock() - 1] in self.need_match.keys():
+                    if prevChar in self.need_match.keys():
                         if cursor.block().text()[cursor.positionInBlock()] == self.need_match[
-                            cursor.block().text()[cursor.positionInBlock() - 1]]:
-                            self.__yuechu = True
-                            cursor.setPosition(cursor.position() + 1)
-                            cursor.deletePreviousChar()
-                            self.setTextCursor(cursor)
-                    elif not self.__yuechu:
-                        if cursor.block().text()[cursor.positionInBlock()] in self.need_match.values():
+                            prevChar]:
                             self.__yuechu = True
                             cursor.setPosition(cursor.position() + 1)
                             cursor.deletePreviousChar()

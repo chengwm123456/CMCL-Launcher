@@ -77,6 +77,8 @@ class Tip(TipBase):
     def setCentralWidget(self, widget):
         if isinstance(widget, QWidget):
             self.setProperty("centralWidget", widget)
+            self.resize(widget.width() + 10 + ((32 if self.closeEnabled() else 0) + 5),
+                        widget.height() + 10)
     
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
