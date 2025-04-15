@@ -5,10 +5,11 @@ from typing import *
 from pathlib import Path, PurePath
 import shlex
 
-from CMCLCore.CMCLDefines import Minecraft
-from CMCLCore.CMCLDefines import Player
+from CMCLCore.CMCLDefines import Player, Minecraft
 from CMCLCore.Player import AuthlibInjectorPlayer
 from CMCLCore import GetOperationSystem
+
+from .TemplateFilling import MinecraftArgumentTemplateFilling, JVMArgumentTemplateFilling
 
 
 def GenerateMinecraftLaunchCommand(
@@ -29,55 +30,55 @@ def GenerateMinecraftLaunchCommand(
     mcAssetsIndex = mcJsonFile.get("assets")
     mcMainClass = mcJsonFile.get("mainClass")
     mcVersionType = mcJsonFile.get("type")
-    mc_libraries_file_datas = mcJsonFile.get("libraries", [])
-    mc_libraries_files = []
-    mc_libraries_files_names = {}
-    for mc_lib in mc_libraries_file_datas:
-        if mc_lib.get("downloads"):
-            if mc_lib.get("rules"):
+    mcLibrariesFileDatas = mcJsonFile.get("libraries", [])
+    mcLibrariesFiles = []
+    mcLibrariesFilesNames = {}
+    for mcLib in mcLibrariesFileDatas:
+        if mcLib.get("downloads"):
+            if mcLib.get("rules"):
                 action = "disallow"
-                for rule in mc_lib.get("rules", []):
-                    rule_of_os = rule.get("os", {}).get("name", GetOperationSystem.GetOperationSystemInMojangApi()[0])
-                    if rule_of_os != GetOperationSystem.GetOperationSystemInMojangApi()[0]:
+                for rule in mcLib.get("rules", []):
+                    ruleOfOs = rule.get("os", {}).get("name", GetOperationSystem.GetOperationSystemInMojangApi()[0])
+                    if ruleOfOs != GetOperationSystem.GetOperationSystemInMojangApi()[0]:
                         continue
                     action = rule.get("action", action)
-                allow = bool(mc_lib.get("downloads", {}).get("artifact", {})) and action == "allow"
+                allow = bool(mcLib.get("downloads", {}).get("artifact", {})) and action == "allow"
             else:
-                allow = bool(mc_lib.get("downloads", {}).get("artifact", {}))
-            downloads = mc_lib.get("downloads", {})
+                allow = bool(mcLib.get("downloads", {}).get("artifact", {}))
+            downloads = mcLib.get("downloads", {})
             if downloads.get("artifact") and allow:
-                mc_lib_jar_names = mc_lib.get("name", ":::").split(":")
-                mc_lib_jar_file = PurePath(" .jar").with_stem("-".join(mc_lib_jar_names[1:]))
-                mc_lib_path = Path(
-                    Path(mc_lib_jar_names[0].replace(".", os.sep)) / mc_lib_jar_names[1] / mc_lib_jar_names[
-                        2] / mc_lib_jar_file)
-                mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mc_lib_path)
-                if len(mc_lib_jar_names) > 3:
-                    mc_lib_name_id = tuple(mc_lib_jar_names[:-2] + [mc_lib_jar_names[-1]])
+                mcLibJarNames = mcLib.get("name", "::").split(":")
+                mcLibJarFile = PurePath(f"{'-'.join(mcLibJarNames[1:])}.jar")
+                mcLibPath = Path(
+                    Path(mcLibJarNames[0].replace(".", os.sep)) / mcLibJarNames[1] / mcLibJarNames[
+                        2] / mcLibJarFile)
+                mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mcLibPath)
+                if len(mcLibJarNames) > 3:
+                    mc_lib_name_id = tuple(mcLibJarNames[:-2] + [mcLibJarNames[-1]])
                 else:
-                    mc_lib_name_id = tuple(mc_lib_jar_names[:2])
-                if mc_lib_name_id in mc_libraries_files_names:
-                    mc_libraries_files[mc_libraries_files_names[mc_lib_name_id]] = str(mc_lib_path_artifact)
+                    mc_lib_name_id = tuple(mcLibJarNames[:2])
+                if mc_lib_name_id in mcLibrariesFilesNames:
+                    mcLibrariesFiles[mcLibrariesFilesNames[mc_lib_name_id]] = str(mc_lib_path_artifact)
                 else:
-                    mc_libraries_files.append(str(mc_lib_path_artifact))
-                mc_libraries_files_names[mc_lib_name_id] = len(mc_libraries_files) - 1
+                    mcLibrariesFiles.append(str(mc_lib_path_artifact))
+                mcLibrariesFilesNames[mc_lib_name_id] = len(mcLibrariesFiles) - 1
         else:
-            mc_lib_jar_names = mc_lib.get("name", ":::").split(":")
-            mc_lib_jar_file = PurePath(" .jar").with_stem("-".join(mc_lib_jar_names[1:]))
-            mc_lib_path = Path(
-                Path(mc_lib_jar_names[0].replace(".", os.sep)) / mc_lib_jar_names[1] / mc_lib_jar_names[
-                    2] / mc_lib_jar_file)
-            mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mc_lib_path)
-            if len(mc_lib_jar_names) > 3:
-                mc_lib_name_id = tuple(mc_lib_jar_names[:-2] + [mc_lib_jar_names[-1]])
+            mcLibJarNames = mcLib.get("name", ":::").split(":")
+            mcLibJarFile = PurePath(" .jar").with_stem("-".join(mcLibJarNames[1:]))
+            mcLibPath = Path(
+                Path(mcLibJarNames[0].replace(".", os.sep)) / mcLibJarNames[1] / mcLibJarNames[
+                    2] / mcLibJarFile)
+            mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mcLibPath)
+            if len(mcLibJarNames) > 3:
+                mc_lib_name_id = tuple(mcLibJarNames[:-2] + [mcLibJarNames[-1]])
             else:
-                mc_lib_name_id = tuple(mc_lib_jar_names[:2])
-            if mc_lib_name_id in mc_libraries_files_names:
-                mc_libraries_files[mc_libraries_files_names[mc_lib_name_id]] = str(mc_lib_path_artifact)
+                mc_lib_name_id = tuple(mcLibJarNames[:2])
+            if mc_lib_name_id in mcLibrariesFilesNames:
+                mcLibrariesFiles[mcLibrariesFilesNames[mc_lib_name_id]] = str(mc_lib_path_artifact)
             else:
-                mc_libraries_files.append(str(mc_lib_path_artifact))
-            mc_libraries_files_names[mc_lib_name_id] = len(mc_libraries_files) - 1
-    mc_libraries_files = os.pathsep.join(mc_libraries_files)
+                mcLibrariesFiles.append(str(mc_lib_path_artifact))
+            mcLibrariesFilesNames[mc_lib_name_id] = len(mcLibrariesFiles) - 1
+    mcLibrariesFiles = os.pathsep.join(mcLibrariesFiles)
     memory_args = f"-Xmn{str(initial_memory)} -Xmx{str(max_memory)}"
     if not jvm_arguments:
         jvm_arguments = []
@@ -87,9 +88,9 @@ def GenerateMinecraftLaunchCommand(
     if mcJsonFile.get("arguments"):
         quick_started = False
         mcArguments = mcJsonFile["arguments"]
-        mc_game_arguments = mcArguments["game"]
-        mc_game_command = []
-        for gameArgument in mc_game_arguments:
+        mcGameArguments = mcArguments["game"]
+        mcGameCommand = []
+        for gameArgument in mcGameArguments:
             if isinstance(gameArgument, dict):
                 if gameArgument.get("value") == "--demo" and player_data.player_hasMC:
                     continue
@@ -102,7 +103,7 @@ def GenerateMinecraftLaunchCommand(
                             if value[0] in ["--quickPlaySingleplayer", "--quickPlayMultiplayer", "--quickPlayRealms"] \
                                     and not quick_started and quickplay_command is not None:
                                 quick_started = True
-                                mc_game_command.append(quickplay_command)
+                                mcGameCommand.append(quickplay_command)
                                 continue
                             else:
                                 if value[0] in ["--quickPlaySingleplayer",
@@ -111,19 +112,20 @@ def GenerateMinecraftLaunchCommand(
                                     continue
                                 str_arg = str_arg.replace("${resolution_width}", "854")
                                 str_arg = str_arg.replace("${resolution_height}", "480")
-                                mc_game_command.append(str_arg)
+                                mcGameCommand.append(str_arg)
                     else:
                         str_arg = value
                         str_arg = str_arg.replace("${resolution_width}", "854")
                         str_arg = str_arg.replace("${resolution_height}", "480")
-                        mc_game_command.append(str_arg)
+                        mcGameCommand.append(str_arg)
             else:
-                mc_game_command.append(
+                mcGameCommand.append(
                     MinecraftArgumentTemplateFilling(gameArgument, player_data, minecraft, minecraftPath, mcAssetsIndex,
+                                                     False,
                                                      mcVersionType))
         if extra_game_command:
-            mc_game_command.append(extra_game_command.strip(" "))
-        mc_game_command = " ".join(mc_game_command)
+            mcGameCommand.append(extra_game_command.strip(" "))
+        mcGameCommand = " ".join(mcGameCommand)
         mc_jvm_arguments = mcArguments.get("jvm", [])
         for jvmArgument in mc_jvm_arguments:
             if isinstance(jvmArgument, dict):
@@ -150,36 +152,23 @@ def GenerateMinecraftLaunchCommand(
                 str_arg = str_arg.replace("${launcher_name}", f'"{launcher_name}"')
                 str_arg = str_arg.replace("${launcher_version}", f'"{launcher_version}"')
                 str_arg = str_arg.replace("${classpath}",
-                                          f'"{mc_libraries_files}{os.pathsep}{mcGameJarFile}"')
+                                          f'"{mcLibrariesFiles}{os.pathsep}{mcGameJarFile}"')
                 mc_jvm_command.append(str_arg)
         mc_jvm_command.append(memory_args)
         mc_jvm_command.append(
             f"-Xmixed {mcMainClass}")
         mc_jvm_command = " ".join(mc_jvm_command)
     elif mcJsonFile.get("minecraftArguments"):
-        mc_game_command = mcJsonFile["minecraftArguments"]
-        mc_game_command = mc_game_command.replace("${auth_session}", f'"{player_data.player_accessToken}"')
-        mc_game_command = mc_game_command.replace("${auth_player_name}", f'"{player_data.player_name}"')
-        mc_game_command = mc_game_command.replace("${version_name}", f'"{minecraft.mc_gameVersion}"')
-        mc_game_command = mc_game_command.replace("${game_directory}", f'"{minecraftPath}"')
-        mc_game_command = mc_game_command.replace("${assets_root}",
-                                                  f'"{Path(minecraft.mc_gameAssetsDir / "virtual" / "legacy")}"')
-        mc_game_command = mc_game_command.replace("${game_assets}",
-                                                  f'"{Path(minecraft.mc_gameAssetsDir / "virtual" / "legacy")}"')
-        mc_game_command = mc_game_command.replace("${assets_index_name}", f'"{mcAssetsIndex}"')
-        mc_game_command = mc_game_command.replace("${auth_uuid}", f'"{player_data.player_uuid}"')
-        mc_game_command = mc_game_command.replace("${auth_access_token}", f'"{player_data.player_accessToken}"')
-        # c = c.replace("${clientid}", "${clientid}")
-        # c = c.replace("${auth_xuid}", "${auth_xuid}")
-        mc_game_command = mc_game_command.replace("${user_type}", f'"{player_data.player_accountType[1]}"')
-        mc_game_command = mc_game_command.replace("${version_type}", f'"{mcVersionType}"')
+        mcGameCommand = mcJsonFile["minecraftArguments"]
+        mcGameCommand = MinecraftArgumentTemplateFilling(mcGameCommand, player_data, minecraft, minecraftPath,
+                                                         mcAssetsIndex, True, mcVersionType)
         if extra_game_command:
-            mc_game_command = shlex.split(mc_game_command)
-            mc_game_command.append(extra_game_command.strip(" "))
-            mc_game_command = " ".join(mc_game_command)
-        mc_jvm_command = f"{' '.join(mc_jvm_command)}{' -XstartOnFirstThread' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'osx' else ''}{' -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'windows' else ''}{' -Xss1M' if GetOperationSystem.GetOperationSystemInMojangApi() == ('windows', 'x86') else ''} -Djava.library.path=\"{str(minecraft.mc_gameNativesDir)}\" -cp \"{mc_libraries_files}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{mcGameJarFile}\" {memory_args} -Xmixed {mcMainClass}"
+            mcGameCommand = shlex.split(mcGameCommand)
+            mcGameCommand.append(extra_game_command.strip(" "))
+            mcGameCommand = " ".join(mcGameCommand)
+        mc_jvm_command = f"{' '.join(mc_jvm_command)}{' -XstartOnFirstThread' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'osx' else ''}{' -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'windows' else ''}{' -Xss1M' if GetOperationSystem.GetOperationSystemInMojangApi() == ('windows', 'x86') else ''} -Djava.library.path=\"{str(minecraft.mc_gameNativesDir)}\" -cp \"{mcLibrariesFiles}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{mcGameJarFile}\" {memory_args} -Xmixed {mcMainClass}"
     else:
-        mc_jvm_command = mc_game_command = ""
+        mc_jvm_command = mcGameCommand = ""
     if isinstance(player_data, AuthlibInjectorPlayer):
         authlib_injector_jar_path = Path(r".\authlib-injector.jar")
         authentication_server_url = player_data.player_authServer  # "https://littleskin.cn/api/yggdrasil"
@@ -194,26 +183,5 @@ def GenerateMinecraftLaunchCommand(
     else:
         mc_authlib_injector_command = ""
     mc_jvm_command = mc_authlib_injector_command + mc_jvm_command
-    command = [f'"{java_path.strip(chr(34))}"', mc_jvm_command, mc_game_command]
+    command = [f'"{java_path.strip(chr(34))}"', mc_jvm_command, mcGameCommand]
     return " ".join(command)
-
-
-def JVMArgumentTemplateFilling(argument):
-    pass
-
-
-def MinecraftArgumentTemplateFilling(argument: str, player_data: Player, minecraft: Minecraft,
-                                     minecraft_path: Union[str, Path, PurePath], assets_index: str,
-                                     version_type: str = "release"):
-    argument = argument.replace("${auth_player_name}", f'"{player_data.player_name}"')
-    argument = argument.replace("${version_name}", f'"{minecraft.mc_gameVersion}"')
-    argument = argument.replace("${game_directory}", f'"{minecraft_path}"')
-    argument = argument.replace("${assets_root}", f'"{minecraft.mc_gameAssetsDir}"')
-    argument = argument.replace("${assets_index_name}", f'"{assets_index}"')
-    argument = argument.replace("${auth_uuid}", f'"{player_data.player_uuid}"')
-    argument = argument.replace("${auth_access_token}", f'"{player_data.player_accessToken}"')
-    argument = argument.replace("${clientid}", f"${{clientid}}")
-    argument = argument.replace("${auth_xuid}", f"${{auth_xuid}}")
-    argument = argument.replace("${user_type}", f'"{player_data.player_accountType[1]}"')
-    argument = argument.replace("${version_type}", f'"{version_type}"')
-    return argument

@@ -734,7 +734,7 @@ Has Minecraft: {}</translation>
         <location filename="main.py" line="837"/>
         <location filename="main.py" line="850"/>
         <source>MainPage.VersionSettingsPage.VersionDetailsPage.Page2.Title</source>
-        <translation>Version Saves</translation>
+        <translation>Version&apos;s Saves</translation>
     </message>
     <message>
         <location filename="main.py" line="843"/>

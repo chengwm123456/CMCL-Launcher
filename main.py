@@ -692,8 +692,8 @@ class SaveEditingWindow(RoundedDialogue):
 <hr/>
 玩家游戏模式：{value_localisations['gamemode'][self.leveldata['Player']['playerGameType']]}模式<br/>
 玩家血量：{self.leveldata['Player']['Health'] / 1}({self.leveldata['Player']['Health'] / 2}颗心)<br/>
-玩家饥饿度：{self.leveldata['Player']['foodLevel']}<br/>
-玩家位置：{list(self.leveldata['Player']['Pos'])}<br/>
+玩家饥饿度：{self.leveldata['Player']['foodLevel'] / 1}<br/>
+玩家位置：{list(map(lambda x: x / 1, self.leveldata['Player']['Pos']))}<br/>
 </body></html>
 """)
         self.toolBox.setItemText(self.toolBox.indexOf(self.basicDataPage), "基础数据")
@@ -1939,7 +1939,10 @@ class DownloadPage(QFrame):
                 for e, hit in enumerate(dat["hits"]):
                     self.model.setItem(e, 0, QStandardItem(hit["title"]))
                     self.model.setItem(e, 1, QStandardItem(hit["author"]))
-                    self.model.setItem(e, 2, QStandardItem(hit["date_modified"]))
+                    self.model.setItem(e, 2, QStandardItem(time.strftime("%Y-%m-%d %H:%M:%S",
+                                                                         time.strptime(
+                                                                             hit["date_modified"].split(".")[0],
+                                                                             "%Y-%m-%dT%H:%M:%S"))))
                     self.model.setItem(e, 3, QStandardItem("modrinth"))
                 self.model.setHorizontalHeaderLabels(
                     [self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.1"),
@@ -1968,7 +1971,11 @@ class DownloadPage(QFrame):
                             if re.match(value_query, hit["title"]):
                                 self.model.setItem(cnt, 0, QStandardItem(hit["title"]))
                                 self.model.setItem(cnt, 1, QStandardItem(hit["author"]))
-                                self.model.setItem(cnt, 2, QStandardItem(hit["date_modified"]))
+                                self.model.setItem(cnt, 2, QStandardItem(time.strftime("%Y-%m-%d %H:%M:%S",
+                                                                                       time.strptime(
+                                                                                           hit["date_modified"].split(
+                                                                                               ".")[0],
+                                                                                           "%Y-%m-%dT%H:%M:%S"))))
                                 self.model.setItem(cnt, 3, QStandardItem("modrinth"))
                                 cnt += 1
                 else:
@@ -3050,7 +3057,9 @@ class ErrorDialogue(MaskedDialogue):
         self.setGeometry(rect)
         
         geometry = self.parent().rect()
-        point = QPoint(geometry.width() // 2 - self.width() // 2, geometry.height() // 2 - self.height() // 2)
+        size = QGuiApplication.primaryScreen().geometry().size()
+        point = QPoint(min(max(geometry.width() // 2 - self.width() // 2, 0), size.width()),
+                       min(max(0, geometry.height() // 2 - self.height() // 2), size.height()))
         self.move(point)
         
         self.setMaximumSize(QGuiApplication.primaryScreen().geometry().size())
@@ -3761,7 +3770,7 @@ if not minecraft_path.exists():
 # QApplication.setDesktopSettingsAware(False)
 app = QApplication(sys.argv)
 app.setFont(QFont("Harmony OS Sans SC"))
-font_id = QFontDatabase.addApplicationFont(":/Unifont 13.0.01.ttf")
+font_id = QFontDatabase.addApplicationFont(r".\Unifont 13.0.01.ttf")
 if font_id != -1:
     font_families = QFontDatabase.applicationFontFamilies(font_id)
     if font_families:

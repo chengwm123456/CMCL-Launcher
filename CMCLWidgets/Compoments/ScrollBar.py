@@ -141,3 +141,4 @@ class ScrollArea(QScrollArea):
         self.installEventFilter(ToolTip(self))
         self.setHorizontalScrollBar(ScrollBar(Qt.Orientation.Horizontal, self))
         self.setVerticalScrollBar(ScrollBar(Qt.Orientation.Vertical, self))
+        self.setCornerWidget(QWidget(self))
