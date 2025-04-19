@@ -25,22 +25,14 @@ class Widget(QWidget):
                     ani.setStartValue(self.property("widgetOpacity"))
                     ani.setEndValue(1.0)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.start()
-                    anit = QTimer(self)
-                    self.destroyed.connect(anit.stop)
-                    ani.destroyed.connect(anit.deleteLater)
-                    anit.singleShot(ani.duration(), ani.deleteLater)
+                    ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("widgetOpacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.start()
-                    anit = QTimer(self)
-                    self.destroyed.connect(anit.stop)
-                    ani.destroyed.connect(anit.deleteLater)
-                    anit.singleShot(ani.duration(), ani.deleteLater)
+                    ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
             case QEvent.Type.Enter:
                 if self.isEnabled():
                     if not self.hasFocus():
@@ -49,22 +41,14 @@ class Widget(QWidget):
                         ani.setStartValue(self.property("widgetOpacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.start()
-                        anit = QTimer(self)
-                        self.destroyed.connect(anit.stop)
-                        ani.destroyed.connect(anit.deleteLater)
-                        anit.singleShot(ani.duration(), ani.deleteLater)
+                        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("widgetOpacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.start()
-                    anit = QTimer(self)
-                    self.destroyed.connect(anit.stop)
-                    ani.destroyed.connect(anit.deleteLater)
-                    anit.singleShot(ani.duration(), ani.deleteLater)
+                    ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
             case QEvent.Type.FocusIn:
                 if self.isEnabled():
                     if not self.underMouse():
@@ -73,22 +57,14 @@ class Widget(QWidget):
                         ani.setStartValue(self.property("widgetOpacity"))
                         ani.setEndValue(1.0)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.start()
-                        anit = QTimer(self)
-                        self.destroyed.connect(anit.stop)
-                        ani.destroyed.connect(anit.deleteLater)
-                        anit.singleShot(ani.duration(), ani.deleteLater)
+                        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("widgetOpacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.start()
-                    anit = QTimer(self)
-                    self.destroyed.connect(anit.stop)
-                    ani.destroyed.connect(anit.deleteLater)
-                    anit.singleShot(ani.duration(), ani.deleteLater)
+                    ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
             case QEvent.Type.Leave:
                 if self.isEnabled():
                     if not self.hasFocus() and \
@@ -100,22 +76,14 @@ class Widget(QWidget):
                         ani.setStartValue(self.property("widgetOpacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.start()
-                        anit = QTimer(self)
-                        self.destroyed.connect(anit.stop)
-                        ani.destroyed.connect(anit.deleteLater)
-                        anit.singleShot(ani.duration(), ani.deleteLater)
+                        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("widgetOpacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.start()
-                    anit = QTimer(self)
-                    self.destroyed.connect(anit.stop)
-                    ani.destroyed.connect(anit.deleteLater)
-                    anit.singleShot(ani.duration(), ani.deleteLater)
+                    ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
                     if not self.underMouse() and \
@@ -127,22 +95,14 @@ class Widget(QWidget):
                         ani.setStartValue(self.property("widgetOpacity"))
                         ani.setEndValue(0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.start()
-                        anit = QTimer(self)
-                        self.destroyed.connect(anit.stop)
-                        ani.destroyed.connect(anit.deleteLater)
-                        anit.singleShot(ani.duration(), ani.deleteLater)
+                        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                 else:
                     ani = QPropertyAnimation(self, b"widgetOpacity", self)
                     ani.setDuration(500)
                     ani.setStartValue(self.property("widgetOpacity"))
                     ani.setEndValue(0.3)
                     ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                    ani.start()
-                    anit = QTimer(self)
-                    self.destroyed.connect(anit.stop)
-                    ani.destroyed.connect(anit.deleteLater)
-                    anit.singleShot(ani.duration(), ani.deleteLater)
+                    ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
             case QEvent.Type.EnabledChange:
                 match self.isEnabled():
                     case True:
@@ -151,22 +111,14 @@ class Widget(QWidget):
                         ani.setStartValue(0.3)
                         ani.setEndValue(1.0 if (self.underMouse() or self.hasFocus()) and self.isEnabled() else 0.6)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.start()
-                        anit = QTimer(self)
-                        self.destroyed.connect(anit.stop)
-                        ani.destroyed.connect(anit.deleteLater)
-                        anit.singleShot(ani.duration(), ani.deleteLater)
+                        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                     case False:
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("widgetOpacity"))
                         ani.setEndValue(0.3)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.start()
-                        anit = QTimer(self)
-                        self.destroyed.connect(anit.stop)
-                        ani.destroyed.connect(anit.deleteLater)
-                        anit.singleShot(ani.duration(), ani.deleteLater)
+                        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
             case QEvent.Type.Paint | QEvent.Type.UpdateRequest | QEvent.Type.UpdateLater | QEvent.Type.KeyPress | QEvent.Type.KeyRelease | QEvent.Type.MouseButtonPress | QEvent.Type.MouseButtonRelease:
                 if self.isEnabled():
                     if self.underMouse() or self.hasFocus() or \
@@ -179,11 +131,7 @@ class Widget(QWidget):
                             ani.setStartValue(self.property("widgetOpacity"))
                             ani.setEndValue(1.0)
                             ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                            ani.start()
-                            anit = QTimer(self)
-                            self.destroyed.connect(anit.stop)
-                            ani.destroyed.connect(anit.deleteLater)
-                            anit.singleShot(ani.duration(), ani.deleteLater)
+                            ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                     else:
                         if self.property("widgetOpacity") != 0.6 and not bool(self.findChild(QPropertyAnimation)):
                             ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -191,11 +139,7 @@ class Widget(QWidget):
                             ani.setStartValue(self.property("widgetOpacity"))
                             ani.setEndValue(0.6)
                             ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                            ani.start()
-                            anit = QTimer(self)
-                            self.destroyed.connect(anit.stop)
-                            ani.destroyed.connect(anit.deleteLater)
-                            anit.singleShot(ani.duration(), ani.deleteLater)
+                            ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                 else:
                     if self.property("widgetOpacity") != 0.3 and not bool(self.findChild(QPropertyAnimation)):
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
@@ -203,9 +147,5 @@ class Widget(QWidget):
                         ani.setStartValue(self.property("widgetOpacity"))
                         ani.setEndValue(0.3)
                         ani.setEasingCurve(QEasingCurve.Type.OutExpo)
-                        ani.start()
-                        anit = QTimer(self)
-                        self.destroyed.connect(anit.stop)
-                        ani.destroyed.connect(anit.deleteLater)
-                        anit.singleShot(ani.duration(), ani.deleteLater)
+                        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
         return super().eventFilter(a0, a1)

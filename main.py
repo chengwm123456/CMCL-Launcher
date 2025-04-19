@@ -309,8 +309,10 @@ class LoadingAnimation(QFrame):
     class TransparencyAnimation(QVariantAnimation):
         def __init__(self, parent=None, variant="in"):
             super().__init__(parent)
-            self.setStartValue(0 if variant == "in" else 255)
-            self.setEndValue(255 if variant == "in" else 0)
+            self.setStartValue(0)
+            self.setEndValue(255)
+            self.setDirection(
+                QAbstractAnimation.Direction.Forward if variant == "in" else QAbstractAnimation.Direction.Backward)
             self.setDuration(1000)
             self.setEasingCurve(QEasingCurve.Type.OutQuad)
             self.valueChanged.connect(self.update_opacity)
@@ -324,11 +326,12 @@ class LoadingAnimation(QFrame):
         def __init__(self, parent=None, variant="in"):
             super().__init__(parent)
             size = parent.size()
-            self.setStartValue(QSize(0, 0) if variant == "in" else size)
-            self.setEndValue(size if variant == "in" else QSize(0, 0))
-            self.setKeyValueAt(0.6 if variant == "in" else 0.4, size + QSize(30, 30))
+            self.setStartValue(QSize(0, 0))
+            self.setEndValue(size)
+            self.setDirection(
+                QAbstractAnimation.Direction.Forward if variant == "in" else QAbstractAnimation.Direction.Backward)
             self.setDuration(1000)
-            self.setEasingCurve(QEasingCurve.Type.OutQuad)
+            self.setEasingCurve(QEasingCurve.Type.OutBack)
             self.valueChanged.connect(self.update_size)
         
         def update_size(self, value):
@@ -1115,17 +1118,28 @@ class MainPage(QFrame):
                 self.tr("MainPage.change_dir_btn.ToolTip").format(str(minecraft_path.absolute())))
     
     def update_menu(self):
-        menu = RoundedMenu()
+        menu = QMenu()
+        menu.showEvent = lambda a0: menu.setStyleSheet("QMenu{ border: none; background: transparent; }")
+        menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        listWidget = ListWidget(menu)
+        maximumWidth = listWidget.width()
+        
         versions = GetVersionByScanDirectory(minecraft_path=minecraft_path)
         if isinstance(versions, list) and len(versions) >= 1:
             for version in versions:
-                action = QAction(menu)
+                action = QListWidgetItem(listWidget)
                 action.setText(version)
-                action.triggered.connect(lambda _, v=version: self.select_version(v))
-                menu.addAction(action)
+                listWidget.addItem(action)
+                maximumWidth = max(maximumWidth, listWidget.fontMetrics().boundingRect(version).width())
+            listWidget.itemClicked.connect(lambda version: self.select_version(version.text()))
             self.select_version(versions[0])
         else:
-            menu.addAction(self.tr("MainPage.NoVersionYet.Text"))
+            listWidget.addItem(self.tr("MainPage.NoVersionYet.Text"))
+        menu.resizeEvent = lambda e: listWidget.setGeometry(menu.rect())
+        listWidget.adjustSize()
+        listWidget.setFixedWidth(maximumWidth + listWidget.verticalScrollBar().width())
+        menu.setFixedHeight(app.primaryScreen().geometry().height())
+        menu.setFixedSize(listWidget.size())
         self.select_version_btn.setMenu(menu)
     
     def show_version_settings_page(self):
@@ -3725,7 +3739,7 @@ logging.basicConfig(
     format="[%(asctime)s][%(levelname)s]:%(message)s",
     datefmt="%Y/%m/%d  %H:%M:%S %p"
 )
-if Path("settings.json").exists():
+if Path("settings.json").exists() and Path("settings.json").read_text("utf-8"):
     settings = json.loads(Path("settings.json").read_text("utf-8"))
 else:
     Path("settings.json").write_text("", encoding="utf-8")
@@ -3763,13 +3777,14 @@ else:
             }
         }
     }
+    saveSettings()
 minecraft_path = Path(settings["Settings"]["LauncherSettings"]["CurrentMinecraftDirectory"]).absolute()
 if not minecraft_path.exists():
     minecraft_path = Path(".").absolute()
     settings["Settings"]["LauncherSettings"]["CurrentMinecraftDirectory"] = str(minecraft_path)
 # QApplication.setDesktopSettingsAware(False)
 app = QApplication(sys.argv)
-app.setFont(QFont("Harmony OS Sans SC"))
+app.setFont(QFont("HarmonyOS Sans SC"))
 font_id = QFontDatabase.addApplicationFont(r".\Unifont 13.0.01.ttf")
 if font_id != -1:
     font_families = QFontDatabase.applicationFontFamilies(font_id)

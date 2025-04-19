@@ -59,6 +59,10 @@ class ComboBox(QComboBox, Widget):
             self.lineEdit().setStyleSheet(
                 f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(self.property('widgetOpacity') or 1.0)}); background: transparent; border: none; padding: 5px;")
             self.lineEdit().setFont(self.font())
+            self.lineEdit().setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            self.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
+        else:
+            self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         painter = QPainter(self)
         painter.setOpacity(self.property("widgetOpacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
