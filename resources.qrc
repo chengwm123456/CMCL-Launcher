@@ -2,8 +2,8 @@
 <RCC>
     <qresource>
         <file>CommonMinecraftLauncherIcon.svg</file>
-        <file>CommonMinecraftLauncherLoading.svg</file>
-        <file>CommonMinecraftLauncherLoadingFailed.svg</file>
+        <file>Loading.svg</file>
+        <file>LoadingFailed.svg</file>
         <file>CMCL_zh-cn.qm</file>
         <file>CMCL_zh-hk.qm</file>
         <file>CMCL_zh-tw.qm</file>

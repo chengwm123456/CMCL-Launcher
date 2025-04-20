@@ -341,19 +341,24 @@ class LoadingAnimation(QFrame):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.__svgWidget = QSvgWidget(self)
-        self.__svgWidget.load(":/CommonMinecraftLauncherLoading.svg")
+        self.__svgWidget.load(":/Loading.svg")
         self.__svgWidget.setFixedSize(96, 96)
         self.__svgWidget.setStyleSheet("background: transparent;")
         dsg = QGraphicsDropShadowEffect(self.__svgWidget)
         dsg.setBlurRadius(30)
         dsg.setOffset(0, 4)
-        dsg.setColor(QColor(0, 0, 0, 100))
+        dsg.setColor(QColor(0, 0, 0, 200))
         self.__svgWidget.setGraphicsEffect(dsg)
-        self.__failedSvg = QSvgWidget(self.__svgWidget)
-        self.__failedSvg.load(":/CommonMinecraftLauncherLoadingFailed.svg")
+        self.__failedSvg = QSvgWidget(self)
+        self.__failedSvg.load(":/LoadingFailed.svg")
         self.__failedSvg.setFixedSize(96, 96)
         self.__failedSvg.setStyleSheet("background: transparent;")
         self.__failedSvg.hide()
+        fdsg = QGraphicsDropShadowEffect(self.__failedSvg)
+        fdsg.setBlurRadius(30)
+        fdsg.setOffset(0, 4)
+        fdsg.setColor(QColor(0, 0, 0, 200))
+        self.__failedSvg.setGraphicsEffect(fdsg)
         self.__statusLabel = Label(self)
         self.__statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.__loadingTimer = QTimer(self)
@@ -376,7 +381,7 @@ class LoadingAnimation(QFrame):
                                                int(self.height() / 2 - (self.__svgWidget.height() / 2)),
                                                self.__svgWidget.width(),
                                                self.__svgWidget.height()))
-            self.__failedSvg.setGeometry(self.__svgWidget.rect())
+            self.__failedSvg.setGeometry(self.__svgWidget.geometry())
         except AttributeError:
             pass
         try:
@@ -406,8 +411,8 @@ class LoadingAnimation(QFrame):
     def start(self, ani=True):
         self.__svgWidget.setFixedSize(96, 96)
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text"))
-        self.__svgWidget.load(":/CommonMinecraftLauncherLoading.svg")
-        self.__failedSvg.load(":/CommonMinecraftLauncherLoadingFailed.svg")
+        self.__svgWidget.load(":/Loading.svg")
+        self.__failedSvg.load(":/LoadingFailed.svg")
         self.__failedSvg.hide()
         if ani:
             self.setStyleSheet("background: transparent")
@@ -440,6 +445,7 @@ class LoadingAnimation(QFrame):
                     f"background: rgb({'255, 200, 200' if getTheme() == Theme.Light else '100, 50, 50'});")
                 self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.FailedText"))
                 self.__failedSvg.show()
+                self.__svgWidget.hide()
         except RuntimeError:
             pass
     
