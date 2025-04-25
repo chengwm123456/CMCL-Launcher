@@ -17,7 +17,7 @@
   
 <h5>来，look in my eyes</h5>
 
-- 任何 bug 都可以通过 Issues （问题）页面和作者激烈对线。
+- 任何 bug 或者建议都可以通过 Issues（问题）页面和作者激烈对线。
 
 - 孩子，会翻译就翻吧，我们需要。（英语翻译文件：CMCL_en-gb.ts / CMCL_en-us.ts，中文翻译文件：CMCL_zh-cn.ts / CMCL_zh-hk.ts / CMCL_zh-tw.ts / CMCL_lzh.ts，其它翻译请新建一个 Pull request）
 
