@@ -528,7 +528,7 @@ For further syntax, search online.</translation>
     <message>
         <location filename="main.py" line="1040"/>
         <source>MainPage.stop_all_games_btn.ToolTip</source>
-        <translation>Stop all Mineraft process(es).</translation>
+        <translation>Stop all Mineraft processes.</translation>
     </message>
     <message>
         <location filename="main.py" line="1042"/>

@@ -18,7 +18,7 @@ import platform
 import sys
 import traceback
 import re
-import ctypes
+import locale, _locale
 import webbrowser as webb
 from pathlib import Path
 from io import StringIO
@@ -128,21 +128,21 @@ theme_colour_defines = {
         Theme.Light: {
             ColourRole.Background: {
                 False: (253, 253, 253),
-                True: (250, 176, 250)
+                True: (250, 176, 206)
             },
             ColourRole.Border: {
                 False: (215, 220, 229),
-                True: (250, 135, 250)
+                True: (250, 178, 237)
             }
         },
         Theme.Dark: {
             ColourRole.Background: {
                 False: (67, 67, 67),
-                True: (252, 142, 252),
+                True: (252, 142, 173),
             },
             ColourRole.Border: {
                 False: (134, 143, 150),
-                True: (252, 79, 252)
+                True: (252, 79, 135)
             }
         }
     },
@@ -2355,7 +2355,6 @@ class SettingsPage(QFrame):
             self.retranslateUi()
         
         def updateJavaSelectPaths(self, data):
-            print(self.comboBox.currentText())
             if self.comboBox.currentText() not in data and self.comboBox.currentText() and Path(
                     self.comboBox.currentText()).exists():
                 data = [self.comboBox.currentText()] + data
@@ -2364,7 +2363,6 @@ class SettingsPage(QFrame):
                 self.comboBox.addItem(i)
         
         def updateJavaPath(self, path):
-            print(path)
             if not settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"]:
                 settings["Settings"]["JavaSettings"]["Java"]["Path"]["value"] = path
             else:
@@ -2406,8 +2404,10 @@ class SettingsPage(QFrame):
                 return
             dialogue = MaskedDialogue(frame)
             label = Label(dialogue)
-            label.setText(
-                "注意：请谨慎配置JVM参数，如果你对这个不熟悉请勿随便添加/修改！\n单击“确定”表示继续修改，单击“取消”表示取消更改。\n关闭？还是取消！")
+            label.setText("""注意：请谨慎配置JVM参数，如果你对这个不熟悉，请不要随便添加，或者随便修改！
+（容易无法启动或者崩溃）
+单击“确定”表示你确定要修改，单击“取消”表示你要撤销更改。
+关闭？还是取消！谁教给你的关窗口？""")
             label.adjustSize()
             bottomPanel = Panel(dialogue)
             horizontalLayout = QHBoxLayout(bottomPanel)
@@ -2526,6 +2526,7 @@ class SettingsPage(QFrame):
             self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label2)
             
             self.comboBox = ComboBox(self.groupBox_4)
+            self.comboBox.wheelEvent = lambda e: None
             self.updateComboBoxLanguageList()
             self.comboBox.currentIndexChanged.connect(self.comboBoxLanguageChanged)
             self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.comboBox)
@@ -2585,8 +2586,19 @@ class SettingsPage(QFrame):
         def comboBoxLanguageChanged(self):
             global current_language
             before_language = current_language
-            current_language = self.comboBox.currentText().split(" ")[-1][1:-1]
-            settings["Settings"]["LauncherSettings"]["CurrentLanguage"] = current_language
+            settings["Settings"]["LauncherSettings"]["CurrentLanguage"] = self.comboBox.currentText().split(" ")[-1][
+                                                                          1:-1]
+            current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
+            app.removeTranslator(app.translator)
+            app.translator = QTranslator()
+            app.translator.load(f":/CMCL_{current_language}.qm")
+            app.installTranslator(app.translator)
+            self.retranslateUI()
+            frame.HomePage.retranslateUI()
+            frame.DownloadPage.retranslateUi()
+            frame.SettingsPage.retranslateUi()
+            frame.AboutPage.retranslateUI()
+            frame.UserPage.retranslateUI()
             if before_language != current_language:
                 if "frame" in globals():
                     saveSettings()
@@ -3776,9 +3788,9 @@ else:
                     "BackgroundBlur": 5
                 },
                 "ModSearching": {
-                    "OnePageModeNum": 10
+                    "OnePageModNum": 10
                 },
-                "CurrentLanguage": "zh-cn",
+                "CurrentLanguage": locale._getdefaultlocale()[0].lower().replace("_", "-"),
                 "CurrentMinecraftDirectory": "."
             }
         }
@@ -3813,9 +3825,9 @@ player = create_online_player(None, None, None, False)
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-hk.ts
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-tw.ts
 current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
-translator = QTranslator()
-translator.load(f":/CMCL_{current_language}.qm")
-app.installTranslator(translator)
+app.translator = QTranslator()
+app.translator.load(f":/CMCL_{current_language}.qm")
+app.installTranslator(app.translator)
 
 match settings["Settings"]["LauncherSettings"]["Customise"]["CurrentTheme"]:
     case "Light":

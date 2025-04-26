@@ -84,7 +84,7 @@ def GenerateMinecraftLaunchCommand(
         jvm_arguments = []
     if isinstance(jvm_arguments, str):
         jvm_arguments = shlex.split(jvm_arguments)
-    mc_jvm_command = jvm_arguments
+    mcJvmCommand = jvm_arguments
     if mcJsonFile.get("arguments"):
         quick_started = False
         mcArguments = mcJsonFile["arguments"]
@@ -99,7 +99,7 @@ def GenerateMinecraftLaunchCommand(
                 features = rules.get("features", {})
                 if features.values():
                     if isinstance(value, list):
-                        for str_arg in value:
+                        for strArgument in value:
                             if value[0] in ["--quickPlaySingleplayer", "--quickPlayMultiplayer", "--quickPlayRealms"] \
                                     and not quick_started and quickplay_command is not None:
                                 quick_started = True
@@ -110,14 +110,14 @@ def GenerateMinecraftLaunchCommand(
                                                 "--quickPlayMultiplayer",
                                                 "--quickPlayRealms"]:
                                     continue
-                                str_arg = str_arg.replace("${resolution_width}", "854")
-                                str_arg = str_arg.replace("${resolution_height}", "480")
-                                mcGameCommand.append(str_arg)
+                                strArgument = strArgument.replace("${resolution_width}", "854")
+                                strArgument = strArgument.replace("${resolution_height}", "480")
+                                mcGameCommand.append(strArgument)
                     else:
-                        str_arg = value
-                        str_arg = str_arg.replace("${resolution_width}", "854")
-                        str_arg = str_arg.replace("${resolution_height}", "480")
-                        mcGameCommand.append(str_arg)
+                        strArgument = value
+                        strArgument = strArgument.replace("${resolution_width}", "854")
+                        strArgument = strArgument.replace("${resolution_height}", "480")
+                        mcGameCommand.append(strArgument)
             else:
                 mcGameCommand.append(
                     MinecraftArgumentTemplateFilling(gameArgument, player_data, minecraft, minecraftPath, mcAssetsIndex,
@@ -126,38 +126,38 @@ def GenerateMinecraftLaunchCommand(
         if extra_game_command:
             mcGameCommand.append(extra_game_command.strip(" "))
         mcGameCommand = " ".join(mcGameCommand)
-        mc_jvm_arguments = mcArguments.get("jvm", [])
-        for jvmArgument in mc_jvm_arguments:
+        mcJvmArguments = mcArguments.get("jvm", [])
+        for jvmArgument in mcJvmArguments:
             if isinstance(jvmArgument, dict):
                 rules = jvmArgument["rules"][0]
-                os_data = GetOperationSystem.GetOperationSystemInMojangApi()
-                os_rules = rules["os"]
-                if os_rules.get("name") and os_rules["name"] != os_data[0]:
+                currentOs = GetOperationSystem.GetOperationSystemInMojangApi()
+                ruleOfOs = rules["os"]
+                if ruleOfOs.get("name") and ruleOfOs["name"] != currentOs[0]:
                     continue
-                if os_rules.get("arch") and os_data[1] != os_rules["arch"]:
+                if ruleOfOs.get("arch") and currentOs[1] != ruleOfOs["arch"]:
                     continue
                 value = jvmArgument["value"]
                 if isinstance(value, list):
-                    for one_val in value:
-                        if " " in one_val and '"' not in one_val:
-                            one_val = f'"{shlex.quote(one_val)[1:-1]}"'
-                        mc_jvm_command.append(one_val)
+                    for oneValue in value:
+                        if " " in oneValue and '"' not in oneValue:
+                            oneValue = f'"{shlex.quote(oneValue)[1:-1]}"'
+                        mcJvmCommand.append(oneValue)
                 else:
-                    mc_jvm_command.append(value)
+                    mcJvmCommand.append(value)
             else:
-                str_arg = jvmArgument
-                if " " in str_arg:
-                    str_arg = f'"{shlex.quote(str_arg)[1:-1]}"'
-                str_arg = str_arg.replace("${natives_directory}", f'"{minecraft.mc_gameNativesDir}"')
-                str_arg = str_arg.replace("${launcher_name}", f'"{launcher_name}"')
-                str_arg = str_arg.replace("${launcher_version}", f'"{launcher_version}"')
-                str_arg = str_arg.replace("${classpath}",
-                                          f'"{mcLibrariesFiles}{os.pathsep}{mcGameJarFile}"')
-                mc_jvm_command.append(str_arg)
-        mc_jvm_command.append(memory_args)
-        mc_jvm_command.append(
+                strArgument = jvmArgument
+                if " " in strArgument:
+                    strArgument = f'"{shlex.quote(strArgument)[1:-1]}"'
+                strArgument = strArgument.replace("${natives_directory}", f'"{minecraft.mc_gameNativesDir}"')
+                strArgument = strArgument.replace("${launcher_name}", f'"{launcher_name}"')
+                strArgument = strArgument.replace("${launcher_version}", f'"{launcher_version}"')
+                strArgument = strArgument.replace("${classpath}",
+                                                  f'"{mcLibrariesFiles}{os.pathsep}{mcGameJarFile}"')
+                mcJvmCommand.append(strArgument)
+        mcJvmCommand.append(memory_args)
+        mcJvmCommand.append(
             f"-Xmixed {mcMainClass}")
-        mc_jvm_command = " ".join(mc_jvm_command)
+        mcJvmCommand = " ".join(mcJvmCommand)
     elif mcJsonFile.get("minecraftArguments"):
         mcGameCommand = mcJsonFile["minecraftArguments"]
         mcGameCommand = MinecraftArgumentTemplateFilling(mcGameCommand, player_data, minecraft, minecraftPath,
@@ -166,22 +166,22 @@ def GenerateMinecraftLaunchCommand(
             mcGameCommand = shlex.split(mcGameCommand)
             mcGameCommand.append(extra_game_command.strip(" "))
             mcGameCommand = " ".join(mcGameCommand)
-        mc_jvm_command = f"{' '.join(mc_jvm_command)}{' -XstartOnFirstThread' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'osx' else ''}{' -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'windows' else ''}{' -Xss1M' if GetOperationSystem.GetOperationSystemInMojangApi() == ('windows', 'x86') else ''} -Djava.library.path=\"{str(minecraft.mc_gameNativesDir)}\" -cp \"{mcLibrariesFiles}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{mcGameJarFile}\" {memory_args} -Xmixed {mcMainClass}"
+        mcJvmCommand = f"{' '.join(mcJvmCommand)}{' -XstartOnFirstThread' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'osx' else ''}{' -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'windows' else ''}{' -Xss1M' if GetOperationSystem.GetOperationSystemInMojangApi() == ('windows', 'x86') else ''} -Djava.library.path=\"{str(minecraft.mc_gameNativesDir)}\" -cp \"{mcLibrariesFiles}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{mcGameJarFile}\" {memory_args} -Xmixed {mcMainClass}"
     else:
-        mc_jvm_command = mcGameCommand = ""
+        mcJvmCommand = mcGameCommand = ""
     if isinstance(player_data, AuthlibInjectorPlayer):
-        authlib_injector_jar_path = Path(r".\authlib-injector.jar")
-        authentication_server_url = player_data.player_authServer  # "https://littleskin.cn/api/yggdrasil"
-        signature_publickey = player_data.player_signaturePublickey.replace("\n", "")
-        mc_authlib_injector_command = " ".join(
+        authlibInjectorJarPath = Path(r".\authlib-injector.jar")
+        authenticationServerUrl = player_data.player_authServer  # "https://littleskin.cn/api/yggdrasil"
+        signaturePublickey = player_data.player_signaturePublickey.replace("\n", "")
+        mcAuthlibInjectorCommand = " ".join(
             [
-                f'-javaagent:"{shlex.quote(str(authlib_injector_jar_path)[1:-1])}"="{shlex.quote(authentication_server_url)[1:-1]}"',
+                f'-javaagent:"{shlex.quote(str(authlibInjectorJarPath)[1:-1])}"="{shlex.quote(authenticationServerUrl)[1:-1]}"',
                 '-Dauthlibinjector.side="client"',
-                f'-Dauthlibinjector.yggdrasil.prefetched="{shlex.quote(signature_publickey)[1:-1]}"'
+                f'-Dauthlibinjector.yggdrasil.prefetched="{shlex.quote(signaturePublickey)[1:-1]}"'
             ]
         )
     else:
-        mc_authlib_injector_command = ""
-    mc_jvm_command = mc_authlib_injector_command + mc_jvm_command
-    command = [f'"{java_path.strip(chr(34))}"', mc_jvm_command, mcGameCommand]
+        mcAuthlibInjectorCommand = ""
+    mcJvmCommand = mcAuthlibInjectorCommand + mcJvmCommand
+    command = [f'"{java_path.strip(chr(34))}"', mcJvmCommand, mcGameCommand]
     return " ".join(command)

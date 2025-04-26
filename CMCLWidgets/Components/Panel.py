@@ -24,6 +24,16 @@ class Panel(QFrame, Widget):
         painter = QPainter(self)
         painter.setOpacity(self.property("widgetOpacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
+        
+        borderColour = getBorderColour()
+        backgroundColour = getBackgroundColour()
+        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                         max(self.width(), self.height()))
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
+        backgroundGradient.setColorAt(0.0, backgroundColour)
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
