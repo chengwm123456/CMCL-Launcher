@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .Compoments.TextEdit import TextEdit
+from .Components.TextEdit import TextEdit
 
 
 class AutoMatchTextEdit(TextEdit):

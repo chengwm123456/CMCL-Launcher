@@ -4,7 +4,7 @@ from .AutoIndentTextEdit import AutoIndentTextEdit
 from .AutoMatchTextEdit import AutoMatchTextEdit
 from .HighlightTextEdit import HighlightTextEdit
 from .LineNumberTextEdit import LineNumberTextEdit
-from .Compoments import *
+from .Components import *
 from .NagivationItem import NavigationItem
 from .NagivationPanel import NavigationPanel
 from .ThemeController import *

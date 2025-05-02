@@ -4,7 +4,7 @@ import re
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 
-from .Compoments.TextEdit import TextEdit
+from .Components.TextEdit import TextEdit
 from .Windows import RoundedMenu
 
 

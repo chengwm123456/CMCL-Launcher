@@ -50,11 +50,29 @@ class Slider(QSlider, Widget):
         op.initFrom(self)
         self.initStyleOption(op)
         painter.save()
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
+        borderColour = getBorderColour()
+        backgroundColour = getBackgroundColour()
+        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                         max(self.width(), self.height()))
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
+        backgroundGradient.setColorAt(0.0, backgroundColour)
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
-        painter.setPen(getBorderColour(is_highlight=self.isSliderDown()))
-        painter.setBrush(getBackgroundColour(is_highlight=self.isSliderDown()))
+        borderColour = getBorderColour(is_highlight=self.isSliderDown())
+        backgroundColour = getBackgroundColour(is_highlight=self.isSliderDown())
+        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                         max(self.width(), self.height()))
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
+        backgroundGradient.setColorAt(0.0, backgroundColour)
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        painter.setBrush(QBrush(backgroundGradient))
         match self.orientation():
             case Qt.Orientation.Horizontal:
                 painter.drawLine(QLine(QPoint(2, self.height() // 2), QPoint(self.width() - 2, self.height() // 2)))
@@ -62,10 +80,18 @@ class Slider(QSlider, Widget):
                 painter.drawLine(QLine(QPoint(self.width() // 2, 2), QPoint(self.width() // 2, self.height() - 2)))
         painter.restore()
         painter.save()
-        painter.setPen(getBorderColour(is_highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled()))
-        painter.setBrush(
-            getBackgroundColour(is_highlight=(self.isSliderDown()) and self.isEnabled()))
-        painter.drawEllipse(
-            self.style().subControlRect(QStyle.ComplexControl.CC_Slider, op, QStyle.SubControl.SC_SliderHandle,
-                                        self).adjusted(3, 3, -3, -3))
+        rect = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, op, QStyle.SubControl.SC_SliderHandle,
+                                           self).adjusted(3, 3, -3, -3)
+        borderColour = getBorderColour(is_highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled())
+        backgroundColour = getBackgroundColour(is_highlight=(self.isSliderDown()) and self.isEnabled())
+        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                         max(rect.width(), rect.height()))
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+        backgroundGradient.setColorAt(0.0, backgroundColour)
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        painter.setBrush(QBrush(backgroundGradient))
+        painter.drawEllipse(rect)
         painter.restore()

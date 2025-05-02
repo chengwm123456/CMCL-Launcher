@@ -174,13 +174,20 @@ def UnpackMinecraftNativeFiles(
                             if PurePath(j).parts in filename.parts:
                                 break
                         else:
-                            natives_jar.extract(i, PurePath(
-                                minecraft_path / "versions" / version_launch / f"{version_launch}-natives") / filename)
+                            try:
+                                natives_jar.extract(i, PurePath(
+                                    minecraft_path / "versions" / version_launch / f"{version_launch}-natives") / filename)
+                            except PermissionError:
+                                pass
                 else:
-                    Path(minecraft_path / "versions" / version_launch / f"{version_launch}-natives").mkdir(parents=True,
-                                                                                                           exist_ok=True)
-                    natives_jar.extractall(
-                        PurePath(minecraft_path / "versions" / version_launch / f"{version_launch}-natives"))
+                    Path(
+                        minecraft_path / "versions" / version_launch / f"{version_launch}-natives").mkdir(parents=True,
+                                                                                                          exist_ok=True)
+                    try:
+                        natives_jar.extractall(
+                            PurePath(minecraft_path / "versions" / version_launch / f"{version_launch}-natives"))
+                    except PermissionError:
+                        pass
             except FileNotFoundError:
                 pass
 

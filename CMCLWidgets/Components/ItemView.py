@@ -21,12 +21,30 @@ class ItemDelegate(QItemDelegate):
         painter.save()
         painter.setOpacity(self.parent().property("widgetOpacity") or 1.0)
         painter.setRenderHints(QPainter.RenderHint.Antialiasing)
-        painter.setPen(
-            getBorderColour(is_highlight=((option.rect.contains(QCursor.pos() - (
-                self.parent().viewport().mapToGlobal(QPoint(0, 0)) if hasattr(self.parent(),
-                                                                              "viewport") else self.parent().mapToGlobal(
-                    QPoint(0, 0))))) and self.parent().underMouse()) and self.parent().isEnabled()))
-        painter.setBrush(getBackgroundColour())
+        borderColour = getBorderColour(
+            is_highlight=((option.rect.contains(QCursor.pos() - (
+                self.parent().viewport().mapToGlobal(QPoint(0, 0))
+                if hasattr(self.parent(), "viewport")
+                else self.parent().mapToGlobal(QPoint(0, 0))
+            ))) and self.parent().underMouse()) and self.parent().isEnabled()
+        )
+        backgroundColour = getBackgroundColour()
+        borderGradient = QRadialGradient(
+            QPointF(
+                self.parent().viewport().mapFromGlobal(QCursor.pos())
+                if hasattr(self.parent(), "viewport")
+                else self.parent().mapFromGlobal(QCursor.pos())
+            ),
+            max(option.rect.width(), option.rect.height())
+        )
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        backgroundGradient = QLinearGradient(QPointF(0, option.rect.y()),
+                                             QPointF(0, option.rect.y() + option.rect.height()))
+        backgroundGradient.setColorAt(0.0, backgroundColour)
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(option.rect.adjusted(1, 1, -1, -1), 10, 10)
         painter.restore()
     
@@ -63,13 +81,22 @@ class ItemView(QAbstractItemView, Widget):
         painter = QPainter(self.viewport())
         painter.setOpacity(self.property("widgetOpacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
         rect = self.viewport().rect()
         rect.setWidth(rect.width() - rect.x() - 1)
         rect.setHeight(rect.height() - rect.y() - 1)
         rect.setX(1)
         rect.setY(1)
+        borderColour = getBorderColour()
+        backgroundColour = getBackgroundColour()
+        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                         max(rect.width(), rect.height()))
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+        backgroundGradient.setColorAt(0.0, backgroundColour)
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(rect, 10, 10)
         op = QStyleOptionFrame()
         op.initFrom(self)

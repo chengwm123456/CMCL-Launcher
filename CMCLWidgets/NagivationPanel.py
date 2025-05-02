@@ -5,7 +5,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 
 from .NagivationItem import NavigationItem
-from .Compoments.Panel import Panel
+from .Components.Panel import Panel
 
 
 class NavigationPanel(Panel):

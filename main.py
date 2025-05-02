@@ -45,7 +45,7 @@ from CMCLCore.GetOperationSystem import GetOperationSystemName
 
 import requests
 
-from CMCLModding.GetMods import GetMods, ListModVersions
+from CMCLModding.GetMods import GetMods, ListModVersions, GetOneMod
 from CMCLModding.DownloadMods import DownloadMod
 
 from CMCLSaveEditing.LevelDat import LoadData
@@ -99,7 +99,7 @@ qInstallMessageHandler(log)
 
 CMCL_version = ("AlphaDev-25001", "Alpha Development-25001")
 minecraft_path = Path(".")
-current_language = "zh-cn"
+current_language = locale._getdefaultlocale()[0].lower().replace("_", "-")
 
 theme_colour_defines = {
     "PresetBlue": {
@@ -1039,6 +1039,9 @@ class MainPage(QFrame):
         self.select_version_btn.setPopupMode(ToolButton.ToolButtonPopupMode.InstantPopup)
         self.update_menu()
         self.horizontalLayout.addWidget(self.select_version_btn)
+        self.update_version_lst_btn = ToolButton(self.bottomPanel)
+        self.update_version_lst_btn.pressed.connect(self.update_menu)
+        self.horizontalLayout.addWidget(self.update_version_lst_btn)
         self.change_dir_btn = PushButton(self.bottomPanel)
         self.change_dir_btn.pressed.connect(self.setMinecraftDir)
         self.horizontalLayout.addWidget(self.change_dir_btn)
@@ -1545,7 +1548,8 @@ class DownloadPage(QFrame):
                     for e2, i2 in enumerate([version, version_type, release_time]):
                         self.versionModel.setItem(i, e2, QStandardItem(i2))
                     i += 1
-                elif version_d == "latest" and (not latest_release or not latest_snapshot):
+                elif version_d.lower() in ["latest", "latest_version", "latest-version"] and (
+                        not latest_release or not latest_snapshot):
                     version = value["VersionId"]
                     version_type = value["VersionType"]
                     match version_type:
@@ -1560,6 +1564,8 @@ class DownloadPage(QFrame):
                             version_type = self.tr("DownloadPage.DownloadVanilla.VersionType.Snapshot")
                             latest_snapshot = True
                         case _:
+                            if latest_release and latest_snapshot:
+                                break
                             continue
                     release_datetime = value["ReleaseDatetime"]
                     localised_release_datetime = release_datetime.replace(tzinfo=datetime.UTC).astimezone(tz.tzlocal())
@@ -1666,13 +1672,13 @@ class DownloadPage(QFrame):
             
             closePage = pyqtSignal()
             
-            def __init__(self, parent=None, mod_name=None, mod_icon=None, mod_description=None,
-                         mod_supported_version=None):
+            def __init__(self, parent=None, mod_name=None, mod_slug=None):
                 super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
                 self.mod_name = mod_name
-                self.mod_icon = mod_icon
-                self.mod_description = mod_description
-                self.mod_supported_version = mod_supported_version
+                self.mod_info_json = GetOneMod(mod_slug)
+                self.mod_icon = self.mod_info_json["icon_url"]
+                self.mod_description = self.mod_info_json["description"]
+                self.mod_body = self.mod_info_json["body"]
                 
                 self.icon_temp = None
                 thread = self.GetIconThread(self, self.mod_icon)
@@ -1702,7 +1708,7 @@ class DownloadPage(QFrame):
                 
                 self.toolBox = ToolBox(self)
                 
-                self.modInfo = QFrame(self.toolBox)
+                self.modInfo = QFrame()
                 
                 self.verticalLayout_2 = QVBoxLayout(self.modInfo)
                 
@@ -1730,11 +1736,17 @@ class DownloadPage(QFrame):
                 
                 self.verticalLayout_2.addWidget(self.modInfoCard)
                 
-                self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+                self.modBody = TextEdit(self.modInfo)
+                self.modBody.setReadOnly(True)
+                self.modBody.setMarkdown(self.mod_body)
+                self.verticalLayout_2.addWidget(self.modBody)
                 
-                self.verticalLayout_2.addItem(self.verticalSpacer)
+                self.modInfoContainer = ScrollArea(self.toolBox)
+                self.modInfoContainer.setWidget(self.modInfo)
+                self.modInfoContainer.setWidgetResizable(True)
                 
-                self.toolBox.addItem(self.modInfo, self.tr("DownloadPage.DownloadMods.ModInfoPage.Page1.Title"))
+                self.toolBox.addItem(self.modInfoContainer,
+                                     self.tr("DownloadPage.DownloadMods.ModInfoPage.Page1.Title"))
                 
                 self.modVersions = QFrame(self.toolBox)
                 
@@ -1832,8 +1844,7 @@ class DownloadPage(QFrame):
             self.model.setHorizontalHeaderLabels(
                 [self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.1"),
                  self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2"),
-                 self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3"),
-                 self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.4")])
+                 self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3")])
             self.contentTabel.setModel(self.model)
             
             self.paginator = Panel(self)
@@ -1871,8 +1882,7 @@ class DownloadPage(QFrame):
             self.model.setHorizontalHeaderLabels(
                 [self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.1"),
                  self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2"),
-                 self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3"),
-                 self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.4")])
+                 self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3")])
         
         def previousPage(self):
             self.currentPage -= 1
@@ -1963,12 +1973,10 @@ class DownloadPage(QFrame):
                                                                          time.strptime(
                                                                              hit["date_modified"].split(".")[0],
                                                                              "%Y-%m-%dT%H:%M:%S"))))
-                    self.model.setItem(e, 3, QStandardItem("modrinth"))
                 self.model.setHorizontalHeaderLabels(
                     [self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.1"),
                      self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2"),
-                     self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3"),
-                     self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.4")])
+                     self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3")])
                 self.contentTabel.setModel(self.model)
                 self.updatePage()
             else:
@@ -1996,7 +2004,6 @@ class DownloadPage(QFrame):
                                                                                            hit["date_modified"].split(
                                                                                                ".")[0],
                                                                                            "%Y-%m-%dT%H:%M:%S"))))
-                                self.model.setItem(cnt, 3, QStandardItem("modrinth"))
                                 cnt += 1
                 else:
                     self.displayMods(None, self.currentPage)
@@ -2005,8 +2012,7 @@ class DownloadPage(QFrame):
             self.model.setHorizontalHeaderLabels(
                 [self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.1"),
                  self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2"),
-                 self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3"),
-                 self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.4")])
+                 self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3")])
             self.contentTabel.setModel(self.model)
         
         def modInfoPageOpen(self, value):
@@ -2019,8 +2025,7 @@ class DownloadPage(QFrame):
                         hit_data = hit
             if hit_data:
                 self.modInfoPageY = self.height()
-                self.modInfoPage = self.ModInfoPage(self, data, hit_data["icon_url"], hit_data["description"],
-                                                    hit_data["versions"])
+                self.modInfoPage = self.ModInfoPage(self, data, hit_data["slug"])
                 self.modInfoPage.closePage.connect(self.modInfoPageClose)
                 rect = self.rect().adjusted(1, 1, -1, -1)
                 self.modInfoPage.setGeometry(rect)
@@ -2579,15 +2584,15 @@ class SettingsPage(QFrame):
         
         def updateComboBoxLanguageList(self):
             self.comboBox.clear()
-            for language in languages_map:
+            for language in sorted(languages_map.keys()):
                 self.comboBox.addItem(f"{languages_map[language]} ({language})")
-            self.comboBox.setCurrentIndex(tuple(languages_map.keys()).index(current_language))
+            self.comboBox.setCurrentIndex(sorted(languages_map.keys()).index(current_language))
         
         def comboBoxLanguageChanged(self):
             global current_language
             before_language = current_language
-            settings["Settings"]["LauncherSettings"]["CurrentLanguage"] = self.comboBox.currentText().split(" ")[-1][
-                                                                          1:-1]
+            settings["Settings"]["LauncherSettings"]["CurrentLanguage"] = self.comboBox.currentText().split(
+                " ")[-1].strip("()")
             current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
             app.removeTranslator(app.translator)
             app.translator = QTranslator()
@@ -3802,6 +3807,8 @@ if not minecraft_path.exists():
     settings["Settings"]["LauncherSettings"]["CurrentMinecraftDirectory"] = str(minecraft_path)
 # QApplication.setDesktopSettingsAware(False)
 app = QApplication(sys.argv)
+app.setApplicationName("Common Minecraft Launcher")
+app.setApplicationVersion(CMCL_version[0])
 app.setFont(QFont("HarmonyOS Sans SC"))
 font_id = QFontDatabase.addApplicationFont(r".\Unifont 13.0.01.ttf")
 if font_id != -1:

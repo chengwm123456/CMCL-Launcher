@@ -1,0 +1,2 @@
+pywayland==0.4.18
+xcffib==1.7.1

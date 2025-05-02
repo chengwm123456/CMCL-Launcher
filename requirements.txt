@@ -13,8 +13,9 @@ PyQt6-WebEngine==6.8.0
 PyQt6-WebEngine-Qt6==6.8.2
 PyQt6_sip==13.10.0
 python-dateutil==2.9.0.post0
-pywayland==0.4.18
 requests==2.32.3
 six==1.17.0
 urllib3==2.3.0
+
+pywayland==0.4.18
 xcffib==1.7.1

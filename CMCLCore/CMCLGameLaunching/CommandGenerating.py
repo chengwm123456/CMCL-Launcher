@@ -10,6 +10,7 @@ from CMCLCore.Player import AuthlibInjectorPlayer
 from CMCLCore import GetOperationSystem
 
 from .TemplateFilling import MinecraftArgumentTemplateFilling, JVMArgumentTemplateFilling
+from .Libraries import GenerateFileNameByNames
 
 
 def GenerateMinecraftLaunchCommand(
@@ -24,7 +25,6 @@ def GenerateMinecraftLaunchCommand(
         launcher_name: str,
         launcher_version: str,
 ) -> str:
-    minecraftPath = Path(minecraft.mc_gameWorkDir).absolute()
     mcJsonFile = json.loads(Path(minecraft.mc_gameJsonFile).read_text(encoding="utf-8"))
     mcGameJarFile = minecraft.mc_gameJarFile
     mcAssetsIndex = mcJsonFile.get("assets")
@@ -48,7 +48,7 @@ def GenerateMinecraftLaunchCommand(
             downloads = mcLib.get("downloads", {})
             if downloads.get("artifact") and allow:
                 mcLibJarNames = mcLib.get("name", "::").split(":")
-                mcLibJarFile = PurePath(f"{'-'.join(mcLibJarNames[1:])}.jar")
+                mcLibJarFile = GenerateFileNameByNames(mcLibJarNames)
                 mcLibPath = Path(
                     Path(mcLibJarNames[0].replace(".", os.sep)) / mcLibJarNames[1] / mcLibJarNames[
                         2] / mcLibJarFile)
@@ -120,9 +120,15 @@ def GenerateMinecraftLaunchCommand(
                         mcGameCommand.append(strArgument)
             else:
                 mcGameCommand.append(
-                    MinecraftArgumentTemplateFilling(gameArgument, player_data, minecraft, minecraftPath, mcAssetsIndex,
-                                                     False,
-                                                     mcVersionType))
+                    MinecraftArgumentTemplateFilling(
+                        gameArgument,
+                        player_data,
+                        minecraft,
+                        mcAssetsIndex,
+                        False,
+                        mcVersionType
+                    )
+                )
         if extra_game_command:
             mcGameCommand.append(extra_game_command.strip(" "))
         mcGameCommand = " ".join(mcGameCommand)
@@ -159,9 +165,13 @@ def GenerateMinecraftLaunchCommand(
             f"-Xmixed {mcMainClass}")
         mcJvmCommand = " ".join(mcJvmCommand)
     elif mcJsonFile.get("minecraftArguments"):
-        mcGameCommand = mcJsonFile["minecraftArguments"]
-        mcGameCommand = MinecraftArgumentTemplateFilling(mcGameCommand, player_data, minecraft, minecraftPath,
-                                                         mcAssetsIndex, True, mcVersionType)
+        mcGameCommand = MinecraftArgumentTemplateFilling(
+            mcJsonFile["minecraftArguments"],
+            player_data,
+            minecraft,
+            mcAssetsIndex,
+            True,
+            mcVersionType)
         if extra_game_command:
             mcGameCommand = shlex.split(mcGameCommand)
             mcGameCommand.append(extra_game_command.strip(" "))

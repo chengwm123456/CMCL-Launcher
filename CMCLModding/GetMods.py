@@ -15,3 +15,9 @@ def ListModVersions(name=""):
     slug = hit["slug"]
     response = requests.get(f"https://api.modrinth.com/v2/project/{slug}/version").json()
     return response
+
+
+def GetOneMod(id_or_slug=""):
+    response = requests.get(f"https://api.modrinth.com/v2/project/{id_or_slug}")
+    res_json = response.json()
+    return res_json

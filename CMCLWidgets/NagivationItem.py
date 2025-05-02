@@ -2,7 +2,7 @@
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .ThemeController.ThemeControl import *
-from .Compoments.Button import ToolButton
+from .Components.Button import ToolButton
 
 
 class NavigationItem(ToolButton):
@@ -16,11 +16,11 @@ class NavigationItem(ToolButton):
         self.setCheckable(True)
         self.setAutoExclusive(True)
         self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-
+    
     def setText(self, text):
         super().setText(text)
         super().setToolTip(text)
-
+    
     def setToolTip(self, text):
         super().setToolTip(text)
         super().setText(text)

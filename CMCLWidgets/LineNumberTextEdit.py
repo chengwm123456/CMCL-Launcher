@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt6.QtCore import *
-from .Compoments.TextEdit import TextEdit
-from .Compoments.Panel import Panel
+from .Components.TextEdit import TextEdit
+from .Components.Panel import Panel
 from .ThemeController.ThemeControl import *
 
 

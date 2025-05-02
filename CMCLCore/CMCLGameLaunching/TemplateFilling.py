@@ -5,17 +5,21 @@ from pathlib import Path, PurePath
 from CMCLCore.CMCLDefines import Player, Minecraft
 
 
-def JVMArgumentTemplateFilling(argument):
+def JVMArgumentTemplateFilling(argument: str):
     pass
 
 
-def MinecraftArgumentTemplateFilling(argument: str, player_data: Player, minecraft: Minecraft,
-                                     minecraft_path: Union[str, Path, PurePath], assets_index: str,
-                                     assets_legacy: bool = False,
-                                     version_type: str = "release"):
+def MinecraftArgumentTemplateFilling(
+        argument: str,
+        player_data: Player,
+        minecraft: Minecraft,
+        assets_index: str,
+        assets_legacy: bool = False,
+        version_type: str = "release"
+):
     argument = argument.replace("${auth_player_name}", f'"{player_data.player_name}"')
     argument = argument.replace("${version_name}", f'"{minecraft.mc_gameVersion}"')
-    argument = argument.replace("${game_directory}", f'"{minecraft_path}"')
+    argument = argument.replace("${game_directory}", f'"{minecraft.mc_gameWorkDir}"')
     if assets_legacy:
         gameAssetsDir = PurePath(minecraft.mc_gameAssetsDir) / "virtual" / "legacy"
     else:

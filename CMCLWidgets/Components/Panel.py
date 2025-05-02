@@ -24,7 +24,6 @@ class Panel(QFrame, Widget):
         painter = QPainter(self)
         painter.setOpacity(self.property("widgetOpacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
         borderColour = getBorderColour()
         backgroundColour = getBackgroundColour()
         borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),

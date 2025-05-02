@@ -52,8 +52,17 @@ class ScrollBar(QScrollBar, Widget):
         op.initFrom(self)
         self.initStyleOption(op)
         painter.save()
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
+        borderColour = getBorderColour()
+        backgroundColour = getBackgroundColour()
+        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                         max(self.width(), self.height()))
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
+        backgroundGradient.setColorAt(0.0, backgroundColour)
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         match self.orientation():
             case Qt.Orientation.Horizontal:
@@ -102,11 +111,21 @@ class ScrollBar(QScrollBar, Widget):
                     [QPoint(3, 3), QPoint(self.width() // 2, self.width() - 3), QPoint(self.width() - 3, 3)])
         painter.restore()
         painter.save()
-        painter.setPen(getBorderColour(is_highlight=self.isEnabled()))
-        painter.setBrush(getBackgroundColour(is_highlight=self.isEnabled()))
-        painter.drawRoundedRect(self.style().subControlRect(QStyle.ComplexControl.CC_ScrollBar, op,
-                                                            QStyle.SubControl.SC_ScrollBarSlider).adjusted(2, 2, -2,
-                                                                                                           -2), 10, 10)
+        rect = self.style().subControlRect(QStyle.ComplexControl.CC_ScrollBar, op,
+                                           QStyle.SubControl.SC_ScrollBarSlider).adjusted(2, 2, -2,
+                                                                                          -2)
+        borderColour = getBorderColour(is_highlight=self.isEnabled())
+        backgroundColour = getBackgroundColour(is_highlight=self.isEnabled())
+        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                         max(rect.width(), rect.height()))
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+        backgroundGradient.setColorAt(0.0, backgroundColour)
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        painter.setBrush(QBrush(backgroundGradient))
+        painter.drawRoundedRect(rect, 10, 10)
         painter.restore()
     
     def contextMenuEvent(self, a0):

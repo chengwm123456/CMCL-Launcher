@@ -49,24 +49,23 @@ class GroupBox(QGroupBox, Widget):
         op.initFrom(self)
         self.initStyleOption(op)
         if self.title() or self.isCheckable():
+            rect = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
+                                               QStyle.SubControl.SC_GroupBoxLabel).united(
+                self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
+                                            QStyle.SubControl.SC_GroupBoxCheckBox)).adjusted(1, 1, -1, -1)
             borderColour = getBorderColour()
             backgroundColour = getBackgroundColour()
             borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                             max(self.width(), self.height()))
+                                             max(rect.width(), rect.height()))
             borderGradient.setColorAt(0.0, borderColour)
             borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
             painter.setPen(QPen(QBrush(borderGradient), 1))
-            backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.style().subControlRect(
-                QStyle.ComplexControl.CC_GroupBox, op,
-                QStyle.SubControl.SC_GroupBoxLabel).height()))
+            backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
             backgroundGradient.setColorAt(0.0, backgroundColour)
             backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
             painter.setBrush(QBrush(backgroundGradient))
             painter.drawRoundedRect(
-                self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
-                                            QStyle.SubControl.SC_GroupBoxLabel).united(
-                    self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
-                                                QStyle.SubControl.SC_GroupBoxCheckBox)).adjusted(1, 1, -1, -1),
+                rect,
                 10, 10)
         if self.title():
             painter.save()
@@ -77,13 +76,26 @@ class GroupBox(QGroupBox, Widget):
                 Qt.AlignmentFlag.AlignCenter, self.title())
             painter.restore()
         if self.isCheckable():
-            painter.setPen(getBorderColour(
-                is_highlight=self.isChecked() or (
-                        (self.isChecked() or self.underMouse() or self.hasFocus()) and self.isEnabled())))
-            painter.setBrush(getBackgroundColour(is_highlight=(self.isChecked()) or (
-                    self.isChecked() and self.isEnabled())))
             rect = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
                                                QStyle.SubControl.SC_GroupBoxCheckBox).adjusted(1, 1, -1, -1)
+            borderColour = getBorderColour(
+                is_highlight=(self.isDown() or self.isChecked()) or
+                             ((self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus()) and
+                              self.isEnabled())
+            )
+            backgroundColour = getBackgroundColour(
+                is_highlight=(self.isDown() or self.isChecked()) or (
+                        (self.isDown() or self.isChecked()) and self.isEnabled())
+            )
+            borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                             max(rect.width(), rect.height()))
+            borderGradient.setColorAt(0.0, borderColour)
+            borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+            painter.setPen(QPen(QBrush(borderGradient), 1))
+            backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+            backgroundGradient.setColorAt(0.0, backgroundColour)
+            backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+            painter.setBrush(QBrush(backgroundGradient))
             painter.drawRoundedRect(rect, 10, 10)
             painter.save()
             painter.setPen(getForegroundColour())

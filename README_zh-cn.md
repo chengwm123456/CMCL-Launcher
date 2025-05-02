@@ -1,4 +1,5 @@
 <h1 align="center">Common Minecraft Launcher</h1>
+<hr>
 <h5>介绍</h5>
 
 这是一个第三方的 Minecraft Java 版启动器，由 chengwm123456（启动器内叫做 chengwm）开发
@@ -13,28 +14,31 @@
 
 - 启动器的这些文件除了 bug 就是 bug …… （比如，关闭一个窗口就能整出 RuntimeError 或者直接崩掉，按一个按钮就能把启动器崩掉，窗口非常卡顿等等）
 
-- 我英语很弱所以这里面会有大量的错误拼写、拼音起名以及离谱的名字。（比如，"recommend"[正确拼写] -> "recommand"[错误的]、"a"[在 CMCLCore/CMCLGameLaunching/CommandGenerating.py 里面] -> "argument"[其代表的意思]等等）
-  
+- 我英语很弱所以这里面会有大量的错误拼写、拼音起名以及离谱的名字。（比如，"recommend"[正确拼写] -> "recommand"[错误的]、"
+  a"[在 CMCLCore/CMCLGameLaunching/CommandGenerating.py 里面] -> "argument"[其代表的意思]等等）
+
 <h5>提示</h5>
 
 - 任何 bug 或者建议都可以通过 Issues（问题）页面进行反馈。
 
-- 你可以帮忙翻译一下启动器，让启动器支持更多的语言。（英语翻译文件：CMCL_en-gb.ts / CMCL_en-us.ts，中文翻译文件：CMCL_zh-cn.ts / CMCL_zh-hk.ts / CMCL_zh-tw.ts / CMCL_lzh.ts，其它翻译请新建一个 Pull request）
+- 你可以帮忙翻译一下启动器，让启动器支持更多的语言。（英语翻译文件：CMCL_en-gb.ts /
+  CMCL_en-us.ts，中文翻译文件：CMCL_zh-cn.ts / CMCL_zh-hk.ts / CMCL_zh-tw.ts / CMCL_lzh.ts，其它翻译请新建一个 Pull
+  request）
 
 <h5>运行启动器</h5>
 
 1. 你可以从右侧的 Releases（版本）下载启动器。
 
 2. 下载源代码。
-   - 点击 Code -> Download ZIP，下载源代码的 zip 压缩包。
+    - 点击 Code -> Download ZIP，下载源代码的 zip 压缩包。
 
-   - 解压压缩包。
+    - 解压压缩包。
 
-   - 确保你有 Python 3.12 作为 Python 解释器。
+    - 确保你有 Python 3.12 作为 Python 解释器。
 
-   - 运行 `pip install -r requirements.txt`。
+    - 运行 `pip install -r requirements.txt`。
 
-   - 运行 `python main.py`。
+    - 运行 `python main.py`。
 
 <h5>重要内容</h5>
 
