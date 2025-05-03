@@ -11,20 +11,21 @@ class Player:
             access_token: Optional[str],
             has_mc: bool
     ):
-        self.__player_name = user_name
+        self.__player_playerName = user_name
         try:
-            self.__player_uuid = str(UUID(str(user_uuid))) or user_uuid
+            self.__player_playerUUID = str(UUID(str(user_uuid))) or user_uuid
         except ValueError:
-            self.__player_uuid = user_uuid
+            self.__player_playerUUID = user_uuid
         self.__player_accessToken = access_token
         self.__player_hasMC = has_mc
     
     def __iter__(self) -> Iterable[Union[Optional[str], bool]]:
-        for item in self.__player_name, self.__player_uuid, self.__player_accessToken, self.__player_hasMC:
+        for item in (self.__player_playerName, self.__player_playerUUID,
+                     self.__player_accessToken, self.__player_hasMC):
             yield item
     
     def __bool__(self) -> bool:
-        return bool(self.__player_name and self.__player_uuid and self.__player_accessToken)
+        return any(self.__iter__()[:-1])
     
     def __getitem__(self, item: str) -> Optional[Any]:
         try:
@@ -42,26 +43,26 @@ class Player:
             return super().__cmp__(other)
     
     @property
-    def player_name(self) -> Optional[str]:
-        return self.__player_name
+    def player_playerName(self) -> Optional[str]:
+        return self.__player_playerName
     
-    @player_name.setter
-    def player_name(self, value: Optional[str]):
-        self.__player_name = value
+    @player_playerName.setter
+    def player_playerName(self, value: Optional[str]):
+        self.__player_playerName = value
     
     @property
-    def player_uuid(self) -> Optional[str]:
+    def player_playerUUID(self) -> Optional[str]:
         try:
-            return str(UUID(str(self.__player_uuid)))
+            return str(UUID(str(self.__player_playerUUID)))
         except ValueError:
-            return str(self.__player_uuid)
+            return str(self.__player_playerUUID)
     
-    @player_uuid.setter
-    def player_uuid(self, value: Optional[Union[str, UUID]]):
+    @player_playerUUID.setter
+    def player_playerUUID(self, value: Optional[Union[str, UUID]]):
         try:
-            self.__player_uuid = str(UUID(str(value))) or value
+            self.__player_playerUUID = str(UUID(str(value))) or value
         except ValueError:
-            self.__player_uuid = value
+            self.__player_playerUUID = value
     
     @property
     def player_accessToken(self) -> Optional[str]:

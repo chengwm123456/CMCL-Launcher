@@ -56,7 +56,7 @@ class GroupBox(QGroupBox, Widget):
             borderColour = getBorderColour()
             backgroundColour = getBackgroundColour()
             borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                             max(rect.width(), rect.height()))
+                                             max(self.width(), self.height()))
             borderGradient.setColorAt(0.0, borderColour)
             borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
             painter.setPen(QPen(QBrush(borderGradient), 1))
@@ -64,9 +64,7 @@ class GroupBox(QGroupBox, Widget):
             backgroundGradient.setColorAt(0.0, backgroundColour)
             backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
             painter.setBrush(QBrush(backgroundGradient))
-            painter.drawRoundedRect(
-                rect,
-                10, 10)
+            painter.drawRoundedRect(rect, 10, 10)
         if self.title():
             painter.save()
             painter.setPen(getForegroundColour())
@@ -79,16 +77,16 @@ class GroupBox(QGroupBox, Widget):
             rect = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
                                                QStyle.SubControl.SC_GroupBoxCheckBox).adjusted(1, 1, -1, -1)
             borderColour = getBorderColour(
-                is_highlight=(self.isDown() or self.isChecked()) or
-                             ((self.isDown() or self.isChecked() or self.underMouse() or self.hasFocus()) and
+                is_highlight=(self.isChecked()) or
+                             ((self.isChecked() or self.underMouse() or self.hasFocus()) and
                               self.isEnabled())
             )
             backgroundColour = getBackgroundColour(
-                is_highlight=(self.isDown() or self.isChecked()) or (
-                        (self.isDown() or self.isChecked()) and self.isEnabled())
+                is_highlight=(self.isChecked()) or (
+                        (self.isChecked()) and self.isEnabled())
             )
             borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                             max(rect.width(), rect.height()))
+                                             max(self.width(), self.height()))
             borderGradient.setColorAt(0.0, borderColour)
             borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
             painter.setPen(QPen(QBrush(borderGradient), 1))

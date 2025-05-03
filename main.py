@@ -2,10 +2,10 @@
 """
 "Common Minecraft Launcher" started time: 1693310591 (folder created time)
 |-time.struct_time(tm_year=2023, tm_mon=8, tm_mday=29, tm_hour=20, tm_min=3, tm_sec=11, tm_wday=1, tm_yday=241, tm_isdst=0)
-|-2023/08/29 20:03:11, 周二, 八月, 时区: 中国标准时间(UTC+8), 一年的第241天
+|-2023/08/29 20:03:11, 周二（Tuesday, Tues.）, 八月二十九日, 时区: 中国标准时间(UTC+8), 一年的第241天
 main.py started time: 1693310592 (main.py created time)
 |-time.struct_time(tm_year=2023, tm_mon=8, tm_mday=29, tm_hour=20, tm_min=3, tm_sec=12, tm_wday=1, tm_yday=241, tm_isdst=0)
-|-2023/08/29 20:03:12, 周二, 八月, 时区: 中国标准时间(UTC+8), 一年的第241天
+|-2023/08/29 20:03:12, 周二（Tuesday, Tues.）, 八月二十九日, 时区: 中国标准时间(UTC+8), 一年的第241天
 """
 import shlex
 import json
@@ -64,7 +64,7 @@ output = StringIO()
 
 if DEBUG:
     sys.stdout = sys.stderr = output
-    
+
     formatter = logging.Formatter("[%(asctime)s][%(levelname)s]:%(message)s")
     formatter.datefmt = "%Y/%m/%d  %H:%M:%S %p"
     streamHandler = logging.StreamHandler(output)
@@ -190,18 +190,18 @@ class AcrylicBackground(QWidget):
         self.blurRadius = blurRadius
         self.noiseOpacity = noiseOpacity
         self.img = QPixmap()
-    
+
     def setTintColour(self, colour):
         self.tintColour = colour
-    
+
     def setLuminosityColour(self, colour):
         self.luminosityColour = colour
-    
+
     def grabBehind(self):
         image = self.window().grab(QRect(self.mapTo(self.window(), QPoint(0, 0)),
                                          self.mapTo(self.window(), QPoint(self.width(), self.height()))))
         self.img = image
-    
+
     def paintEvent(self, a0):
         brush = self.__createTexture()
         scene = QGraphicsScene()
@@ -219,7 +219,7 @@ class AcrylicBackground(QWidget):
         painter = QPainter(self)
         painter.drawPixmap(self.rect(), img.scaled(self.size()))
         painter.fillRect(self.rect(), brush)
-    
+
     def __createTexture(self):
         acrylicTexture = QImage(64, 64, QImage.Format.Format_ARGB32_Premultiplied)
         luminosityColour = QColor.fromRgb(self.luminosityColour.rgb())
@@ -232,7 +232,7 @@ class AcrylicBackground(QWidget):
         painter.setOpacity(self.noiseOpacity)
         painter.drawImage(acrylicTexture.rect(), QImage(":/acrylic_noise.png"))
         painter.end()
-        
+
         brush = QBrush(acrylicTexture)
         return brush
 
@@ -243,7 +243,7 @@ class AnimatedStackedWidget(QStackedWidget):
             def __init__(self, parent=None):
                 super().__init__(parent)
                 self.valueChanged.connect(self.__updateOpacity)
-            
+
             def __updateOpacity(self, value):
                 op = QGraphicsOpacityEffect(self.parent())
                 op.setOpacity(self.currentValue() / 100)
@@ -251,7 +251,7 @@ class AnimatedStackedWidget(QStackedWidget):
                     self.parent().setGraphicsEffect(None)
                     return
                 self.parent().setGraphicsEffect(op)
-        
+
         lastWidget = self.currentWidget()
         if lastWidget == w:
             return
@@ -305,7 +305,7 @@ class LoadingAnimation(QFrame):
             import time
             time.sleep(1)
             self.parent().hide()
-    
+
     class TransparencyAnimation(QVariantAnimation):
         def __init__(self, parent=None, variant="in"):
             super().__init__(parent)
@@ -316,12 +316,12 @@ class LoadingAnimation(QFrame):
             self.setDuration(1000)
             self.setEasingCurve(QEasingCurve.Type.OutQuad)
             self.valueChanged.connect(self.update_opacity)
-        
+
         def update_opacity(self, value):
             colour = value
             self.parent().setStyleSheet(
                 f"background: rgba({str(getBackgroundColour(is_tuple=True)).strip('()')}, {colour / 255})")
-    
+
     class SizingAnimation(QVariantAnimation):
         def __init__(self, parent=None, variant="in"):
             super().__init__(parent)
@@ -333,10 +333,10 @@ class LoadingAnimation(QFrame):
             self.setDuration(1000)
             self.setEasingCurve(QEasingCurve.Type.OutBack)
             self.valueChanged.connect(self.update_size)
-        
+
         def update_size(self, value):
             self.parent().setFixedSize(value)
-    
+
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
@@ -366,13 +366,13 @@ class LoadingAnimation(QFrame):
         self.destroyed.connect(lambda: self.__loadingTimer.stop())
         self.__counter = 0
         self.hide()
-    
+
     def __del__(self):
         try:
             self.__loadingTimer.stop()
         except RuntimeError:
             pass
-    
+
     def event(self, e):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setGeometry(self.parent().rect())
@@ -394,7 +394,7 @@ class LoadingAnimation(QFrame):
             pass
         self.raise_()
         return super().event(e)
-    
+
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         if not self.__failedSvg.isVisible():
@@ -403,11 +403,11 @@ class LoadingAnimation(QFrame):
         else:
             self.setStyleSheet(f"background: rgb({'255, 200, 200' if getTheme() == Theme.Light else '100, 50, 50'});")
         return super().paintEvent(a0)
-    
+
     def __updateText(self):
         self.__counter += 1
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text") + "." * (self.__counter % 4))
-    
+
     def start(self, ani=True):
         self.__svgWidget.setFixedSize(96, 96)
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text"))
@@ -424,7 +424,7 @@ class LoadingAnimation(QFrame):
         self.__counter = 0
         self.__loadingTimer.start(1000)
         self.show()
-    
+
     def finish(self, ani=True, failed=False):
         try:
             self.__loadingTimer.moveToThread(self.thread())
@@ -448,7 +448,7 @@ class LoadingAnimation(QFrame):
                 self.__svgWidget.hide()
         except RuntimeError:
             pass
-    
+
     def hideEvent(self, *args, **kwargs):
         try:
             self.__loadingTimer.stop()
@@ -460,11 +460,11 @@ class LoadingAnimation(QFrame):
 class LoginDialogue(MaskedDialogue):
     class LoginThread(QThread):
         loginFinished = pyqtSignal()
-        
+
         def __init__(self, token, parent=None):
             super().__init__(parent)
             self.token = token
-        
+
         def run(self):
             try:
                 datas = login_user(bytes(self.token, encoding="utf-8"))
@@ -473,7 +473,7 @@ class LoginDialogue(MaskedDialogue):
             except:
                 traceback.print_exc()
             self.loginFinished.emit()
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background: white")
@@ -510,7 +510,7 @@ class LoginDialogue(MaskedDialogue):
         self.setLayout(self.verticalLayout)
         webb.open(
             "https://login.live.com/oauth20_authorize.srf?client_id=00000000402b5328&response_type=code&scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf")
-    
+
     def process_login(self):
         token = self.lineEdit.text()
         token = token.split(".")[-1]
@@ -518,12 +518,12 @@ class LoginDialogue(MaskedDialogue):
         thread = self.LoginThread(token)
         thread.start()
         self.hide()
-    
+
     def open_new_login(self):
         self.hide()
         w = LoginWindow(frame)
         w.exec()
-    
+
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
         p = QPainter(background)
@@ -554,11 +554,11 @@ class LoginDialogue(MaskedDialogue):
 class LoginWindow(MaskedDialogue):
     class LoginThread(QThread):
         loginFinished = pyqtSignal()
-        
+
         def __init__(self, token, parent=None):
             super().__init__(parent)
             self.token = token
-        
+
         def run(self):
             try:
                 datas = login_user(bytes(self.token, encoding="utf-8"))
@@ -566,7 +566,7 @@ class LoginWindow(MaskedDialogue):
             except:
                 traceback.print_exc()
             self.loginFinished.emit()
-    
+
     class QWebEngineView(QWebEngineView):
         def contextMenuEvent(self, a0):
             menu = RoundedMenu(self)
@@ -575,7 +575,7 @@ class LoginWindow(MaskedDialogue):
             reload.triggered.connect(self.reload)
             menu.addAction(reload)
             menu.popup(self.mapToGlobal(a0.pos()))
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(self.tr("LoginWindow.Title"))
@@ -594,7 +594,7 @@ class LoginWindow(MaskedDialogue):
         self.titleBar.raise_()
         self.update()
         self.setResizeEnabled(True)
-    
+
     def assert_url(self):
         if re.match(r"https://login\.live\.com/oauth20_desktop\.srf\?error=.+&error_description=.+&lc=.+",
                     self.view.url().toString()):
@@ -609,23 +609,23 @@ class LoginWindow(MaskedDialogue):
                 thread = self.LoginThread(token)
                 thread.start()
                 self.hide()
-    
+
     def loadStarted(self):
         self.progress.start(ani=self.isFirstShow)
         self.isFirstShow = True
-    
+
     def loadFinished(self):
         self.progress.finish()
-    
+
     def resizeEvent(self, a0, **kwargs):
         super().resizeEvent(a0)
         if hasattr(self, "view"):
             self.view.setGeometry(self.rect())
-    
+
     def showEvent(self, a0):
         super().showEvent(a0)
         self.isFirstShow = False
-    
+
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
         p = QPainter(background)
@@ -660,9 +660,9 @@ class SaveEditingWindow(RoundedDialogue):
             savedir = minecraft_path / "saves"
         self.savedir = savedir / savename
         self.leveldata = LoadData(self.savedir / "level.dat")
-        
+
         self.resize(800, 600)
-        
+
         self.toolBox = ToolBox(self)
         self.basicDataPage = QFrame(self.toolBox)
         self.verticalLayout = QVBoxLayout(self.basicDataPage)
@@ -674,44 +674,52 @@ class SaveEditingWindow(RoundedDialogue):
         self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         self.verticalLayout_2.addItem(self.verticalSpacer)
         self.verticalLayout.addWidget(self.panel)
-        self.toolBox.addItem(self.basicDataPage, "基础数据")
+        self.toolBox.addItem(self.basicDataPage, self.tr("SaveEditingWindow.Page1.Title"))  # 基础数据
         self.retranslateUI()
-    
+
     def retranslateUI(self):
         print(self.leveldata)
         value_localisations = {
             "difficulty": {
-                nbtlib.Byte(0): "和平",
-                nbtlib.Byte(1): "简单",
-                nbtlib.Byte(2): "普通",
-                nbtlib.Byte(3): "困难"
+                nbtlib.Byte(0): self.tr("SaveEditingWindow.ValueLocalisations.Difficulty.0"),  # 和平
+                nbtlib.Byte(1): self.tr("SaveEditingWindow.ValueLocalisations.Difficulty.1"),  # 简单
+                nbtlib.Byte(2): self.tr("SaveEditingWindow.ValueLocalisations.Difficulty.2"),  # 普通
+                nbtlib.Byte(3): self.tr("SaveEditingWindow.ValueLocalisations.Difficulty.3")  # 困难
             },
             "gamemode": {
-                nbtlib.Int(0): "生存",
-                nbtlib.Int(1): "创造",
-                nbtlib.Int(2): "冒险",
-                nbtlib.Int(3): "旁观",
-                "hardcore": "极限"
+                nbtlib.Int(0): self.tr("SaveEditingWindow.ValueLocalisations.Gamemode.0"),  # 生存
+                nbtlib.Int(1): self.tr("SaveEditingWindow.ValueLocalisations.Gamemode.1"),  # 创造
+                nbtlib.Int(2): self.tr("SaveEditingWindow.ValueLocalisations.Gamemode.2"),  # 冒险
+                nbtlib.Int(3): self.tr("SaveEditingWindow.ValueLocalisations.Gamemode.3"),  # 旁观
+                "hardcore": self.tr("SaveEditingWindow.ValueLocalisations.Gamemode.4")  # 极限
             }
         }
-        self.label.setText(f"""<html><head/><body>
-存档名称：{self.leveldata['LevelName']}<br/>
-难度：{value_localisations['difficulty'][self.leveldata['Difficulty']] if not self.leveldata['hardcore'] else value_localisations['gamemode']['hardcore']}<br/>
-最后游玩时间：{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.leveldata['LastPlayed'] / 1000))}
-<hr/>
-玩家游戏模式：{value_localisations['gamemode'][self.leveldata['Player']['playerGameType']]}模式<br/>
-玩家血量：{self.leveldata['Player']['Health'] / 1}({self.leveldata['Player']['Health'] / 2}颗心)<br/>
-玩家饥饿度：{self.leveldata['Player']['foodLevel'] / 1}<br/>
-玩家位置：{list(map(lambda x: x / 1, self.leveldata['Player']['Pos']))}<br/>
-</body></html>
-""")
+        self.label.setText(self.tr("SaveEditingWindow.Infomation.Text").format(
+            self.leveldata['LevelName'],
+            value_localisations['difficulty'][
+                self.leveldata['Difficulty']] if not
+            self.leveldata['hardcore'] else
+            value_localisations['gamemode'][
+                'hardcore'],
+            time.strftime('%Y-%m-%d %H:%M:%S',
+                          time.localtime(
+                              self.leveldata[
+                                  'LastPlayed'] / 1000)),
+            value_localisations['gamemode'][
+                self.leveldata['Player'][
+                    'playerGameType']],
+            self.leveldata['Player']['Health'] / 1,
+            self.leveldata['Player']['Health'] / 2,
+            self.leveldata['Player'][
+                'foodLevel'] / 1, list(
+                map(lambda x: x / 1, self.leveldata['Player']['Pos']))))
         self.toolBox.setItemText(self.toolBox.indexOf(self.basicDataPage), "基础数据")
-    
+
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         if hasattr(self, "toolBox"):
             self.toolBox.setGeometry(5, 35, self.width() - 10, self.height() - 40)
-    
+
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
         p = QPainter(background)
@@ -812,59 +820,59 @@ class SaveEditingWindow(RoundedDialogue):
 class MainPage(QFrame):
     class VersionSettingsPage(AcrylicBackground):
         frameClosed = pyqtSignal()
-        
+
         class VersionDetailsPage(QFrame):
             def __init__(self, parent=None, version=None):
                 super().__init__(parent)
                 self.version = version
-                
+
                 self.verticalLayout = QVBoxLayout(self)
-                
+
                 self.toolBox = ToolBox(self)
                 self.verticalLayout.addWidget(self.toolBox)
-                
+
                 self.versionDetails = QFrame(self.toolBox)
-                
+
                 self.verticalLayout_2 = QVBoxLayout(self.versionDetails)
-                
+
                 self.versionPanel = Panel(self.versionDetails)
-                
+
                 self.horizontalLayout_3 = QHBoxLayout(self.versionPanel)
-                
+
                 self.versionNameLabel = Label(self.versionPanel)
                 self.horizontalLayout_3.addWidget(self.versionNameLabel, 1)
-                
+
                 self.toolButton = ToolButton(self.versionDetails)
                 self.toolButton.setPopupMode(ToolButton.ToolButtonPopupMode.InstantPopup)
                 self.horizontalLayout_3.addWidget(self.toolButton)
-                
+
                 self.verticalLayout_2.addWidget(self.versionPanel)
-                
+
                 self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-                
+
                 self.verticalLayout_2.addItem(self.verticalSpacer)
-                
+
                 self.toolBox.addItem(self.versionDetails,
                                      self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page1.Title"))
-                
+
                 self.versionSaves = QFrame(self.toolBox)
                 self.verticalLayout_3 = QVBoxLayout(self.versionSaves)
-                
+
                 self.listView = ListView(self.versionSaves)
                 self.listView.setEditTriggers(ListView.EditTrigger.NoEditTriggers)
                 self.listView.pressed.connect(self.startEditSave)
                 self.savesModel = QStandardItemModel()
                 self.listView.setModel(self.savesModel)
-                
+
                 self.verticalLayout_3.addWidget(self.listView)
-                
+
                 self.listSaves()
-                
+
                 self.toolBox.addItem(self.versionSaves,
                                      self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page2.Title"))
-                
+
                 self.retranslateUI()
-            
+
             def retranslateUI(self):
                 self.versionNameLabel.setText(
                     self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.versionNameLabel.Text").format(
@@ -876,7 +884,7 @@ class MainPage(QFrame):
                 self.toolBox.setItemText(self.toolBox.indexOf(self.versionSaves),
                                          self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page2.Title"))
                 self.generateMenu()
-            
+
             def generateMenu(self):
                 menu = RoundedMenu(self.toolButton)
                 action1 = QAction(menu)
@@ -896,37 +904,37 @@ class MainPage(QFrame):
                 action3.triggered.connect(self.generateLaunchScript)
                 menu.addAction(action3)
                 self.toolButton.setMenu(menu)
-            
+
             def openVersionFolder(self):
                 if self.version:
                     if platform.system().lower() == "windows":
                         os.startfile(minecraft_path / "versions" / self.version)
                     elif platform.system().lower() == "linux":
                         os.system(f"xdg-open \"{str((minecraft_path / 'versions' / self.version).absolute())}\"")
-            
+
             def openVersionSettingsFile(self):
                 if self.version:
                     if platform.system().lower() == "windows":
                         os.startfile(minecraft_path / "options.txt")
                     elif platform.system().lower() == "linux":
                         os.system(f"xdg-open \"{str((minecraft_path / 'options.txt').absolute())}\"")
-            
+
             def generateLaunchScript(self):
                 if self.version:
                     # I've written the function for generating command.
                     pass
-            
+
             def listSaves(self):
                 self.savesModel.clear()
                 for idx, dire in enumerate(os.listdir(minecraft_path / "saves")):
                     self.savesModel.setItem(idx, QStandardItem(dire))
                 self.listView.setModel(self.savesModel)
-            
+
             def startEditSave(self, index):
                 saveName = self.savesModel.itemData(index)[0]
                 saveEditWindow = SaveEditingWindow(frame, saveName, minecraft_path / "saves")
                 saveEditWindow.show()
-            
+
             def paintEvent(self, a0):
                 painter = QPainter(self)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -934,46 +942,46 @@ class MainPage(QFrame):
                 colour.setAlpha(128)
                 painter.setBrush(colour)
                 painter.drawRect(self.rect())
-        
+
         def __init__(self, parent=None):
             super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
             self.verticalLayout = QVBoxLayout(self)
-            
+
             self.topPanel = Panel(self)
             self.horizontalLayout = QHBoxLayout(self.topPanel)
-            
+
             self.closeButton = CloseButton(self.topPanel)
             self.closeButton.pressed.connect(self.closeFrame)
             self.horizontalLayout.addWidget(self.closeButton)
-            
+
             self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
             self.horizontalLayout.addItem(self.horizontalSpacer)
-            
+
             self.verticalLayout.addWidget(self.topPanel)
-            
+
             self.listWidget = ListWidget(self)
-            
+
             versions = GetVersionByScanDirectory(minecraft_path)
             if versions:
                 for version in versions:
                     self.listWidget.addItem(version)
-            
+
             self.listWidget.itemDoubleClicked.connect(self.startSettings)
-            
+
             self.verticalLayout.addWidget(self.listWidget)
-            
+
             self.versionDetailsPage = None
-        
+
         def paintEvent(self, a0):
             self.setTintColour(getBackgroundColour())
             super().paintEvent(a0)
-        
+
         def event(self, a0):
             if hasattr(self, "versionDetailsPage") and self.versionDetailsPage:
                 self.versionDetailsPage.setGeometry(self.listWidget.geometry())
                 self.versionDetailsPage.raise_()
             return super().event(a0)
-        
+
         def closeFrame(self):
             if not self.versionDetailsPage:
                 self.close()
@@ -981,20 +989,20 @@ class MainPage(QFrame):
             else:
                 self.versionDetailsPage.close()
                 self.versionDetailsPage = None
-        
+
         def startSettings(self, item):
             self.versionDetailsPage = self.VersionDetailsPage(self, item.text())
             self.versionDetailsPage.show()
-    
+
     class LaunchThread(QThread):
         launched = pyqtSignal(tuple)
-        
+
         def __init__(self, minecraft_path, version, player, parent=None):
             super().__init__(parent)
             self.minecraft_path = minecraft_path
             self.version = version
             self.player = player
-        
+
         def run(self):
             result = LaunchMinecraft(
                 self.minecraft_path,
@@ -1008,12 +1016,12 @@ class MainPage(QFrame):
                 self.player
             )
             self.launched.emit(result)
-    
+
     def __init__(self, parent):
         super().__init__(parent)
         self.version = None
         self.games = []
-        
+
         self.verticalLayout = QVBoxLayout(self)
         self.scrollArea = ScrollArea(self)
         self.verticalLayout.addWidget(self.scrollArea)
@@ -1061,27 +1069,28 @@ class MainPage(QFrame):
         self.bottomPanelIsShow = True
         self.versionSettings = None
         self.versionSettingsY = None
-    
+
     def retranslateUI(self):
         self.launch_btn.setText(self.tr("MainPage.launch_btn.Text"))
         self.select_version_btn.setText(self.version or self.tr("MainPage.select_version_btn.DefaultText"))
         self.change_dir_btn.setText(self.tr("MainPage.change_dir_btn.Text"))
         self.settings_btn.setText(self.tr("MainPage.settings_btn.Text"))
         self.stop_all_games_btn.setToolTip(self.tr("MainPage.stop_all_games_btn.ToolTip"))
+        self.update_version_lst_btn.setToolTip(self.tr("MainPage.update_version_lst_btn.ToolTip"))  # 重新加载版本列表
         self.change_dir_btn.setToolTip(
             self.tr("MainPage.change_dir_btn.ToolTip").format(str(minecraft_path.absolute())))
-    
+
     def select_version(self, version):
         self.version = version
         self.select_version_btn.setText(self.version or self.tr("MainPage.select_version_btn.DefaultText"))
-    
+
     def b4launch(self):
         if not player:
             UserPage.startLogin()
             if not player:
                 return
         self.launch()
-    
+
     def launch(self):
         if self.version:
             self.launch_btn.setEnabled(False)
@@ -1091,7 +1100,7 @@ class MainPage(QFrame):
                 launch_thread.start()
             finally:
                 self.launch_btn.setEnabled(True)
-    
+
     def launched(self, result):
         print(result)
         if result[0] == "Successfully":
@@ -1103,7 +1112,7 @@ class MainPage(QFrame):
             tip.setCentralWidget(label)
             tip.setGeometry(QRect(0, 0, 300, 64))
             tip.tip(PopupTip.PopupPosition.RIGHT, 3000)
-            
+
             # loggingwindow = GameLoggingWindow(None, result[1])
             # loggingwindow.show()
         else:
@@ -1114,7 +1123,7 @@ class MainPage(QFrame):
             tip.setCentralWidget(label)
             tip.setGeometry(QRect(0, 0, 300, 64))
             tip.tip(PopupTip.PopupPosition.RIGHT, 3000)
-    
+
     def setMinecraftDir(self):
         global minecraft_path
         self.change_dir_btn.setDown(False)
@@ -1125,14 +1134,14 @@ class MainPage(QFrame):
             self.update_menu()
             self.change_dir_btn.setToolTip(
                 self.tr("MainPage.change_dir_btn.ToolTip").format(str(minecraft_path.absolute())))
-    
+
     def update_menu(self):
         menu = QMenu()
         menu.showEvent = lambda a0: menu.setStyleSheet("QMenu{ border: none; background: transparent; }")
         menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         listWidget = ListWidget(menu)
         maximumWidth = listWidget.width()
-        
+
         versions = GetVersionByScanDirectory(minecraft_path=minecraft_path)
         if isinstance(versions, list) and len(versions) >= 1:
             for version in versions:
@@ -1145,12 +1154,13 @@ class MainPage(QFrame):
         else:
             listWidget.addItem(self.tr("MainPage.NoVersionYet.Text"))
         menu.resizeEvent = lambda e: listWidget.setGeometry(menu.rect())
+        menu.addAction("")
         listWidget.adjustSize()
         listWidget.setFixedWidth(maximumWidth + listWidget.verticalScrollBar().width())
         menu.setFixedHeight(app.primaryScreen().geometry().height())
         menu.setFixedSize(listWidget.size())
         self.select_version_btn.setMenu(menu)
-    
+
     def show_version_settings_page(self):
         self.versionSettingsY = self.height()
         self.versionSettings = self.VersionSettingsPage(self)
@@ -1161,19 +1171,21 @@ class MainPage(QFrame):
         rect.moveTo(0, self.versionSettingsY)
         self.versionSettings.setGeometry(rect)
         self.versionSettings.show()
-    
+
     def hide_version_settings_page(self):
         self.versionSettings = None
         self.versionSettingsY = None
-    
+
     def stop_all_games(self):
         for popen in self.games:
             popen.kill()
         self.games.clear()
-    
+
     def update_icon(self):
         self.stop_all_games_btn.setIcon(QIcon(f":/StopGame-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
-    
+        self.update_version_lst_btn.setIcon(
+            QIcon(f":/ReloadVersions-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
+
     def resizeEvent(self, *args, **kwargs):
         super().resizeEvent(*args, **kwargs)
         try:
@@ -1191,7 +1203,7 @@ class MainPage(QFrame):
                       self.stop_all_games_btn.width(), self.stop_all_games_btn.height()))
         except AttributeError:
             pass
-    
+
     def event(self, a0):
         if hasattr(self, "versionSettings") and self.versionSettings:
             rect = self.rect().adjusted(1, 1, -1, -1)
@@ -1210,36 +1222,36 @@ class DownloadPage(QFrame):
     class DownloadVanilla(QFrame):
         class DownloadOptions(AcrylicBackground):
             frameClosed = pyqtSignal()
-            
+
             class DownloadVersionThread(QThread):
                 def __init__(self, parent, version=None, path="."):
                     super().__init__(parent)
                     self.__version = version
                     self.__path = Path(path)
-                
+
                 def run(self):
                     if self.__version:
                         DownloadMinecraft(self.__path, self.__version)
-            
+
             def __init__(self, parent, version=None):
                 super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
                 self.version = version
-                
+
                 self.verticalLayout = QVBoxLayout(self)
-                
+
                 self.topPanel = Panel(self)
                 self.verticalLayout.addWidget(self.topPanel)
-                
+
                 self.horizontalLayout = QVBoxLayout(self.topPanel)
-                
+
                 self.closeButton = CloseButton(self.topPanel)
                 self.closeButton.pressed.connect(self.closeFrame)
                 self.closeButton.pressed.connect(self.frameClosed.emit)
                 self.horizontalLayout.addWidget(self.closeButton)
-                
+
                 self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 self.horizontalLayout.addItem(self.horizontalSpacer)
-                
+
                 self.toolBox = ToolBox(self)
                 self.toolBox.setObjectName(u"toolBox")
                 self.page = QWidget()
@@ -1251,20 +1263,20 @@ class DownloadPage(QFrame):
                 self.formLayout.setObjectName(u"formLayout")
                 self.lLabel = Label(self.page)
                 self.lLabel.setObjectName(u"lLabel")
-                
+
                 self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.lLabel)
-                
+
                 self.pushButton = PushButton(self.page)
                 self.pushButton.setObjectName(u"pushButton")
-                
+
                 self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.pushButton)
-                
+
                 self.verticalLayout_3.addLayout(self.formLayout)
-                
+
                 self.verticalSpacer_2 = QSpacerItem(20, 286, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-                
+
                 self.verticalLayout_3.addItem(self.verticalSpacer_2)
-                
+
                 self.toolBox.addItem(self.page,
                                      self.tr("DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page1.Title"))
                 self.page_2 = QWidget()
@@ -1275,35 +1287,35 @@ class DownloadPage(QFrame):
                 self.formLayout_2.setObjectName(u"formLayout_2")
                 self.label_2 = Label(self.page_2)
                 self.label_2.setObjectName(u"label_2")
-                
+
                 self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_2)
-                
+
                 self.lineEdit_2 = LineEdit(self.page_2)
                 self.lineEdit_2.setObjectName(u"lineEdit_2")
-                
+
                 self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.lineEdit_2)
-                
+
                 self.verticalLayout_4.addLayout(self.formLayout_2)
-                
+
                 self.verticalSpacer = QSpacerItem(20, 290, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-                
+
                 self.verticalLayout_4.addItem(self.verticalSpacer)
-                
+
                 self.toolBox.addItem(self.page_2,
                                      self.tr("DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page2.Title"))
-                
+
                 self.verticalLayout.addWidget(self.toolBox)
-                
+
                 self.startDownloadButton = PushButton(self)
                 self.startDownloadButton.pressed.connect(self.startDownload)
                 self.verticalLayout.addWidget(self.startDownloadButton)
-                
+
                 self.retranslateUI()
-                
+
                 self.toolBox.setCurrentIndex(0)
-                
+
                 QMetaObject.connectSlotsByName(self)
-            
+
             def retranslateUI(self):
                 self.lLabel.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.lLabel.Text"))
                 self.pushButton.setText(self.version or u"RubyDung")
@@ -1316,26 +1328,26 @@ class DownloadPage(QFrame):
                                          self.tr("DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page2.Title"))
                 self.startDownloadButton.setText(
                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.startDownloadButton.Text"))
-            
+
             # retranslateUi
-            
+
             def startDownload(self):
                 download_thread = self.DownloadVersionThread(None, self.version, self.lineEdit_2.text())
                 download_thread.start()
                 self.closeButton.pressed.emit()
-            
+
             def closeFrame(self):
                 self.hide()
                 self.deleteLater()
                 del self
-            
+
             def paintEvent(self, a0):
                 self.setTintColour(getBackgroundColour())
                 super().paintEvent(a0)
-        
+
         class GetVersionThread(QThread):
             gotVersion = pyqtSignal(dict)
-            
+
             def run(self):
                 try:
                     response = GetVersionByMojangApi(returns="RETURN_JSON")
@@ -1345,17 +1357,17 @@ class DownloadPage(QFrame):
                         self.gotVersion.emit({"status": "failed", "result": None})
                 except:
                     self.gotVersion.emit({"status": "failed", "result": None})
-        
+
         def __init__(self, parent=None):
             super().__init__(parent)
             self.verticalLayout = QVBoxLayout(self)
-            
+
             self.lineEdit = LineEdit(self)
             self.lineEdit.setClearButtonEnabled(True)
             self.lineEdit.textChanged.connect(self.searchVersion)
-            
+
             self.verticalLayout.addWidget(self.lineEdit)
-            
+
             self.tableView = TableView(self)
             self.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
             self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -1377,9 +1389,9 @@ class DownloadPage(QFrame):
             sizePolicy.setVerticalStretch(0)
             sizePolicy.setHeightForWidth(self.tableView.sizePolicy().hasHeightForWidth())
             self.tableView.setSizePolicy(sizePolicy)
-            
+
             self.verticalLayout.addWidget(self.tableView)
-            
+
             self.bottomFrame = Panel(self)
             sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
             sizePolicy1.setHorizontalStretch(0)
@@ -1393,34 +1405,34 @@ class DownloadPage(QFrame):
             self.formLayout.setObjectName(u"formLayout")
             self.label = Label(self.bottomFrame)
             self.label.setObjectName(u"label")
-            
+
             self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label)
-            
+
             self.comboBox = ComboBox(self.bottomFrame)
             self.comboBox.setObjectName(u"comboBox")
             self.comboBox.addItem(self.tr("DownloadPage.DownloadVanilla.ComboBox.Item1.Text"))
             # self.comboBox.setEditable(True)
-            
+
             self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.comboBox)
-            
+
             self.horizontalLayout.addLayout(self.formLayout)
-            
+
             self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-            
+
             self.horizontalLayout.addItem(self.horizontalSpacer)
-            
+
             self.verticalLayout.addWidget(self.bottomFrame)
-            
+
             self.retranslateUi()
-            
+
             self.loadingAnimation = None
             self.getVersionThread = None
             self.downloadOptions = None
             self.downloadOptionsY = None
-            
+
             # QMetaObject.connectSlotsByName(self)
             # setupUi
-        
+
         def retranslateUi(self):
             self.lineEdit.setPlaceholderText(self.tr("DownloadPage.DownloadVanilla.lineEdit.PlaceholderText"))
             self.lineEdit.setToolTip(self.tr("DownloadPage.DownloadVanilla.lineEdit.ToolTip"))
@@ -1429,9 +1441,9 @@ class DownloadPage(QFrame):
                 [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
                  self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
                  self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
-        
+
         # retranslateUi
-        
+
         def event(self, e):
             if hasattr(self, "downloadOptions") and self.downloadOptions:
                 rect = self.rect().adjusted(1, 1, -1, -1)
@@ -1444,7 +1456,7 @@ class DownloadPage(QFrame):
                 else:
                     self.downloadOptionsY = 0
             return super().event(e)
-        
+
         def showEvent(self, *args, **kwargs):
             super().showEvent(*args, **kwargs)
             if self.versions:
@@ -1455,21 +1467,21 @@ class DownloadPage(QFrame):
                 self.getVersionThread.start()
                 self.loadingAnimation = LoadingAnimation(self)
                 self.startAnimation(False)
-        
+
         def hideEvent(self, a0):
             super().hideEvent(a0)
             self.finishAnimation(False)
-        
+
         def startAnimation(self, ani=True):
             if not self.loadingAnimation:
                 self.loadingAnimation = LoadingAnimation(self)
             self.loadingAnimation.start(ani)
-        
+
         def finishAnimation(self, ani=True, stat=True):
             if not self.loadingAnimation:
                 return
             self.loadingAnimation.finish(ani, not stat)
-        
+
         def displayVersion(self, data):
             if data["status"] == "successfully":
                 data = data["result"]
@@ -1514,7 +1526,7 @@ class DownloadPage(QFrame):
                 self.tableView.verticalHeader().setVisible(False)
             else:
                 self.finishAnimation(stat=False)
-        
+
         def searchVersion(self, value):
             version_d = value
             self.versionModel.clear()
@@ -1611,7 +1623,7 @@ class DownloadPage(QFrame):
             self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             self.tableView.horizontalHeader().setVisible(True)
             self.tableView.verticalHeader().setVisible(False)
-        
+
         def downloadOptionsOpen(self, value):
             data = self.tableView.model().item(value.row(), 0).text()
             self.downloadOptionsY = self.height()
@@ -1623,55 +1635,55 @@ class DownloadPage(QFrame):
             rect.moveTo(0, self.downloadOptionsY)
             self.downloadOptions.setGeometry(rect)
             self.downloadOptions.show()
-        
+
         def downloadOptionsClose(self):
             self.downloadOptions = None
             self.downloadOptionsY = None
-    
+
     class DownloadMods(QFrame):
         class ModInfoPage(AcrylicBackground):
             class GetVersionsThread(QThread):
                 requested = pyqtSignal(list)
-                
+
                 def __init__(self, parent=None, mod_name=None):
                     super().__init__(parent)
                     self.mod_name = mod_name
-                
+
                 def run(self):
                     try:
                         content = ListModVersions(self.mod_name)
                         self.requested.emit(content)
                     except:
                         self.requested.emit([])
-            
+
             class DownloadThread(QThread):
                 def __init__(self, parent=None, mod_name=None, mod_version=None, target_path=None):
                     super().__init__(parent)
                     self.mod_name = mod_name
                     self.mod_version = mod_version
                     self.target_path = target_path
-                
+
                 def run(self):
                     if self.mod_name and self.mod_version and self.target_path:
                         print("started")
                         DownloadMod(self.mod_name, self.mod_version, self.target_path)
-            
+
             class GetIconThread(QThread):
                 requested = pyqtSignal(bytes)
-                
+
                 def __init__(self, parent=None, icon_url=None):
                     super().__init__(parent)
                     self.icon_url = icon_url
-                
+
                 def run(self):
                     try:
                         content = requests.get(self.icon_url).content
                         self.requested.emit(content)
                     except:
                         self.requested.emit(b"")
-            
+
             closePage = pyqtSignal()
-            
+
             def __init__(self, parent=None, mod_name=None, mod_slug=None):
                 super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
                 self.mod_name = mod_name
@@ -1679,89 +1691,89 @@ class DownloadPage(QFrame):
                 self.mod_icon = self.mod_info_json["icon_url"]
                 self.mod_description = self.mod_info_json["description"]
                 self.mod_body = self.mod_info_json["body"]
-                
+
                 self.icon_temp = None
                 thread = self.GetIconThread(self, self.mod_icon)
                 thread.requested.connect(self.updateIcon)
                 thread.start()
-                
+
                 self.mod_versions = []
                 thread_2 = self.GetVersionsThread(self, self.mod_name)
                 thread_2.requested.connect(self.updateVersions)
                 thread_2.start()
-                
+
                 self.verticalLayout = QVBoxLayout(self)
-                
+
                 self.topPanel = Panel(self)
-                
+
                 self.horizontalLayout = QHBoxLayout(self.topPanel)
-                
+
                 self.closeButton = CloseButton(self.topPanel)
                 self.closeButton.pressed.connect(self.close)
                 self.closeButton.pressed.connect(self.closePage.emit)
                 self.horizontalLayout.addWidget(self.closeButton)
-                
+
                 self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 self.horizontalLayout.addItem(self.horizontalSpacer)
-                
+
                 self.verticalLayout.addWidget(self.topPanel)
-                
+
                 self.toolBox = ToolBox(self)
-                
+
                 self.modInfo = QFrame()
-                
+
                 self.verticalLayout_2 = QVBoxLayout(self.modInfo)
-                
+
                 self.modInfoCard = Panel(self.modInfo)
-                
+
                 self.horizontalLayout_2 = QHBoxLayout(self.modInfoCard)
-                
+
                 self.modIcon = ToolButton(self.modInfoCard)
                 self.modIcon.setFixedSize(QSize(74, 74))
                 self.modIcon.setIconSize(QSize(64, 64))
-                
+
                 self.horizontalLayout_2.addWidget(self.modIcon)
-                
+
                 self.verticalLayout_3 = QVBoxLayout(self.modInfoCard)
-                
+
                 self.modName = Label(self.modInfoCard)
                 self.verticalLayout_3.addWidget(self.modName)
-                
+
                 self.modDescription = Label(self.modInfoCard)
                 self.modDescription.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
                 self.modDescription.setWordWrap(True)
                 self.verticalLayout_3.addWidget(self.modDescription, 1)
-                
+
                 self.horizontalLayout_2.addLayout(self.verticalLayout_3)
-                
+
                 self.verticalLayout_2.addWidget(self.modInfoCard)
-                
+
                 self.modBody = TextEdit(self.modInfo)
                 self.modBody.setReadOnly(True)
                 self.modBody.setMarkdown(self.mod_body)
                 self.verticalLayout_2.addWidget(self.modBody)
-                
+
                 self.modInfoContainer = ScrollArea(self.toolBox)
                 self.modInfoContainer.setWidget(self.modInfo)
                 self.modInfoContainer.setWidgetResizable(True)
-                
+
                 self.toolBox.addItem(self.modInfoContainer,
                                      self.tr("DownloadPage.DownloadMods.ModInfoPage.Page1.Title"))
-                
+
                 self.modVersions = QFrame(self.toolBox)
-                
+
                 self.verticalLayout_4 = QVBoxLayout(self.modVersions)
-                
+
                 self.listWidget = ListWidget(self.modVersions)
                 self.listWidget.doubleClicked.connect(self.startDownloadMod)
                 self.verticalLayout_4.addWidget(self.listWidget)
-                
+
                 self.toolBox.addItem(self.modVersions, self.tr("DownloadPage.DownloadMods.ModInfoPage.Page2.Title"))
-                
+
                 self.verticalLayout.addWidget(self.toolBox)
-                
+
                 self.retranslateUI()
-            
+
             def retranslateUI(self):
                 self.modName.setText(self.mod_name)
                 self.modDescription.setText(self.mod_description)
@@ -1769,7 +1781,7 @@ class DownloadPage(QFrame):
                                          self.tr("DownloadPage.DownloadMods.ModInfoPage.Page1.Title"))
                 self.toolBox.setItemText(self.toolBox.indexOf(self.modVersions),
                                          self.tr("DownloadPage.DownloadMods.ModInfoPage.Page2.Title"))
-            
+
             def updateIcon(self, icon):
                 try:
                     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".png", delete=False) as self.icon_temp:
@@ -1778,13 +1790,13 @@ class DownloadPage(QFrame):
                 except:
                     self.icon_temp = None
                 self.modIcon.setIcon(QIcon(self.icon_temp.name) if self.icon_temp else QIcon())
-            
+
             def updateVersions(self, versions):
                 self.listWidget.clear()
                 self.mod_versions = versions
                 for version in versions:
                     self.listWidget.addItem(f"{version['name']}")
-            
+
             def startDownloadMod(self, version):
                 download_path = QFileDialog.getExistingDirectory(self, self.tr(
                     "DownloadPage.DownloadMods.ModInfoPage.Page2.DownloadPath"), str(Path(".").absolute()))
@@ -1792,24 +1804,24 @@ class DownloadPage(QFrame):
                     version_text = self.listWidget.model().itemData(version)[0]
                     thread = self.DownloadThread(self, self.mod_name, version_text, download_path)
                     thread.start()
-            
+
             def paintEvent(self, a0):
                 self.setTintColour(getBackgroundColour())
                 super().paintEvent(a0)
-            
+
             def closeEvent(self, *args, **kwargs):
                 super().closeEvent(*args, **kwargs)
                 if self.icon_temp:
                     Path(self.icon_temp.name).unlink(missing_ok=True)
-        
+
         class GetModThread(QThread):
             gotMod = pyqtSignal(dict)
-            
+
             def __init__(self, parent=None, page=1, page_items=10):
                 super().__init__(parent)
                 self.page = page
                 self.page_items = page_items
-            
+
             def run(self):
                 try:
                     response = GetMods(limit=self.page_items, offset=(self.page - 1) * self.page_items)
@@ -1819,21 +1831,21 @@ class DownloadPage(QFrame):
                         self.gotMod.emit({"status": "failed", "result": None})
                 except:
                     self.gotMod.emit({"status": "failed", "result": None})
-        
+
         def __init__(self, parent=None):
             super().__init__(parent)
             self.verticalLayout = QVBoxLayout(self)
-            
+
             self.filterPanel = GroupBox(self)
             self.horizontalLayout = QHBoxLayout(self.filterPanel)
-            
+
             self.searchLineEdit = LineEdit(self.filterPanel)
             self.searchLineEdit.setClearButtonEnabled(True)
             self.searchLineEdit.textEdited.connect(self.searchMods)
             self.horizontalLayout.addWidget(self.searchLineEdit)
-            
+
             self.verticalLayout.addWidget(self.filterPanel)
-            
+
             self.contentTabel = TableView(self)
             self.verticalLayout.addWidget(self.contentTabel)
             self.contentTabel.verticalHeader().setVisible(False)
@@ -1846,33 +1858,33 @@ class DownloadPage(QFrame):
                  self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2"),
                  self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3")])
             self.contentTabel.setModel(self.model)
-            
+
             self.paginator = Panel(self)
             self.horizontalLayout_2 = QHBoxLayout(self.paginator)
-            
+
             self.previousButton = PushButton(self.paginator)
             self.previousButton.pressed.connect(self.previousPage)
             self.horizontalLayout_2.addWidget(self.previousButton)
-            
+
             self.currentPageLabel = Label(self.paginator)
             self.currentPageLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.horizontalLayout_2.addWidget(self.currentPageLabel)
-            
+
             self.nextButton = PushButton(self.paginator)
             self.nextButton.pressed.connect(self.nextPage)
             self.horizontalLayout_2.addWidget(self.nextButton)
-            
+
             self.verticalLayout.addWidget(self.paginator)
-            
+
             self.retranslateUI()
-            
+
             self.mods = {}
             self.loadingAnimation = None
             self.getModThread = None
             self.modInfoPage = None
             self.modInfoPageY = None
             self.currentPage = 1
-        
+
         def retranslateUI(self):
             self.filterPanel.setTitle(self.tr("DownloadPage.DownloadMods.filterPanel.Title"))
             self.searchLineEdit.setPlaceholderText(self.tr("DownloadPage.DownloadMods.searchLineEdit.PlaceholderText"))
@@ -1883,18 +1895,18 @@ class DownloadPage(QFrame):
                 [self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.1"),
                  self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2"),
                  self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3")])
-        
+
         def previousPage(self):
             self.currentPage -= 1
             self.currentPage = max(self.currentPage, 1)
             self.updatePage()
             self.loadPage()
-        
+
         def nextPage(self):
             self.currentPage += 1
             self.updatePage()
             self.loadPage()
-        
+
         def updatePage(self):
             self.currentPageLabel.setText(str(self.currentPage))
             if self.currentPage <= 1:
@@ -1905,7 +1917,7 @@ class DownloadPage(QFrame):
                 self.nextButton.setEnabled(False)
             else:
                 self.nextButton.setEnabled(True)
-        
+
         def loadPage(self):
             if self.currentPage in self.mods:
                 self.displayMods(None, self.currentPage)
@@ -1915,7 +1927,7 @@ class DownloadPage(QFrame):
                 self.getModThread.start()
                 self.loadingAnimation = LoadingAnimation(self)
                 self.startAnimation(True)
-        
+
         def event(self, e):
             if hasattr(self, "modInfoPage") and self.modInfoPage:
                 rect = self.rect().adjusted(1, 1, -1, -1)
@@ -1928,7 +1940,7 @@ class DownloadPage(QFrame):
                 else:
                     self.modInfoPageY = 0
             return super().event(e)
-        
+
         def showEvent(self, a0):
             super().showEvent(a0)
             if self.mods:
@@ -1939,21 +1951,21 @@ class DownloadPage(QFrame):
                 self.getModThread.start()
                 self.loadingAnimation = LoadingAnimation(self)
                 self.startAnimation(False)
-        
+
         def hideEvent(self, a0):
             super().hideEvent(a0)
             self.finishAnimation(False)
-        
+
         def startAnimation(self, ani=True):
             if not self.loadingAnimation:
                 self.loadingAnimation = LoadingAnimation(self)
             self.loadingAnimation.start(ani)
-        
+
         def finishAnimation(self, ani=True, stat=True):
             if not self.loadingAnimation:
                 return
             self.loadingAnimation.finish(ani, not stat)
-        
+
         def displayMods(self, data, page=1):
             if not data or data["status"] == "successfully":
                 if data:
@@ -1969,10 +1981,15 @@ class DownloadPage(QFrame):
                 for e, hit in enumerate(dat["hits"]):
                     self.model.setItem(e, 0, QStandardItem(hit["title"]))
                     self.model.setItem(e, 1, QStandardItem(hit["author"]))
-                    self.model.setItem(e, 2, QStandardItem(time.strftime("%Y-%m-%d %H:%M:%S",
-                                                                         time.strptime(
-                                                                             hit["date_modified"].split(".")[0],
-                                                                             "%Y-%m-%dT%H:%M:%S"))))
+                    self.model.setItem(e, 2, QStandardItem(
+                        time.strftime(
+                            "%Y-%m-%d %H:%M:%S",
+                            time.strptime(
+                                hit["date_modified"].split(".")[0],
+                                "%Y-%m-%dT%H:%M:%S"
+                            )
+                        )
+                    ))
                 self.model.setHorizontalHeaderLabels(
                     [self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.1"),
                      self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2"),
@@ -1985,7 +2002,7 @@ class DownloadPage(QFrame):
                     self.finishAnimation(True, True)
                 else:
                     self.finishAnimation(True, False)
-        
+
         def searchMods(self, value):
             value_query = value
             self.model.clear()
@@ -1996,14 +2013,18 @@ class DownloadPage(QFrame):
                     cnt = 0
                     for dat in list(self.mods.values()):
                         for hit in dat["hits"]:
-                            if re.match(value_query, hit["title"]):
+                            if re.match(value_query.lower(), hit["title"].lower()):
                                 self.model.setItem(cnt, 0, QStandardItem(hit["title"]))
                                 self.model.setItem(cnt, 1, QStandardItem(hit["author"]))
-                                self.model.setItem(cnt, 2, QStandardItem(time.strftime("%Y-%m-%d %H:%M:%S",
-                                                                                       time.strptime(
-                                                                                           hit["date_modified"].split(
-                                                                                               ".")[0],
-                                                                                           "%Y-%m-%dT%H:%M:%S"))))
+                                self.model.setItem(cnt, 2, QStandardItem(
+                                    time.strftime(
+                                        "%Y-%m-%d %H:%M:%S",
+                                        time.strptime(
+                                            hit["date_modified"].split(".")[0],
+                                            "%Y-%m-%dT%H:%M:%S"
+                                        )
+                                    )
+                                ))
                                 cnt += 1
                 else:
                     self.displayMods(None, self.currentPage)
@@ -2014,7 +2035,7 @@ class DownloadPage(QFrame):
                  self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2"),
                  self.tr("DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3")])
             self.contentTabel.setModel(self.model)
-        
+
         def modInfoPageOpen(self, value):
             data = self.contentTabel.model().item(value.row(), 0).text()
             print(data)
@@ -2033,11 +2054,11 @@ class DownloadPage(QFrame):
                 rect.moveTo(0, self.modInfoPageY)
                 self.modInfoPage.setGeometry(rect)
                 self.modInfoPage.show()
-        
+
         def modInfoPageClose(self):
             self.modInfoPage = None
             self.modInfoPageY = None
-    
+
     def __init__(self, parent):
         super().__init__(parent)
         self.verticalLayout = QVBoxLayout(self)
@@ -2052,7 +2073,7 @@ class DownloadPage(QFrame):
         self.horizontalLayout = QHBoxLayout(self.navigationFrameScrollAreaWidgetContent)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.pages = {}
-        
+
         self.page = self.DownloadVanilla()
         self.page.setObjectName(u"page")
         self.pushButton = PushButton(self.navigationFrameScrollAreaWidgetContent)
@@ -2061,10 +2082,10 @@ class DownloadPage(QFrame):
         self.pushButton.setChecked(True)
         self.pushButton.setAutoExclusive(True)
         self.pushButton.pressed.connect(lambda: self.update_page(self.pushButton))
-        
+
         self.horizontalLayout.addWidget(self.pushButton)
         self.pages[self.pushButton] = self.page
-        
+
         self.page_2 = self.DownloadMods()
         self.page_2.setObjectName(u"page_2")
         self.pushButton_2 = PushButton(self.navigationFrameScrollAreaWidgetContent)
@@ -2072,39 +2093,39 @@ class DownloadPage(QFrame):
         self.pushButton_2.setCheckable(True)
         self.pushButton_2.setAutoExclusive(True)
         self.pushButton_2.pressed.connect(lambda: self.update_page(self.pushButton_2))
-        
+
         self.horizontalLayout.addWidget(self.pushButton_2)
         self.pages[self.pushButton_2] = self.page_2
-        
+
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        
+
         self.horizontalLayout.addItem(self.horizontalSpacer)
-        
+
         self.navigationFrameScrollArea.setWidget(self.navigationFrameScrollAreaWidgetContent)
         self.navigationFrameScrollArea.setWidgetResizable(True)
-        
+
         self.verticalLayout.addWidget(self.navigationFrame)
-        
+
         self.stackedWidget = AnimatedStackedWidget(self)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.addWidget(self.page)
         self.stackedWidget.addWidget(self.page_2)
         self.stackedWidget.setCurrentIndex(0)
-        
+
         self.verticalLayout.addWidget(self.stackedWidget, 1)
-        
+
         self.retranslateUi()
         #
         # QMetaObject.connectSlotsByName(Form)
-    
+
     # setupUi
-    
+
     def retranslateUi(self):
         self.pushButton.setText(self.tr("DownloadPage.pushButton.Text"))
         self.pushButton_2.setText(self.tr("DownloadPage.pushButton_2.Text"))
-    
+
     # retranslateUi
-    
+
     def update_page(self, btn):
         self.stackedWidget.setCurrentWidget(self.pages[btn])
 
@@ -2119,9 +2140,9 @@ class SettingsPage(QFrame):
             self.formLayout.setObjectName(u"formLayout")
             self.label = Label(self)
             self.label.setObjectName(u"label")
-            
+
             self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label)
-            
+
             self.lineEdit = LineEdit(self)
             self.lineEdit.setObjectName(u"lineEdit")
             self.lineEdit.setText(settings["Settings"]["GameSettings"]["ExtraGameCommand"])
@@ -2131,11 +2152,11 @@ class SettingsPage(QFrame):
             font = QFont("Consolas")
             font.setPointSize(13)
             self.lineEdit.setFont(font)
-            
+
             self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.lineEdit)
-            
+
             self.verticalLayout.addLayout(self.formLayout)
-            
+
             self.groupBox = GroupBox(self)
             self.groupBox.setObjectName(u"groupBox")
             # self.groupBox.setCheckable(True)
@@ -2144,41 +2165,41 @@ class SettingsPage(QFrame):
             self.checkBox = CheckBox(self.groupBox)
             self.checkBox.setObjectName(u"checkBox")
             self.checkBox.toggled.connect(lambda state=False: self.presentChecked(state, "-demo"))
-            
+
             # self.checkBox.setFixedHeight(10)
             # self.checkBox.setFixedHeight(100)
             # self.checkBox.setTristate(True)
-            
+
             self.gridLayout.addWidget(self.checkBox, 0, 0, 1, 1)
-            
+
             self.checkBox_2 = CheckBox(self.groupBox)
             self.checkBox_2.setObjectName(u"checkBox_2")
             self.checkBox_2.toggled.connect(lambda state=False: self.presentChecked(state, "-fullscreen"))
-            
+
             self.gridLayout.addWidget(self.checkBox_2, 1, 0, 1, 1)
-            
+
             self.verticalLayout.addWidget(self.groupBox)
-            
+
             self.verticalSpacer = QSpacerItem(20, 360, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-            
+
             self.verticalLayout.addItem(self.verticalSpacer)
-            
+
             self.retranslateUi()
-            
+
             self.updatePresetsState()
             #
             # QMetaObject.connectSlotsByName(Form)
-        
+
         # setupUi
-        
+
         def retranslateUi(self):
             self.label.setText(self.tr("SettingsPage.GameSettings.label.Text"))
             self.groupBox.setTitle(self.tr("SettingsPage.GameSettings.groupBox.Title"))
             self.checkBox.setText(self.tr("SettingsPage.GameSettings.checkBox.Text"))
             self.checkBox_2.setText(self.tr("SettingsPage.GameSettings.checkBox_2.Text"))
-        
+
         # retranslateUi
-        
+
         def presentChecked(self, state, command):
             text = self.lineEdit.text()
             splited_command = shlex.split(text)
@@ -2190,20 +2211,20 @@ class SettingsPage(QFrame):
                     splited_command.remove(command)
             command = shlex.join(splited_command)
             self.lineEdit.setText(command)
-        
+
         def updatePresetsState(self):
             text = self.lineEdit.text()
             splited_command = shlex.split(text)
             self.checkBox.setChecked("-demo" in splited_command)
             self.checkBox_2.setChecked("-fullscreen" in splited_command)
-        
+
         def updateSettings(self, value):
             settings["Settings"]["GameSettings"]["ExtraGameCommand"] = value
-    
+
     class JavaSettings(QFrame):
         class SearchVersionThread(QThread):
             versionHasGot = pyqtSignal(list)
-            
+
             def run(self):
                 where_out = subprocess.run(
                     ["which" if GetOperationSystemName()[0].lower() != "windows" else "where",
@@ -2214,7 +2235,7 @@ class SettingsPage(QFrame):
                 for i in where_out.decode(errors="ignore").splitlines():
                     result.append(i)
                 self.versionHasGot.emit(result)
-        
+
         def __init__(self, parent):
             super().__init__(parent)
             self.verticalLayout = QVBoxLayout(self)
@@ -2227,25 +2248,25 @@ class SettingsPage(QFrame):
             self.radioButton.setObjectName(u"radioButton")
             self.radioButton.setChecked(settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] == "client")
             self.radioButton.toggled.connect(self.updateJavaLaunchMode)
-            
+
             self.horizontalLayout.addWidget(self.radioButton)
-            
+
             self.radioButton_2 = RadioButton(self.groupBox)
             self.radioButton_2.setObjectName(u"radioButton_2")
             self.radioButton_2.setChecked(settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] == "server")
             self.radioButton_2.toggled.connect(self.updateJavaLaunchMode)
-            
+
             self.horizontalLayout.addWidget(self.radioButton_2)
-            
+
             self.verticalLayout.addWidget(self.groupBox)
-            
+
             self.formLayout_2 = QFormLayout()
             self.formLayout_2.setObjectName(u"formLayout_2")
             self.label_2 = Label(self)
             self.label_2.setObjectName(u"label_2")
-            
+
             self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_2)
-            
+
             self.widget_2 = QWidget(self)
             self.widget_2.setObjectName(u"widget_2")
             self.horizontalLayout_3 = QHBoxLayout(self.widget_2)
@@ -2260,7 +2281,7 @@ class SettingsPage(QFrame):
             font.setPointSize(13)
             self.comboBox.setFont(font)
             self.horizontalLayout_3.addWidget(self.comboBox, 1)
-            
+
             self.pushButton_2 = TogglePushButton(self.widget_2)
             self.pushButton_2.setObjectName(u"pushButton_2")
             self.pushButton_2.setChecked(settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"])
@@ -2273,26 +2294,26 @@ class SettingsPage(QFrame):
                 self.comboBox.setCurrentText(self.tr("SettingsPage.JavaSettings.comboBox.Text"))
                 self.comboBox.setEnabled(False)
             self.pushButton_2.toggled.connect(self.updateJavaPathIsAuto)
-            
+
             self.horizontalLayout_3.addWidget(self.pushButton_2)
-            
+
             self.pushButton_3 = PushButton(self.widget_2)
             self.pushButton_3.pressed.connect(self.applyJavaByUser)
             self.pushButton_3.setEnabled(self.comboBox.isEnabled())
-            
+
             self.horizontalLayout_3.addWidget(self.pushButton_3)
-            
+
             self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.widget_2)
-            
+
             self.verticalLayout.addLayout(self.formLayout_2)
-            
+
             self.formLayout = QFormLayout()
             self.formLayout.setObjectName(u"formLayout")
             self.label = Label(self)
             self.label.setObjectName(u"label")
-            
+
             self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label)
-            
+
             self.widget = QWidget(self)
             self.widget.setObjectName(u"widget")
             self.horizontalLayout_2 = QHBoxLayout(self.widget)
@@ -2303,31 +2324,31 @@ class SettingsPage(QFrame):
             self.lineEdit.setText(settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["value"])
             self.lineEdit.setFont(font)
             self.lineEdit.editingFinished.connect(self.editingFinished)
-            
+
             self.horizontalLayout_2.addWidget(self.lineEdit)
-            
+
             self.pushButton = TogglePushButton(self.widget)
             self.pushButton.setObjectName(u"pushButton")
             self.pushButton.setChecked(settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["is_override"])
             self.groupBox.setEnabled(not self.pushButton.isChecked())
             self.pushButton.toggled.connect(self.updateJVMArgIsOverride)
-            
+
             self.horizontalLayout_2.addWidget(self.pushButton)
-            
+
             self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.widget)
-            
+
             self.verticalLayout.addLayout(self.formLayout)
-            
+
             self.verticalSpacer = QSpacerItem(20, 163, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-            
+
             self.verticalLayout.addItem(self.verticalSpacer)
-            
+
             self.retranslateUi()
             #
             # QMetaObject.connectSlotsByName(self)
-        
+
         # setupUi
-        
+
         def retranslateUi(self):
             self.groupBox.setTitle(self.tr("SettingsPage.JavaSettings.groupBox.Text"))
             self.radioButton.setText(self.tr("SettingsPage.JavaSettings.radioButton.Text"))
@@ -2342,9 +2363,9 @@ class SettingsPage(QFrame):
                 self.tr("SettingsPage.JavaSettings.label.Text.1") if not self.pushButton.isChecked() else self.tr(
                     "SettingsPage.JavaSettings.label.Text.2"))
             self.pushButton.setText(self.tr("SettingsPage.JavaSettings.pushButton.Text"))
-        
+
         # retranslateUi
-        
+
         def updateJavaPathIsAuto(self):
             global settings
             settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"] = self.pushButton_2.isChecked()
@@ -2358,7 +2379,7 @@ class SettingsPage(QFrame):
                 self.comboBox.setEnabled(False)
             self.pushButton_3.setEnabled(self.comboBox.isEnabled())
             self.retranslateUi()
-        
+
         def updateJavaSelectPaths(self, data):
             if self.comboBox.currentText() not in data and self.comboBox.currentText() and Path(
                     self.comboBox.currentText()).exists():
@@ -2366,18 +2387,18 @@ class SettingsPage(QFrame):
             self.comboBox.clear()
             for i in data:
                 self.comboBox.addItem(i)
-        
+
         def updateJavaPath(self, path):
             if not settings["Settings"]["JavaSettings"]["Java"]["Path"]["is_auto"]:
                 settings["Settings"]["JavaSettings"]["Java"]["Path"]["value"] = path
             else:
                 settings["Settings"]["JavaSettings"]["Java"]["Path"]["value"] = None
-        
+
         def searchJava(self):
             thread = self.SearchVersionThread(self)
             thread.versionHasGot.connect(self.updateJavaSelectPaths)
             thread.start()
-        
+
         def applyJavaByUser(self):
             file_filter = ""
             match platform.system().lower():
@@ -2390,38 +2411,35 @@ class SettingsPage(QFrame):
             java_path = Path(java[0])
             self.comboBox.addItem(str(java_path))
             self.comboBox.setCurrentText(str(java_path))
-        
+
         def updateJVMArgIsOverride(self):
             global settings
             settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["is_override"] = self.pushButton.isChecked()
             self.groupBox.setEnabled(not self.pushButton.isChecked())
             self.retranslateUi()
-        
+
         def updateJavaLaunchMode(self):
             if self.radioButton.isChecked():
                 settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] = "client"
             if self.radioButton_2.isChecked():
                 settings["Settings"]["JavaSettings"]["Java"]["LaunchMode"] = "server"
-        
+
         def editingFinished(self):
             if not self.lineEdit.text():
                 self.setJVMArgs(None)
                 return
             dialogue = MaskedDialogue(frame)
             label = Label(dialogue)
-            label.setText("""注意：请谨慎配置JVM参数，如果你对这个不熟悉，请不要随便添加，或者随便修改！
-（容易无法启动或者崩溃）
-单击“确定”表示你确定要修改，单击“取消”表示你要撤销更改。
-关闭？还是取消！谁教给你的关窗口？""")
+            label.setText(self.tr("SettingsPage.JavaSettings.JVMEditConfirmation.Text"))
             label.adjustSize()
             bottomPanel = Panel(dialogue)
             horizontalLayout = QHBoxLayout(bottomPanel)
             yesButton = PushButton(dialogue)
-            yesButton.setText("确定")
+            yesButton.setText(self.tr("SettingsPage.JavaSettings.JVMEditConfirmation.OK"))  # 确定
             yesButton.pressed.connect(lambda: (dialogue.close(), self.setJVMArgs(self.lineEdit.text())))
             horizontalLayout.addWidget(yesButton)
             cancelButton = PushButton(dialogue)
-            cancelButton.setText("取消")
+            cancelButton.setText(self.tr("SettingsPage.JavaSettings.JVMEditConfirmation.Cancel"))  # 取消
             cancelButton.pressed.connect(lambda: (
                 dialogue.close(), self.lineEdit.setText(settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["value"])))
             dialogue.closeEvent = lambda e: self.lineEdit.setText(
@@ -2433,75 +2451,75 @@ class SettingsPage(QFrame):
                 QRect(dialogue.x(), dialogue.y(), 20 + label.width(), 20 + label.height() + 10 + bottomPanel.height()))
             label.move(10, 30)
             dialogue.exec()
-        
+
         def setJVMArgs(self, args):
             global settings
             settings["Settings"]["JavaSettings"]["JVM"]["Arg"]["value"] = args
-    
+
     class JavaSettingsContainer(ScrollArea):
         def __init__(self, parent, javasettings):
             super().__init__(parent)
             self.javaSettings = javasettings(self)
             self.setWidget(self.javaSettings)
             self.setWidgetResizable(True)
-    
+
     class CustomiseSettings(QFrame):
         def __init__(self, parent):
             super().__init__(parent)
             self.setThemePreset(True, settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePreset"])
-            
+
             self.verticalLayout = QVBoxLayout(self)
-            
+
             self.groupBox = GroupBox(self)
             self.verticalLayout.addWidget(self.groupBox)
-            
+
             self.girdLayout = QGridLayout(self.groupBox)
-            
+
             self.group1_radioButton = RadioButton(self.groupBox)
             self.group1_radioButton.setChecked(
                 settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePreset"] == "PresetBlue")
             self.group1_radioButton.toggled.connect(lambda state: self.setThemePreset(state, "PresetBlue"))
-            
+
             self.girdLayout.addWidget(self.group1_radioButton, 0, 0)
-            
+
             self.group1_radioButton_2 = RadioButton(self.groupBox)
             self.group1_radioButton_2.setChecked(
                 settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePreset"] == "PresetPink")
             self.group1_radioButton_2.toggled.connect(lambda state: self.setThemePreset(state, "PresetPink"))
-            
+
             self.girdLayout.addWidget(self.group1_radioButton_2, 0, 1)
-            
+
             self.group1_radioButton_3 = RadioButton(self.groupBox)
             self.group1_radioButton_3.setChecked(
                 settings["Settings"]["LauncherSettings"]["Customise"]["CurrentThemePreset"] == "PresetRed")
             self.group1_radioButton_3.toggled.connect(lambda state: self.setThemePreset(state, "PresetRed"))
-            
+
             self.girdLayout.addWidget(self.group1_radioButton_3, 1, 0)
-            
+
             self.groupBox_2 = GroupBox(self)
             self.verticalLayout.addWidget(self.groupBox_2)
-            
+
             self.verticalLayout_2 = QVBoxLayout(self.groupBox_2)
-            
+
             self.girdLayout_2 = QGridLayout()
             self.verticalLayout_2.addLayout(self.girdLayout_2)
-            
+
             self.group2_radioButton = RadioButton(self.groupBox_2)
             self.girdLayout_2.addWidget(self.group2_radioButton, 0, 0)
-            
+
             self.group2_radioButton_2 = RadioButton(self.groupBox_2)
             self.group2_radioButton_2.setChecked(True)
             self.girdLayout_2.addWidget(self.group2_radioButton_2, 0, 1)
-            
+
             self.tipLabel = Label(self.groupBox_2)
             self.verticalLayout_2.addWidget(self.tipLabel)
-            
+
             self.formLayout = QFormLayout()
-            
+
             self.label1 = Label(self.groupBox_2)
-            
+
             self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label1)
-            
+
             self.blurSlider = Slider(self.groupBox_2)
             self.blurSlider.setOrientation(Qt.Orientation.Horizontal)
             self.blurSlider.setMinimum(0)
@@ -2509,43 +2527,43 @@ class SettingsPage(QFrame):
             self.blurSlider.setValue(settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"])
             self.blurSlider.valueChanged.connect(self.updateBackgroundBlur)
             self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.blurSlider)
-            
+
             self.verticalLayout_2.addLayout(self.formLayout)
-            
+
             self.groupBox_3 = GroupBox(self)
             self.verticalLayout.addWidget(self.groupBox_3)
-            
+
             self.verticalLayout_3 = QVBoxLayout(self.groupBox_3)
-            
+
             self.group3_checkBox = CheckBox(self.groupBox_3)
             self.verticalLayout_3.addWidget(self.group3_checkBox)
-            
+
             self.groupBox_4 = GroupBox(self)
             self.verticalLayout.addWidget(self.groupBox_4)
-            
+
             self.verticalLayout_4 = QVBoxLayout(self.groupBox_4)
-            
+
             self.formLayout_2 = QFormLayout()
-            
+
             self.label2 = Label(self.groupBox_4)
             self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label2)
-            
+
             self.comboBox = ComboBox(self.groupBox_4)
             self.comboBox.wheelEvent = lambda e: None
             self.updateComboBoxLanguageList()
             self.comboBox.currentIndexChanged.connect(self.comboBoxLanguageChanged)
             self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.comboBox)
-            
+
             self.verticalLayout_4.addLayout(self.formLayout_2)
-            
+
             self.translationMayNotBeCorrectLabel = Label(self.groupBox_4)
             self.verticalLayout_4.addWidget(self.translationMayNotBeCorrectLabel)
-            
+
             self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
             self.verticalLayout.addItem(self.verticalSpacer)
-            
+
             self.retranslateUI()
-        
+
         def retranslateUI(self):
             self.groupBox.setTitle(self.tr("SettingsPage.CustomiseSettings.groupBox.Title"))
             self.group1_radioButton.setText(self.tr("SettingsPage.CustomiseSettings.group1_radioButton.Text"))
@@ -2565,7 +2583,7 @@ class SettingsPage(QFrame):
             self.label2.setText(self.tr("SettingsPage.CustomiseSettings.label2.Text"))
             self.translationMayNotBeCorrectLabel.setText(
                 self.tr("SettingsPage.CustomiseSettings.translationMayNotBeCorrectLabel.Text"))
-        
+
         @staticmethod
         def setThemePreset(state, value):
             if not state:
@@ -2578,16 +2596,16 @@ class SettingsPage(QFrame):
                         for highlight in define[theme][role]:
                             setThemeColour(role, False, highlight, theme,
                                            theme_colour_defines[value][theme][role][highlight])
-        
+
         def updateBackgroundBlur(self, value):
             settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"] = value
-        
+
         def updateComboBoxLanguageList(self):
             self.comboBox.clear()
             for language in sorted(languages_map.keys()):
                 self.comboBox.addItem(f"{languages_map[language]} ({language})")
             self.comboBox.setCurrentIndex(sorted(languages_map.keys()).index(current_language))
-        
+
         def comboBoxLanguageChanged(self):
             global current_language
             before_language = current_language
@@ -2618,14 +2636,14 @@ class SettingsPage(QFrame):
                     tip.tip(PopupTip.PopupPosition.RIGHT, 3000)
                     QTimer.singleShot(2500, lambda: os.execv(sys.executable, ('python',) + tuple(
                         map(lambda x: f'"{shlex.quote(x).strip("'")}"', sys.argv))))
-    
+
     class CustomiseSettingsContainer(ScrollArea):
         def __init__(self, parent, customisesettings):
             super().__init__(parent)
             self.customiseSettings = customisesettings(self)
             self.setWidget(self.customiseSettings)
             self.setWidgetResizable(True)
-    
+
     def __init__(self, parent):
         super().__init__(parent)
         self.verticalLayout = QVBoxLayout(self)
@@ -2640,65 +2658,65 @@ class SettingsPage(QFrame):
         self.horizontalLayout = QHBoxLayout(self.navigationFrameScrollAreaWidgetContent)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.pages = {}
-        
+
         self.page = self.GameSettings(self)
         self.pushButton = PushButton(self.navigationFrameScrollAreaWidgetContent)
         self.pushButton.setCheckable(True)
         self.pushButton.setChecked(True)
         self.pushButton.setAutoExclusive(True)
         self.pushButton.pressed.connect(lambda: self.update_page(self.pushButton))
-        
+
         self.horizontalLayout.addWidget(self.pushButton)
         self.pages[self.pushButton] = self.page
-        
+
         self.page_2 = self.JavaSettingsContainer(self, self.JavaSettings)
         self.pushButton_2 = PushButton(self.navigationFrameScrollAreaWidgetContent)
         self.pushButton_2.setCheckable(True)
         self.pushButton_2.setAutoExclusive(True)
         self.pushButton_2.pressed.connect(lambda: self.update_page(self.pushButton_2))
-        
+
         self.horizontalLayout.addWidget(self.pushButton_2)
         self.pages[self.pushButton_2] = self.page_2
-        
+
         self.page_3 = self.CustomiseSettingsContainer(self, self.CustomiseSettings)
         self.pushButton_3 = PushButton(self.navigationFrameScrollAreaWidgetContent)
         self.pushButton_3.setCheckable(True)
         self.pushButton_3.setAutoExclusive(True)
         self.pushButton_3.pressed.connect(lambda: self.update_page(self.pushButton_3))
-        
+
         self.horizontalLayout.addWidget(self.pushButton_3)
         self.pages[self.pushButton_3] = self.page_3
-        
+
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        
+
         self.horizontalLayout.addItem(self.horizontalSpacer)
-        
+
         self.navigationFrameScrollArea.setWidget(self.navigationFrameScrollAreaWidgetContent)
         self.navigationFrameScrollArea.setWidgetResizable(True)
-        
+
         self.verticalLayout.addWidget(self.navigationFrame)
-        
+
         self.stackedWidget = AnimatedStackedWidget(self)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.addWidget(self.page)
         self.stackedWidget.addWidget(self.page_2)
         self.stackedWidget.addWidget(self.page_3)
-        
+
         self.verticalLayout.addWidget(self.stackedWidget, 1)
-        
+
         self.retranslateUi()
         #
         # QMetaObject.connectSlotsByName(Form)
-    
+
     # setupUi
-    
+
     def retranslateUi(self):
         self.pushButton.setText(self.tr("SettingsPage.pushButton.Text"))
         self.pushButton_2.setText(self.tr("SettingsPage.pushButton_2.Text"))
         self.pushButton_3.setText(self.tr("SettingsPage.pushButton_3.Text"))
-    
+
     # retranslateUi
-    
+
     def update_page(self, btn):
         self.stackedWidget.setCurrentWidget(self.pages[btn])
 
@@ -2708,89 +2726,150 @@ class AboutPage(QFrame):
         super().__init__(parent)
         self.verticalLayout = QVBoxLayout(self)
         self.toolBox = ToolBox(self)
-        
+
         self.page1 = QFrame(self.toolBox)
         self.verticalLayout_2 = QVBoxLayout(self.page1)
-        
+
         self.panel1 = Panel(self.page1)
         self.horizontalLayout = QHBoxLayout(self.panel1)
-        
+
         self.avatar1 = ToolButton(self.panel1)
         self.avatar1.setFixedSize(QSize(42, 42))
         self.avatar1.setIconSize(QSize(32, 32))
         self.avatar1.setIcon(QIcon(":/chengwm_avatar.png"))
-        
+
         self.horizontalLayout.addWidget(self.avatar1)
-        
+
         self.label1 = Label(self.panel1)
         self.label1.setText("chengwm\n" + self.tr('AboutPage.label1.Text'))
-        
+
         self.horizontalLayout.addWidget(self.label1, 1)
-        
+
         self.verticalLayout_2.addWidget(self.panel1)
-        
+
         self.panel2 = Panel(self.page1)
         self.horizontalLayout_2 = QHBoxLayout(self.panel2)
-        
+
         self.avatar2 = ToolButton(self.panel2)
         self.avatar2.setFixedSize(QSize(42, 42))
         self.avatar2.setIconSize(QSize(32, 32))
         self.avatar2.setIcon(QIcon(":/mcdaotian_avatar.png"))
-        
+
         self.horizontalLayout_2.addWidget(self.avatar2)
-        
+
         self.label2 = Label(self.panel2)
         self.label2.setText(
             self.tr('AboutPage.label2.Text.LocalisedName') + "\n" + self.tr(
                 'AboutPage.label2.Text'))
-        
+
         self.horizontalLayout_2.addWidget(self.label2, 1)
-        
+
         self.verticalLayout_2.addWidget(self.panel2)
-        
+
         self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         self.verticalLayout_2.addItem(self.verticalSpacer)
-        
+
         self.toolBox.addItem(self.page1, self.tr("AboutPage.Page1.Title"))
-        
+
         self.page2 = QFrame(self.toolBox)
         self.verticalLayout_3 = QVBoxLayout(self.page2)
-        
+
         self.panel_cmcl = Panel(self.page2)
         self.horizontalLayout_3 = QHBoxLayout(self.panel_cmcl)
-        
+
         self.cmcl_icon = ToolButton(self.panel_cmcl)
         self.cmcl_icon.setFixedSize(QSize(74, 74))
         self.cmcl_icon.setIconSize(QSize(64, 64))
         self.cmcl_icon.setIcon(QIcon(":/CommonMinecraftLauncherIcon.svg"))
-        
+
         self.horizontalLayout_3.addWidget(self.cmcl_icon)
-        
+
         self.cmcl_info = Label(self.panel_cmcl)
         self.cmcl_info.setText(
             self.tr("AboutPage.Page2.CMCL_info").format(CMCL_version[0], CMCL_version[1],
                                                         languages_map.get(current_language, current_language)))
-        
+
         self.horizontalLayout_3.addWidget(self.cmcl_info, 1)
-        
+
         self.verticalLayout_3.addWidget(self.panel_cmcl)
-        
+
         self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         self.verticalLayout_3.addItem(self.verticalSpacer)
-        
+
         self.toolBox.addItem(self.page2, self.tr("AboutPage.Page2.Title"))
-        
+
+        self.page3 = QFrame()
+        self.verticalLayout_4 = QVBoxLayout(self.page3)
+
+        self.noteTip = Tip(self.page3)
+
+        self.label3 = Label(self.noteTip)
+        self.label3.setText("""声明：
+1, 此处排序没有任何的含义。
+2, 不是我懒得拷贝头像（其实也有），是我不敢拷…………（不敢直接下载…………请诸君谅解）。
+3, 可以自行提供头像，前提是你是那个人 / 那个组织，冒充的不行啊。""")
+        self.label3.adjustSize()
+        self.noteTip.setCloseEnabled(False)
+        self.noteTip.setMinimumHeight(self.label3.height() + 10)
+        self.noteTip.setCentralWidget(self.label3)
+
+        self.verticalLayout_4.addWidget(self.noteTip)
+
+        self.card1 = Panel(self.page3)
+        self.horizontalLayout_4 = QHBoxLayout(self.card1)
+
+        self.avatar3 = ToolButton(self.card1)
+        self.avatar3.setFixedSize(QSize(42, 42))
+        self.avatar3.setIconSize(QSize(32, 32))
+        self.horizontalLayout_4.addWidget(self.avatar3)
+
+        self.label3 = Label(self.card1)
+        self.label3.setText("中文 Minecraft Wiki\n编写启动器（底层代码）时很多东西都是从那上面扒下来（其实是参考）的。")
+        self.horizontalLayout_4.addWidget(self.label3, 1)
+
+        self.verticalLayout_4.addWidget(self.card1)
+
+        self.card2 = Panel(self.page3)
+        self.horizontalLayout_5 = QHBoxLayout(self.card2)
+
+        self.avatar4 = ToolButton(self.card2)
+        self.avatar4.setFixedSize(QSize(42, 42))
+        self.avatar4.setIconSize(QSize(32, 32))
+        self.horizontalLayout_5.addWidget(self.avatar4)
+
+        self.label4 = Label(self.card2)
+        self.label4.setText(
+            "龙腾猫跃\n冷知识：启动器启动部分的参考指令就是 PCL2 启动器（此人编写）生成的指令，\n对于启动器启动部分，这个作者的 PCL2 功不可没（确实）。")
+        self.horizontalLayout_5.addWidget(self.label4, 1)
+
+        self.verticalLayout_4.addWidget(self.card2)
+
+        self.card3 = Panel(self.page3)
+        self.horizontalLayout_6 = QHBoxLayout(self.card3)
+
+        self.verticalLayout_4.addWidget(self.card3)
+
+        self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        self.verticalLayout_4.addItem(self.verticalSpacer)
+
+        self.page3container = ScrollArea(self.toolBox)
+        self.page3container.setWidget(self.page3)
+        self.page3container.setWidgetResizable(True)
+
+        self.toolBox.addItem(self.page3container, "特别感谢")
+
         self.verticalLayout.addWidget(self.toolBox)
-        
+
         # Special Thanks:
         # 中文 Minecraft Wiki -> 提供教程
         # 龙腾猫跃 -> PCL2启动器的作者
         # zhiyiYo -> 无边框窗口代码
         self.retranslateUI()
-    
+
     def retranslateUI(self):
         self.toolBox.setItemText(self.toolBox.indexOf(self.page1), self.tr("AboutPage.Page1.Title"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page2), self.tr("AboutPage.Page2.Title"))
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page3), "特别感谢")
 
 
 class OfflinePlayerCreationDialogue(MaskedDialogue):
@@ -2816,18 +2895,18 @@ class OfflinePlayerCreationDialogue(MaskedDialogue):
         self.OKButton.pressed.connect(self.setPlayer)
         self.verticalLayout.addWidget(self.bottomPanel)
         self.retranslateUI()
-    
+
     def retranslateUI(self):
         self.label.setText(self.tr("OfflinePlayerCreationDialogue.label.Text"))
         self.CancelButton.setText(self.tr("OfflinePlayerCreationDialogue.CancelButton.Text"))
         self.OKButton.setText(self.tr("OfflinePlayerCreationDialogue.OKButton.Text"))
-    
+
     def setPlayer(self):
         global player
         player = create_offline_player(self.playernameLineEdit.text(), player.player_hasMC)
         frame.UserPage.user_datas[frame.UserPage.current_user] = player
         self.close()
-    
+
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
         p = QPainter(background)
@@ -2860,7 +2939,7 @@ class UserPage(QFrame):
         super().__init__(parent)
         self.user_datas = []
         self.current_user = 0
-        
+
         # DEBUG: ON#
         # self.user_datas.append(create_online_player("2233", "68559", "TheFengHaoDouLuoOfBiZhan", True))
         # self.user_datas.append(create_online_player("22和33", "68559", "TheSameAsAbove", True))
@@ -2868,9 +2947,9 @@ class UserPage(QFrame):
         # self.user_datas.append(create_online_player("chengwm_CMCL", "100000000", "NoAccessToken", False))
         # self.current_user = 2
         # DEBUG: END#
-        
+
         self.user_datas.append(player)
-        
+
         self.verticalLayout = QVBoxLayout(self)
         self.topPanel = Panel(self)
         self.horizontalLayout = QHBoxLayout(self.topPanel)
@@ -2882,7 +2961,8 @@ class UserPage(QFrame):
         if len(self.user_datas) > 1 and self.current_user >= 1:
             left_user = self.user_datas[min(max(self.current_user - 1, 0), len(self.user_datas) - 1)]
             self.leftUserIcon.setToolTip(
-                self.tr("UserPage.UserDataFormat.Text").format(left_user.player_name, left_user.player_accountType[1],
+                self.tr("UserPage.UserDataFormat.Text").format(left_user.player_playerName,
+                                                               left_user.player_accountType[1],
                                                                left_user.player_hasMC))
         else:
             self.leftUserIcon.setToolTip("")
@@ -2896,7 +2976,7 @@ class UserPage(QFrame):
         if len(self.user_datas) > 0:
             current_user = self.user_datas[self.current_user]
             self.UserIcon.setText(
-                self.tr("UserPage.UserDataFormat.Text").format(current_user.player_name,
+                self.tr("UserPage.UserDataFormat.Text").format(current_user.player_playerName,
                                                                current_user.player_accountType[1],
                                                                current_user.player_hasMC))
         else:
@@ -2913,14 +2993,15 @@ class UserPage(QFrame):
         if len(self.user_datas) > 1 and self.current_user < len(self.user_datas) - 1:
             right_user = self.user_datas[min(max(self.current_user + 1, 0), len(self.user_datas) - 1)]
             self.rightUserIcon.setToolTip(
-                self.tr("UserPage.UserDataFormat.Text").format(right_user.player_name, right_user.player_accountType[1],
+                self.tr("UserPage.UserDataFormat.Text").format(right_user.player_playerName,
+                                                               right_user.player_accountType[1],
                                                                right_user.player_hasMC))
         else:
             self.rightUserIcon.setToolTip("")
         self.rightUserIcon.pressed.connect(lambda: self.select_new_user(self.current_user + 1))
         self.horizontalLayout.addWidget(self.rightUserIcon)
         self.verticalLayout.addWidget(self.topPanel)
-        
+
         self.centrePanel = Panel(self)
         self.horizontalLayout_2 = QHBoxLayout(self.centrePanel)
         self.addUserBtn = ToolButton(self.centrePanel)
@@ -2929,7 +3010,7 @@ class UserPage(QFrame):
         self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.horizontalLayout_2.addItem(self.horizontalSpacer)
         self.verticalLayout.addWidget(self.centrePanel)
-        
+
         self.userTabel = TableView(self)
         self.verticalLayout.addWidget(self.userTabel)
         self.userTabel.setSelectionMode(QTableView.SelectionMode.SingleSelection)
@@ -2947,16 +3028,16 @@ class UserPage(QFrame):
         self.userModel.setHorizontalHeaderLabels([self.tr("UserPage.userTable.horizontalHeaderLabels.1"),
                                                   self.tr("UserPage.userTable.horizontalHeaderLabels.2")])
         for e, i in enumerate(self.user_datas):
-            self.userModel.setItem(e, 0, QStandardItem(i.player_name))
+            self.userModel.setItem(e, 0, QStandardItem(i.player_playerName))
             self.userModel.setItem(e, 1, QStandardItem(i.player_accountType[1]))
-        
+
         self.retranslateUI()
-        
+
         def tempfun(self):
             if len(self.user_datas) > 0:
                 current_user = self.user_datas[self.current_user]
                 self.UserIcon.setText(
-                    self.tr("UserPage.UserDataFormat.Text").format(current_user.player_name,
+                    self.tr("UserPage.UserDataFormat.Text").format(current_user.player_playerName,
                                                                    current_user.player_accountType[1],
                                                                    current_user.player_hasMC))
             else:
@@ -2965,26 +3046,27 @@ class UserPage(QFrame):
             self.userModel.setHorizontalHeaderLabels([self.tr("UserPage.userTable.horizontalHeaderLabels.1"),
                                                       self.tr("UserPage.userTable.horizontalHeaderLabels.2")])
             for e, i in enumerate(self.user_datas):
-                self.userModel.setItem(e, 0, QStandardItem(i.player_name))
+                self.userModel.setItem(e, 0, QStandardItem(i.player_playerName))
                 self.userModel.setItem(e, 1, QStandardItem(i.player_accountType[1]))
-        
+
         timer = QTimer(self)
         timer.setInterval(100)
         timer.timeout.connect(lambda: tempfun(self))
         timer.start()
-    
+
     def retranslateUI(self):
         if len(self.user_datas) > 1 and self.current_user >= 1:
             left_user = self.user_datas[min(max(self.current_user - 1, 0), len(self.user_datas) - 1)]
             self.leftUserIcon.setToolTip(
-                self.tr("UserPage.UserDataFormat.Text").format(left_user.player_name, left_user.player_accountType[1],
+                self.tr("UserPage.UserDataFormat.Text").format(left_user.player_playerName,
+                                                               left_user.player_accountType[1],
                                                                left_user.player_hasMC))
         else:
             self.leftUserIcon.setToolTip("")
         if len(self.user_datas) > 0:
             current_user = self.user_datas[self.current_user]
             self.UserIcon.setText(
-                self.tr("UserPage.UserDataFormat.Text").format(current_user.player_name,
+                self.tr("UserPage.UserDataFormat.Text").format(current_user.player_playerName,
                                                                current_user.player_accountType[1],
                                                                current_user.player_hasMC))
         else:
@@ -2992,7 +3074,8 @@ class UserPage(QFrame):
         if len(self.user_datas) > 1 and self.current_user < len(self.user_datas) - 1:
             right_user = self.user_datas[min(max(self.current_user + 1, 0), len(self.user_datas) - 1)]
             self.rightUserIcon.setToolTip(
-                self.tr("UserPage.UserDataFormat.Text").format(right_user.player_name, right_user.player_accountType[1],
+                self.tr("UserPage.UserDataFormat.Text").format(right_user.player_playerName,
+                                                               right_user.player_accountType[1],
                                                                right_user.player_hasMC))
         else:
             self.rightUserIcon.setToolTip("")
@@ -3002,9 +3085,9 @@ class UserPage(QFrame):
         self.userModel.setHorizontalHeaderLabels([self.tr("UserPage.userTable.horizontalHeaderLabels.1"),
                                                   self.tr("UserPage.userTable.horizontalHeaderLabels.2")])
         for e, i in enumerate(self.user_datas):
-            self.userModel.setItem(e, 0, QStandardItem(i.player_name))
+            self.userModel.setItem(e, 0, QStandardItem(i.player_playerName))
             self.userModel.setItem(e, 1, QStandardItem(i.player_accountType[1]))
-    
+
     def paintEvent(self, a0):
         self.leftUserIcon.setVisible(len(self.user_datas) > 1 and self.current_user >= 1)
         self.rightUserIcon.setVisible(len(self.user_datas) > 1 and self.current_user < len(self.user_datas) - 1)
@@ -3012,7 +3095,7 @@ class UserPage(QFrame):
         self.UserIcon.setIcon(QIcon(f":/user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
         self.rightUserIcon.setIcon(QIcon(f":/user_icon-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
         super().paintEvent(a0)
-    
+
     def createAddUserBtnActions(self):
         menu = RoundedMenu(self.addUserBtn)
         action1 = QAction(menu)
@@ -3025,22 +3108,22 @@ class UserPage(QFrame):
         menu.addAction(action2)
         self.addUserBtn.setMenu(menu)
         self.addUserBtn.setPopupMode(ToolButton.ToolButtonPopupMode.InstantPopup)
-    
+
     def select_new_user(self, id):
         self.current_user = id
         self.current_user = max(0, min(len(self.user_datas) - 1, self.current_user))
         self.retranslateUI()
-    
+
     def mainButtonPressed(self):
         if self.user_datas:
             return
         self.startLogin()
-    
+
     @staticmethod
     def startLogin():
         dialogue = LoginDialogue(frame)
         dialogue.exec()
-    
+
     @staticmethod
     def startCreateOfflinePlayer():
         dialogue = OfflinePlayerCreationDialogue(frame)
@@ -3052,55 +3135,55 @@ class ErrorDialogue(MaskedDialogue):
         class Highlighter(HighlightTextEdit.Highlighter):
             def __init__(self, document):
                 super().__init__(document)
-                
+
                 string = QTextCharFormat()
                 string.setForeground(QColor(0, 170, 9))
-                
+
                 url = QTextCharFormat()
                 url.setForeground(QColor(100, 80, 255))
                 url.setFontUnderline(True)
-                
+
                 self.highlight_styles["string"] = string
                 self.highlight_styles["url"] = url
-                
+
                 stringprefix = r"(?i:r|u|f|fr|rf|b|br|rb)?"
                 sqstring = stringprefix + r"'[^'\\\n]*(\\.[^'\\\n]*)*'?"
                 dqstring = stringprefix + r'"[^"\\\n]*(\\.[^"\\\n]*)*"?'
                 sq3string = stringprefix + r"'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
                 dq3string = stringprefix + r'"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
                 string = "|".join([sqstring, dqstring, sq3string, dq3string])
-                
+
                 self.rules.extend([
                     (string, 0, "string"),
                     (r"http[s]?://(.+|\[.+\])(:[0-9]+)?(/(.+|#))?", 0, "url")
                 ])
-        
+
         Default_Highlighter = Highlighter
-    
+
     def __init__(self, parent, errorMessage):
         super().__init__(parent)
         self.message = errorMessage
-        
+
         self.label = self.ErrorText(self)
         self.label.setText(self.message)
         self.label.setReadOnly(True)
         self.label.setLineWrapMode(self.ErrorText.LineWrapMode.NoWrap)
-        
+
         rect = self.label.fontMetrics().boundingRect(self.label.rect(), self.label.alignment(),
                                                      self.label.toPlainText())
         rect.setSize(
             rect.size() + QSize(self.label.verticalScrollBar().width(), self.label.horizontalScrollBar().height()))
         rect.moveTo(self.pos())
         self.setGeometry(rect)
-        
+
         geometry = self.parent().rect()
         size = QGuiApplication.primaryScreen().geometry().size()
         point = QPoint(min(max(geometry.width() // 2 - self.width() // 2, 0), size.width()),
                        min(max(0, geometry.height() // 2 - self.height() // 2), size.height()))
         self.move(point)
-        
+
         self.setMaximumSize(QGuiApplication.primaryScreen().geometry().size())
-    
+
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         if hasattr(self, "label"):
@@ -3153,7 +3236,7 @@ class MainWindow(window_class):
         # popoutTip.tip()
         self.centralwidget.setLayout(self.horizontalLayout)
         self.setCentralWidget(self.centralwidget)
-        
+
         # April FOOL Code:
         if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
             self.dx = self.dy = 1
@@ -3162,7 +3245,7 @@ class MainWindow(window_class):
             t.start(1)
         else:
             self.dx = self.dy = 0
-    
+
     def SUPERFOOL(self):
         self.move(self.x() + self.dx, self.y() + self.dy)
         sg = QGuiApplication.primaryScreen().geometry()
@@ -3170,7 +3253,7 @@ class MainWindow(window_class):
             self.dx = -self.dx
         if self.y() <= 0 or self.y() + self.height() >= sg.height():
             self.dy = -self.dy
-    
+
     def mousePressEvent(self, a0):
         super().mousePressEvent(a0)
         if 0 <= a0.pos().x() - self.x() <= 100 and 0 <= a0.pos().y() - self.x() <= 100:
@@ -3185,14 +3268,14 @@ class MainWindow(window_class):
                     self.dy += 1
                 else:
                     self.dy -= 1
-    
+
     # End
-    
+
     def setCentre(self):
         geometry = QGuiApplication.primaryScreen().geometry()
         point = QPoint(geometry.width() // 2 - self.width() // 2, geometry.height() // 2 - self.height() // 2)
         self.move(point)
-    
+
     @staticmethod
     def toggle_theme():
         if getTheme() == Theme.Light:
@@ -3203,11 +3286,11 @@ class MainWindow(window_class):
             settings["Settings"]["LauncherSettings"]["Customise"]["CurrentTheme"] = "Light"
         for window in QGuiApplication.allWindows():
             window.requestUpdate()
-    
+
     def errorDialogue(self, message):
         dialogue = ErrorDialogue(self, message)
         dialogue.exec()
-    
+
     def updateIcon(self):
         if self.topWidget.button("1"):
             self.topWidget.button("1").setIcon(QIcon(f":/Home-{'black' if getTheme() == Theme.Light else 'white'}.svg"))
@@ -3228,7 +3311,7 @@ class MainWindow(window_class):
             self.topWidget.button("6").setText(
                 self.tr("MainPage.ToggleTheme.Light.Text") if getTheme() == Theme.Light else self.tr(
                     "MainPage.ToggleTheme.Dark.Text"))
-    
+
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
         p = QPainter(background)
@@ -3257,15 +3340,15 @@ class MainWindow(window_class):
         # painter.setPen(Qt.PenStyle.NoPen)
         # painter.setBrush(QBrush(img))
         # painter.drawRoundedRect(self.rect(), 10, 10)
-    
+
     def showEvent(self, a0):
         super().showEvent(a0)
-        
+
         class OpacityAnimation(QVariantAnimation):
             def __init__(self, parent=None):
                 super().__init__(parent)
                 self.valueChanged.connect(self.__updateOpacity)
-            
+
             def __updateOpacity(self, value):
                 op = QGraphicsOpacityEffect(self.parent())
                 op.setOpacity(self.currentValue() / 100)
@@ -3273,7 +3356,7 @@ class MainWindow(window_class):
                     self.parent().setGraphicsEffect(None)
                     return
                 self.parent().setGraphicsEffect(op)
-        
+
         ani = QPropertyAnimation(self.content, b"pos", parent=self)
         ani.setDuration(1000)
         ani.setStartValue(QPoint(self.content.x(), self.content.y() + 300))
@@ -3294,49 +3377,49 @@ class LoggingWindow(window_class):
         class Highlighter(HighlightTextEdit.Highlighter):
             def __init__(self, document):
                 super().__init__(document)
-                
+
                 state = QTextCharFormat()
                 state.setFontItalic(True)
                 state.setForeground(QColor(144, 0, 144))
-                
+
                 string = QTextCharFormat()
                 string.setForeground(QColor(0, 170, 9))
-                
+
                 command = QTextCharFormat()
                 command.setForeground(QColor(144, 0, 200))
-                
+
                 url = QTextCharFormat()
                 url.setForeground(QColor(100, 80, 255))
                 url.setFontUnderline(True)
-                
+
                 self.highlight_styles["state"] = state
                 self.highlight_styles["string"] = string
                 self.highlight_styles["command"] = command
                 self.highlight_styles["url"] = url
-                
+
                 stringprefix = r"(?i:r|u|f|fr|rf|b|br|rb)?"
                 sqstring = stringprefix + r"'[^'\\\n]*(\\.[^'\\\n]*)*'?"
                 dqstring = stringprefix + r'"[^"\\\n]*(\\.[^"\\\n]*)*"?'
                 sq3string = stringprefix + r"'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
                 dq3string = stringprefix + r'"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
                 string = "|".join([sqstring, dqstring, sq3string, dq3string])
-                
+
                 self.rules.extend([
                     (r"^\[.+\]:", 0, "state"),
                     (string, 0, "string"),
                     # (r"([^.]-.+\s|[^.]--.+\s|[^.]\"-.+\"|[^.]\'--.+\')", 0, "command"),
                     (r"http[s]?://(.+|\[.+\])(:[0-9]+)?(/(.+|#))?", 0, "url")
                 ])
-        
+
         Default_Highlighter = Highlighter
-    
+
     class Executer:
         def __init__(self, extra_globals=None):
             if not extra_globals:
                 extra_globals = {}
-            
+
             self.__th = None
-            
+
             def input(prompt=""):
                 class Th(QThread):
                     def __init__(self, prompt=""):
@@ -3345,11 +3428,11 @@ class LoggingWindow(window_class):
                         self.__flag = False
                         self.__in = ""
                         self.__stdin = sys.stdin
-                    
+
                     def finish(self, _in):
                         self.__flag = True
                         self.__in = _in
-                    
+
                     def run(self):
                         sys.stdin = _in = StringIO()
                         while self.__flag:
@@ -3357,10 +3440,10 @@ class LoggingWindow(window_class):
                         _in.write(self.__in)
                         __builtins__.input(self.prompt)
                         sys.stdin = self.__stdin
-                
+
                 self.__th = Th(prompt)
                 self.__th.start()
-            
+
             self.globals = {
                 "input": input,
                 "sys": sys,
@@ -3373,7 +3456,7 @@ class LoggingWindow(window_class):
                 "input": input,
                 "sys": sys,
             }
-        
+
         def process_command(self, command):
             try:
                 if self.__th:
@@ -3384,7 +3467,7 @@ class LoggingWindow(window_class):
                     print(d, file=sys.stdout)
             except:
                 sys.stderr.write(traceback.format_exc())
-    
+
     def __init__(self):
         super().__init__()
         self.resize(800, 600)
@@ -3417,8 +3500,7 @@ class LoggingWindow(window_class):
         self.inputtext = LineEdit(self)
         self.inputtext.returnPressed.connect(self.process_command)
         self.inputtext.setFont(font)
-        self.inputtext.setToolTip(
-            "输入代码以运行。\n内置的变量：\n  'frame'：启动器主窗口\n  'player'：当前玩家\n  '[一些奇奇怪怪的函数]'：没啥用")
+        self.inputtext.setToolTip(self.tr("LoggingWindow.inputtext.ToolTip"))
         self.canOutput = True
         self.retranslateUI()
         import nothingtoseeheremovealong, hashlib
@@ -3427,12 +3509,12 @@ class LoggingWindow(window_class):
              hashlib.md5("SummonACreeperToYouHouse".encode()).hexdigest(): nothingtoseeheremovealong.creeper})
         self.history_command = []
         self.current_history = 0
-    
+
     def retranslateUI(self):
         self.stopOutputBtn.setText(self.tr("LoggingWindow.stopOutputBtn.StopOut.Text") if self.canOutput else self.tr(
             "LoggingWindow.stopOutputBtn.StartOut.Text"))
-        self.triggerExceptionBtn.setText(self.tr("LoggingWindow.triggerExceptionBtn.Text"))  # 触发异常（调试启动器报错处理）
-    
+        self.triggerExceptionBtn.setText(self.tr("LoggingWindow.triggerExceptionBtn.Text"))
+
     def updateText(self):
         if self.bftext != output.getvalue():
             Path("latest.log").write_text(output.getvalue(), encoding="utf-8")
@@ -3442,31 +3524,31 @@ class LoggingWindow(window_class):
                 self.loggingtext.textCursor().insertText(output.getvalue().split("")[-1])
                 self.loggingtext.ensureCursorVisible()
                 self.bftext = output.getvalue()
-    
+
     def toggleOutput(self):
         self.canOutput = not self.canOutput
         self.stopOutputBtn.setText(self.tr("LoggingWindow.stopOutputBtn.StopOut.Text") if self.canOutput else self.tr(
             "LoggingWindow.stopOutputBtn.StartOut.Text"))
-    
+
     def triggerException(self):
         def trigger1():
             trigger2()
-        
+
         def trigger2():
             trigger3()
-        
+
         def trigger3():
             trigger4()
-        
+
         def trigger4():
             trigger5()
-        
+
         def trigger5():
             trigger6()
-        
+
         def trigger6():
             error
-        
+
         try:
             trigger1()
         except NameError as n:
@@ -3498,18 +3580,18 @@ class LoggingWindow(window_class):
                                                 raise ArithmeticError() from s
                                             except ArithmeticError as a:
                                                 raise MemoryError()
-    
+
     def process_command(self):
         if self.inputtext.text():
             self.history_command.append(self.inputtext.text())
             self.cmd.process_command(self.inputtext.text())
             self.inputtext.clear()
             self.current_history = 0
-    
+
     def closeEvent(self, a0):
         super().closeEvent(a0)
         QApplication.closeAllWindows()
-    
+
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         if hasattr(self, "titleBar"):
@@ -3522,7 +3604,7 @@ class LoggingWindow(window_class):
                                        32)
         except AttributeError:
             pass
-    
+
     def keyPressEvent(self, a0):
         super().keyPressEvent(a0)
         if not self.history_command:
@@ -3538,7 +3620,7 @@ class LoggingWindow(window_class):
             if self.current_history == 1:
                 self.current_history = 0
                 self.inputtext.setText("")
-    
+
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
         p = QPainter(background)
@@ -3570,32 +3652,32 @@ class GameLoggingWindow(window_class):
     def __init__(self, parent=None, popen_obj=None):
         super().__init__(parent)
         self.popen_obj = popen_obj
-        
+
         self.resize(800, 600)
-        
+
         self.textEdit = TextEdit(self)
-        
+
         if popen_obj.stdout:
             self.beforeText = popen_obj.stdout.read()
         else:
             self.beforeText = ""
-        
+
         t = QTimer(self)
         t.timeout.connect(self.updateLogs)
         t.start(1000)
-    
+
     def updateLogs(self):
         if self.popen_obj.stdout:
             if self.popen_obj.stdout.read() != self.beforeText:
                 self.textEdit.clear()
                 self.textEdit.append(self.popen_obj.stdout.read().decode("utf-8"))
                 self.beforeText = self.popen_obj.stdout.read()
-    
+
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         if hasattr(self, "textEdit"):
             self.textEdit.setGeometry(QRect(5, 37, self.width() - 10, self.height() - 42))
-    
+
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
         p = QPainter(background)
@@ -3637,14 +3719,14 @@ class SplashScreen(QSplashScreen):
         )
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        
+
         geometry = QGuiApplication.primaryScreen().geometry()
         point = QPoint(geometry.width() // 2 - self.width() // 2, geometry.height() // 2 - self.height() // 2)
         self.move(point)
-        
+
         self.show()
         self.update()
-    
+
     def paintEvent(self, a0, **kwargs):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -3653,7 +3735,7 @@ class SplashScreen(QSplashScreen):
         painter.setFont(app.font())
         painter.drawText(QRect(0, 96, self.width(), 18), Qt.AlignmentFlag.AlignCenter,
                          self.tr("SplashScreen.LoadingText"))
-    
+
     def closeEvent(self, a0, **kwargs):
         super().closeEvent(a0)
         frame.show()
@@ -3664,12 +3746,12 @@ def login_user(name_or_token=b"", is_refresh_login=False):
         conn = sqlite3.connect("user_data.DAT")
         cursor = conn.cursor()
         try:
-            cursor.execute("create table users (refresh_token TEXT, player_name TEXT)")
+            cursor.execute("create table users (refresh_token TEXT, player_playerName TEXT)")
         except sqlite3.OperationalError:
             pass
         if is_refresh_login:
             cursor.execute(
-                f'select refresh_token from users where player_name = "{name_or_token.decode()}"')
+                f'select refresh_token from users where player_playerName = "{name_or_token.decode()}"')
             token = base64.b64decode(cursor.fetchone()[0])
         else:
             token = name_or_token
@@ -3677,9 +3759,11 @@ def login_user(name_or_token=b"", is_refresh_login=False):
         status, player, refresh_token = MicrosoftPlayerLogin(token, is_refresh_login)
         if not is_refresh_login:
             byte_name = b"".join(
-                [str(player.player_name[i] if i < len(player.player_name) else random.randrange(0, 10)).encode("utf-8")
-                 for
-                 i in range(16)])
+                [str(player.player_playerName[i] if i < len(player.player_playerName) else random.randrange(0,
+                                                                                                            10)).encode(
+                    "utf-8")
+                    for
+                    i in range(16)])
             key = str(UUID(bytes=byte_name))
         else:
             byte_name = b"1234567890123456"
@@ -3687,10 +3771,10 @@ def login_user(name_or_token=b"", is_refresh_login=False):
         if refresh_token:
             if not is_refresh_login:
                 cursor.execute(
-                    f'insert into users (refresh_token, player_name) values ("{base64.b64encode(bytes(refresh_token, encoding="utf-8")).decode()}", "{key}")')
+                    f'insert into users (refresh_token, player_playerName) values ("{base64.b64encode(bytes(refresh_token, encoding="utf-8")).decode()}", "{key}")')
             else:
                 cursor.execute(
-                    f'update users set refresh_token = "{base64.b64encode(bytes(refresh_token, encoding="utf-8")).decode()}" where player_name = "{key}"')
+                    f'update users set refresh_token = "{base64.b64encode(bytes(refresh_token, encoding="utf-8")).decode()}" where player_playerName = "{key}"')
         cursor.close()
         conn.commit()
         conn.close()
@@ -3705,7 +3789,7 @@ def login_user(name_or_token=b"", is_refresh_login=False):
 
 class LoginThread(QThread):
     loginFinished = pyqtSignal(MicrosoftPlayer)
-    
+
     def run(self):
         try:
             data = Path("current_user.DAT").read_bytes().replace(
@@ -3732,7 +3816,7 @@ Path("latest.log").write_text("", encoding="utf-8")
 
 class ExceptionEmitter(QObject):
     errorSignal = pyqtSignal()
-    
+
     def __init__(self, func):
         super().__init__()
         self.errorSignal.connect(func)
@@ -3831,6 +3915,10 @@ player = create_online_player(None, None, None, False)
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-cn.ts
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-hk.ts
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-tw.ts
+
+fallback_translator = QTranslator()
+fallback_translator.load(f":/CMCL_zh-cn.qm")
+app.installTranslator(fallback_translator)
 current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
 app.translator = QTranslator()
 app.translator.load(f":/CMCL_{current_language}.qm")
@@ -3860,8 +3948,8 @@ if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
             frame.dy = frame.dx = 0
             frame.setWindowTitle(":D" * 15)
         stopbutton.close()
-    
-    
+
+
     stopbutton = QPushButton("🏳️")
     stopbutton.setWindowFlags(Qt.WindowType.FramelessWindowHint)
     stopbutton.pressed.connect(sttttttttttttttttttttttttttttttop)

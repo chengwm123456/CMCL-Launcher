@@ -79,15 +79,27 @@ class ComboBox(QComboBox, Widget):
         painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         painter.save()
-        painter.setPen(QPen(getBorderColour(
-            is_highlight=self.isEnabled()) if (
-                                                      self.hasFocus() or self.underMouse() or self.view().isVisible()) and self.isEnabled() else getForegroundColour(),
-                            1.0,
-                            Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-        painter.setBrush(getBorderColour(
-            is_highlight=self.isEnabled()) if self.view().isVisible() and self.isEnabled() else getForegroundColour())
-        painter.translate((self.width() - 8) - 3, self.height() / 2 - 4)
-        painter.drawPolygon([QPoint(0, 0), QPoint(4, 8), QPoint(8, 0)])
+        x = (self.width() - 8) - 3
+        y = self.height() / 2 - 2
+        if self.view().isVisible():
+            y += 2
+        borderColour = getBorderColour(
+            is_highlight=self.isEnabled()
+        ) if (self.hasFocus() or self.underMouse() or self.view().isVisible()) and self.isEnabled() \
+            else getForegroundColour()
+        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())) - QPointF(x, y),
+                                         max(self.width(), self.height()))
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(
+            QBrush(borderGradient),
+            1.0,
+            Qt.PenStyle.SolidLine,
+            Qt.PenCapStyle.RoundCap,
+            Qt.PenJoinStyle.RoundJoin
+        ))
+        painter.translate(x, y)
+        painter.drawLines([QLineF(QPointF(0, 0), QPointF(4, 4)), QLineF(QPointF(4, 4), QPointF(8, 0))])
         painter.restore()
         op = QStyleOptionComboBox()
         op.initFrom(self)

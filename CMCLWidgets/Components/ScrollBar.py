@@ -64,51 +64,78 @@ class ScrollBar(QScrollBar, Widget):
         backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
         painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
-        match self.orientation():
-            case Qt.Orientation.Horizontal:
-                painter.drawLines([QLine(QPoint(self.height(), 2), QPoint(self.height(), self.height() - 2)),
-                                   QLine(QPoint(self.width() - self.height(), 2),
-                                         QPoint(self.width() - self.height(), self.height() - 2))])
-            case Qt.Orientation.Vertical:
-                painter.drawLines([QLine(QPoint(2, self.width()), QPoint(self.width() - 2, self.width())),
-                                   QLine(QPoint(2, self.height() - self.width()),
-                                         QPoint(self.width() - 2, self.height() - self.width()))])
         painter.restore()
         painter.save()
-        painter.setPen(
-            QPen(
-                getBorderColour(is_highlight=True) \
-                    if ((self.underMouse() or self.hasFocus()) or self.isSliderDown()) and self.isEnabled() \
-                    else getForegroundColour(),
-                1.0,
-                Qt.PenStyle.SolidLine,
-                Qt.PenCapStyle.RoundCap,
-                Qt.PenJoinStyle.RoundJoin
-            )
-        )
-        painter.setBrush(
-            getBorderColour(is_highlight=True) \
-                if (self.isSliderDown() or self.hasFocus()) and self.isEnabled() \
-                else getForegroundColour()
-        )
+        borderColour = getBorderColour(is_highlight=True) \
+            if ((self.underMouse() or self.hasFocus()) or self.isSliderDown()) and self.isEnabled() \
+            else getForegroundColour()
         match self.orientation():
             case Qt.Orientation.Horizontal:
                 painter.translate(QPoint(0, 0))
-                painter.drawPolygon(
-                    [QPoint(3, self.height() // 2), QPoint(self.height() - 3, self.height() - 3),
-                     QPoint(self.height() - 3, 3)])
+                borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                                 max(self.width(), self.height()))
+                borderGradient.setColorAt(0.0, borderColour)
+                borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+                painter.setPen(QPen(
+                    QBrush(borderGradient),
+                    1.0,
+                    Qt.PenStyle.SolidLine,
+                    Qt.PenCapStyle.RoundCap,
+                    Qt.PenJoinStyle.RoundJoin
+                ))
+                painter.drawLines(
+                    [QLineF(QPointF(self.height() - 4.5, 3), QPointF(3, self.height() // 2)),
+                     QLineF(QPointF(3, self.height() // 2), QPointF(self.height() - 4.5, self.height() - 3))])
                 painter.translate(QPoint(self.width() - self.height(), 0))
-                painter.drawPolygon(
-                    [QPoint(self.height() - 3, self.height() // 2), QPoint(3, self.height() - 3),
-                     QPoint(3, 3)])
+                borderGradient = QRadialGradient(
+                    QPointF(self.mapFromGlobal(QCursor.pos())) - QPointF(self.width() - self.height(), 0),
+                    max(self.width(), self.height()))
+                borderGradient.setColorAt(0.0, borderColour)
+                borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+                painter.setPen(QPen(
+                    QBrush(borderGradient),
+                    1.0,
+                    Qt.PenStyle.SolidLine,
+                    Qt.PenCapStyle.RoundCap,
+                    Qt.PenJoinStyle.RoundJoin
+                ))
+                painter.drawLines(
+                    [QLineF(QPointF(3, 3), QPointF(self.height() - 4.5, self.height() // 2)),
+                     QLineF(QPointF(self.height() - 4.5, self.height() // 2), QPointF(3, self.height() - 3))])
             case Qt.Orientation.Vertical:
+                borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                                 max(self.width(), self.height()))
+                borderGradient.setColorAt(0.0, borderColour)
+                borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+                painter.setPen(QPen(
+                    QBrush(borderGradient),
+                    1.0,
+                    Qt.PenStyle.SolidLine,
+                    Qt.PenCapStyle.RoundCap,
+                    Qt.PenJoinStyle.RoundJoin
+                ))
                 painter.translate(QPoint(0, 0))
-                painter.drawPolygon(
-                    [QPoint(3, self.width() - 3), QPoint(self.width() // 2, 3),
-                     QPoint(self.width() - 3, self.width() - 3)])
+                painter.drawLines(
+                    [QLineF(QPointF(3, self.width() - 3), QPointF(self.width() // 2, 4.5)),
+                     QLineF(QPointF(self.width() // 2, 4.5),
+                            QPointF(self.width() - 3, self.width() - 3))])
                 painter.translate(QPoint(0, self.height() - self.width()))
-                painter.drawPolygon(
-                    [QPoint(3, 3), QPoint(self.width() // 2, self.width() - 3), QPoint(self.width() - 3, 3)])
+                borderGradient = QRadialGradient(
+                    QPointF(self.mapFromGlobal(QCursor.pos())) - QPointF(0, self.height() - self.width()),
+                    max(self.width(), self.height()))
+                borderGradient.setColorAt(0.0, borderColour)
+                borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+                painter.setPen(QPen(
+                    QBrush(borderGradient),
+                    1.0,
+                    Qt.PenStyle.SolidLine,
+                    Qt.PenCapStyle.RoundCap,
+                    Qt.PenJoinStyle.RoundJoin
+                ))
+                painter.drawLines(
+                    [QLineF(QPointF(3, 4.5), QPointF(self.width() // 2, self.width() - 3)),
+                     QLineF(QPointF(self.width() // 2, self.width() - 3),
+                            QPointF(self.width() - 3, 4.5))])
         painter.restore()
         painter.save()
         rect = self.style().subControlRect(QStyle.ComplexControl.CC_ScrollBar, op,

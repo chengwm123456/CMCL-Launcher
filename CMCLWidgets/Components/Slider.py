@@ -12,34 +12,34 @@ class Slider(QSlider, Widget):
     @overload
     def __init__(self, parent=None):
         ...
-    
+
     @overload
     def __init__(self, orientation, parent=None):
         ...
-    
+
     def __init__(self, *__args):
         super().__init__(*__args)
         self.sliderPressed.connect(lambda: self.setSliderDown(True))
         self.sliderReleased.connect(lambda: self.setSliderDown(False))
-    
+
     def mousePressEvent(self, ev):
         super().mousePressEvent(ev)
         if ev.button() == Qt.MouseButton.LeftButton:
             self.setSliderDown(True)
-    
+
     def mouseReleaseEvent(self, ev):
         super().mouseReleaseEvent(ev)
         self.setSliderDown(False)
-    
+
     def keyPressEvent(self, ev):
         super().keyPressEvent(ev)
         if ev.key() in [16777234, 16777235, 16777236, 16777237]:
             self.setSliderDown(True)
-    
+
     def keyReleaseEvent(self, ev):
         super().keyPressEvent(ev)
         self.setSliderDown(False)
-    
+
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
@@ -85,7 +85,7 @@ class Slider(QSlider, Widget):
         borderColour = getBorderColour(is_highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled())
         backgroundColour = getBackgroundColour(is_highlight=(self.isSliderDown()) and self.isEnabled())
         borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(rect.width(), rect.height()))
+                                         max(self.width(), self.height()))
         borderGradient.setColorAt(0.0, borderColour)
         borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
         painter.setPen(QPen(QBrush(borderGradient), 1))

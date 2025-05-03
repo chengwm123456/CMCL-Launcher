@@ -42,19 +42,16 @@ class Minecraft:
                 self.__mc_gameAssetsIndex = self.__mc_gameJsonFileInfo.get("assets")
         if Path(game_libs).is_dir():
             self.__mc_gameLibrariesDir = Path(game_libs).absolute()
+            if self.__mc_gameJsonFileInfo:
+                self.__mc_gameLibrariesFiles = self.__mc_gameJsonFileInfo.get("libraries", [])
     
     def __iter__(self) -> Iterable[Any]:
-        yield self.__mc_gameVersion
-        yield self.__mc_gameWorkDir
-        yield self.__mc_gameJarFile
-        yield self.__mc_gameJsonFile
-        yield self.__mc_gameNativesDir
-        yield self.__mc_gameAssetsDir
-        yield self.__mc_gameLibrariesDir
+        for item in (self.__mc_gameVersion, self.__mc_gameWorkDir, self.__mc_gameJarFile, self.__mc_gameJsonFile,
+                     self.__mc_gameNativesDir, self.__mc_gameAssetsDir, self.__mc_gameLibrariesDir):
+            yield item
     
     def __bool__(self) -> bool:
-        return bool(
-            self.__mc_gameVersion and self.__mc_gameWorkDir and self.__mc_gameJarFile and self.__mc_gameJsonFile and self.__mc_gameNativesDir and self.__mc_gameAssetsDir and self.__mc_gameLibrariesDir)
+        return any(self.__iter__())
     
     def __getitem__(self, item: str) -> Optional[Any]:
         try:
@@ -67,9 +64,9 @@ class Minecraft:
     
     def __cmp__(self, other: Any) -> bool:
         if isinstance(other, Minecraft):
-            return self.__mc_gameVersion == other.__mc_gameVersion and self.__mc_gameWorkDir == other.__mc_gameWorkDir and self.__mc_gameJarFile == other.__mc_gameJarFile and self.__mc_gameJsonFile == other.__mc_gameJsonFile and self.__mc_gameNativesDir == other.__mc_gameNativesDir and self.__mc_gameAssetsDir == other.__mc_gameAssetsDir and self.__mc_gameLibrariesDir == other.__mc_gameLibrariesDir
+            return tuple(self.__iter__()) == tuple(other.__iter__())
         else:
-            return False
+            return super().__cmp__(other)
     
     @property
     def mc_gameVersion(self) -> Optional[str]:
@@ -109,6 +106,10 @@ class Minecraft:
                 self.__mc_gameAssetsIndex = self.__mc_gameJsonFileInfo.get("assets")
             else:
                 self.__mc_gameAssetsIndex = None
+            if self.__mc_gameJsonFileInfo:
+                self.__mc_gameLibrariesFiles = self.__mc_gameJsonFileInfo.get("libraries", [])
+            else:
+                self.__mc_gameLibrariesFiles = []
     
     @property
     def mc_gameJsonFileInfo(self) -> Optional[Union[str, dict]]:
@@ -123,7 +124,7 @@ class Minecraft:
         self.__mc_gameNativesDir = Path(value).absolute()
     
     @property
-    def mc_gameAssetsDir(self) -> Union[str, Path, PurePath, os.PathLike, LiteralString]:
+    def mc_gameAssetsDir(self) -> Optional[Union[str, Path, PurePath, os.PathLike, LiteralString]]:
         return Path(self.__mc_gameAssetsDir).absolute()
     
     @mc_gameAssetsDir.setter
@@ -139,9 +140,15 @@ class Minecraft:
         return self.__mc_gameAssetsIndex
     
     @property
-    def mc_gameLibrariesDir(self) -> Union[str, Path, PurePath, os.PathLike, LiteralString]:
+    def mc_gameLibrariesDir(self) -> Optional[Union[str, Path, PurePath, os.PathLike, LiteralString]]:
         return Path(self.__mc_gameLibrariesDir).absolute()
     
     @mc_gameLibrariesDir.setter
     def mc_gameLibrariesDir(self, value: Union[str, Path, PurePath, os.PathLike, LiteralString]):
         self.__mc_gameLibrariesDir = Path(value).absolute()
+        if self.__mc_gameJsonFileInfo:
+            self.__mc_gameLibrariesFiles = self.__mc_gameJsonFileInfo.get("libraries", [])
+    
+    @property
+    def mc_gameLibrariesFiles(self) -> Iterable[Any]:
+        return self.__mc_gameLibrariesFiles

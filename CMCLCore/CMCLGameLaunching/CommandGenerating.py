@@ -9,8 +9,8 @@ from CMCLCore.CMCLDefines import Player, Minecraft
 from CMCLCore.Player import AuthlibInjectorPlayer
 from CMCLCore import GetOperationSystem
 
-from .TemplateFilling import MinecraftArgumentTemplateFilling, JVMArgumentTemplateFilling
-from .Libraries import GenerateFileNameByNames
+from .TemplateFilling import Quote, MinecraftArgumentTemplateFilling, JVMArgumentTemplateFilling
+from .LibrariesGenerating import GenerateMinecraftLibrariesFiles
 
 
 def GenerateMinecraftLaunchCommand(
@@ -27,58 +27,11 @@ def GenerateMinecraftLaunchCommand(
 ) -> str:
     mcJsonFile = json.loads(Path(minecraft.mc_gameJsonFile).read_text(encoding="utf-8"))
     mcGameJarFile = minecraft.mc_gameJarFile
-    mcAssetsIndex = mcJsonFile.get("assets")
+    mcAssetsIndex = minecraft.mc_gameAssetsIndex
     mcMainClass = mcJsonFile.get("mainClass")
     mcVersionType = mcJsonFile.get("type")
-    mcLibrariesFileDatas = mcJsonFile.get("libraries", [])
-    mcLibrariesFiles = []
-    mcLibrariesFilesNames = {}
-    for mcLib in mcLibrariesFileDatas:
-        if mcLib.get("downloads"):
-            if mcLib.get("rules"):
-                action = "disallow"
-                for rule in mcLib.get("rules", []):
-                    ruleOfOs = rule.get("os", {}).get("name", GetOperationSystem.GetOperationSystemInMojangApi()[0])
-                    if ruleOfOs != GetOperationSystem.GetOperationSystemInMojangApi()[0]:
-                        continue
-                    action = rule.get("action", action)
-                allow = bool(mcLib.get("downloads", {}).get("artifact", {})) and action == "allow"
-            else:
-                allow = bool(mcLib.get("downloads", {}).get("artifact", {}))
-            downloads = mcLib.get("downloads", {})
-            if downloads.get("artifact") and allow:
-                mcLibJarNames = mcLib.get("name", "::").split(":")
-                mcLibJarFile = GenerateFileNameByNames(mcLibJarNames)
-                mcLibPath = Path(
-                    Path(mcLibJarNames[0].replace(".", os.sep)) / mcLibJarNames[1] / mcLibJarNames[
-                        2] / mcLibJarFile)
-                mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mcLibPath)
-                if len(mcLibJarNames) > 3:
-                    mc_lib_name_id = tuple(mcLibJarNames[:-2] + [mcLibJarNames[-1]])
-                else:
-                    mc_lib_name_id = tuple(mcLibJarNames[:2])
-                if mc_lib_name_id in mcLibrariesFilesNames:
-                    mcLibrariesFiles[mcLibrariesFilesNames[mc_lib_name_id]] = str(mc_lib_path_artifact)
-                else:
-                    mcLibrariesFiles.append(str(mc_lib_path_artifact))
-                mcLibrariesFilesNames[mc_lib_name_id] = len(mcLibrariesFiles) - 1
-        else:
-            mcLibJarNames = mcLib.get("name", ":::").split(":")
-            mcLibJarFile = PurePath(" .jar").with_stem("-".join(mcLibJarNames[1:]))
-            mcLibPath = Path(
-                Path(mcLibJarNames[0].replace(".", os.sep)) / mcLibJarNames[1] / mcLibJarNames[
-                    2] / mcLibJarFile)
-            mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mcLibPath)
-            if len(mcLibJarNames) > 3:
-                mc_lib_name_id = tuple(mcLibJarNames[:-2] + [mcLibJarNames[-1]])
-            else:
-                mc_lib_name_id = tuple(mcLibJarNames[:2])
-            if mc_lib_name_id in mcLibrariesFilesNames:
-                mcLibrariesFiles[mcLibrariesFilesNames[mc_lib_name_id]] = str(mc_lib_path_artifact)
-            else:
-                mcLibrariesFiles.append(str(mc_lib_path_artifact))
-            mcLibrariesFilesNames[mc_lib_name_id] = len(mcLibrariesFiles) - 1
-    mcLibrariesFiles = os.pathsep.join(mcLibrariesFiles)
+    mcLibrariesFileDatas = minecraft.mc_gameLibrariesFiles
+    mcLibrariesFiles = os.pathsep.join(GenerateMinecraftLibrariesFiles(minecraft, mcLibrariesFileDatas))
     memory_args = f"-Xmn{str(initial_memory)} -Xmx{str(max_memory)}"
     if not jvm_arguments:
         jvm_arguments = []
@@ -136,30 +89,26 @@ def GenerateMinecraftLaunchCommand(
         for jvmArgument in mcJvmArguments:
             if isinstance(jvmArgument, dict):
                 rules = jvmArgument["rules"][0]
-                currentOs = GetOperationSystem.GetOperationSystemInMojangApi()
-                ruleOfOs = rules["os"]
-                if ruleOfOs.get("name") and ruleOfOs["name"] != currentOs[0]:
+                currentOS = GetOperationSystem.GetOperationSystemInMojangApi()
+                ruleOfOS = rules["os"]
+                if ruleOfOS.get("name") and ruleOfOS["name"] != currentOS[0]:
                     continue
-                if ruleOfOs.get("arch") and currentOs[1] != ruleOfOs["arch"]:
+                if ruleOfOS.get("arch") and currentOS[1] != ruleOfOS["arch"]:
                     continue
                 value = jvmArgument["value"]
                 if isinstance(value, list):
                     for oneValue in value:
                         if " " in oneValue and '"' not in oneValue:
-                            oneValue = f'"{shlex.quote(oneValue)[1:-1]}"'
+                            oneValue = Quote(oneValue)
                         mcJvmCommand.append(oneValue)
                 else:
                     mcJvmCommand.append(value)
             else:
                 strArgument = jvmArgument
                 if " " in strArgument:
-                    strArgument = f'"{shlex.quote(strArgument)[1:-1]}"'
-                strArgument = strArgument.replace("${natives_directory}", f'"{minecraft.mc_gameNativesDir}"')
-                strArgument = strArgument.replace("${launcher_name}", f'"{launcher_name}"')
-                strArgument = strArgument.replace("${launcher_version}", f'"{launcher_version}"')
-                strArgument = strArgument.replace("${classpath}",
-                                                  f'"{mcLibrariesFiles}{os.pathsep}{mcGameJarFile}"')
-                mcJvmCommand.append(strArgument)
+                    strArgument = Quote(strArgument)
+                mcJvmCommand.append(JVMArgumentTemplateFilling(strArgument, minecraft, launcher_name, launcher_version,
+                                                               mcLibrariesFiles))
         mcJvmCommand.append(memory_args)
         mcJvmCommand.append(
             f"-Xmixed {mcMainClass}")

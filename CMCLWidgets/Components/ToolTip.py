@@ -13,7 +13,7 @@ class ToolTipLabel(QLabel):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setContentsMargins(5, 5, 5, 5)
         self.show()
-
+    
     def paintEvent(self, a0):
         self.setStyleSheet("padding: 3px;")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -21,8 +21,17 @@ class ToolTipLabel(QLabel):
         painter = QPainter(self)
         painter.setOpacity(1.0)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
+        borderColour = getBorderColour()
+        backgroundColour = getBackgroundColour()
+        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+                                         max(self.width(), self.height()))
+        borderGradient.setColorAt(0.0, borderColour)
+        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
+        backgroundGradient.setColorAt(0.0, backgroundColour)
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         self.setStyleSheet(
             f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {painter.opacity()});")
@@ -43,14 +52,14 @@ class ToolTipWidget(QWidget):
         shadow.setOffset(QPointF(5, 5))
         self.label.setGraphicsEffect(shadow)
         self.hide()
-
+    
     def paintEvent(self, a0):
         self.label.adjustSize()
         self.resize(self.label.graphicsEffect().boundingRect().size().toSize())
-
+    
     def setText(self, text):
         self.label.setText(text)
-
+    
     def setFont(self, a0):
         super().setFont(a0)
         self.label.setFont(a0)
@@ -62,15 +71,13 @@ class ToolTip(QWidget):
         self.__tooltip = ToolTipWidget(self.parent().parent())
         self.__tooltip.setText(self.parent().toolTip())
         self.__tooltip.adjustSize()
-        x = self.parent().mapToGlobal(QPoint(0, self.parent().height())).x()
-        y = self.parent().mapToGlobal(QPoint(0, self.parent().height())).y()
-        self.__tooltip.move(x, y)
+        self.__tooltip.move(QCursor.pos())
         self.__tooltip.raise_()
-
+    
     def event(self, a0):
         self.hide()
         return super().event(a0)
-
+    
     def eventFilter(self, a0, a1):
         match a1.type():
             case QEvent.Type.ToolTip:
@@ -78,14 +85,26 @@ class ToolTip(QWidget):
                     if not self.__tooltip.isVisible():
                         self.__tooltip.setText(a0.toolTip())
                         self.__tooltip.adjustSize()
-                        x = a0.mapToGlobal(QPoint(0, a0.height())).x()
-                        y = a0.mapToGlobal(QPoint(0, a0.height())).y()
-                        self.__tooltip.move(x, y)
                         self.__tooltip.raise_()
                         self.__tooltip.show()
                         if a0.toolTipDuration() > 0:
                             QTimer.singleShot(a0.toolTipDuration(), self.__tooltip.hide)
+                    maxWidth, maxHeight = (QGuiApplication.primaryScreen().geometry().width(),
+                                           QGuiApplication.primaryScreen().geometry().height())
+                    self.__tooltip.move(QCursor.pos())
+                    if self.__tooltip.y() + self.__tooltip.height() > maxHeight:
+                        self.__tooltip.move(self.__tooltip.x(), self.__tooltip.y() - self.__tooltip.height())
+                    if self.__tooltip.x() + self.__tooltip.width() > maxWidth:
+                        self.__tooltip.move(self.__tooltip.x() - self.__tooltip.width(), self.__tooltip.y())
                 return True
+            case QEvent.Type.Move:
+                maxWidth, maxHeight = (QGuiApplication.primaryScreen().geometry().width(),
+                                       QGuiApplication.primaryScreen().geometry().height())
+                self.__tooltip.move(QCursor.pos())
+                if self.__tooltip.y() + self.__tooltip.height() > maxHeight:
+                    self.__tooltip.move(self.__tooltip.x(), self.__tooltip.y() - self.__tooltip.height())
+                if self.__tooltip.x() + self.__tooltip.width() > maxWidth:
+                    self.__tooltip.move(self.__tooltip.x() - self.__tooltip.width(), self.__tooltip.y())
             case QEvent.Type.Leave:
                 self.__tooltip.hide()
             case QEvent.Type.Hide:

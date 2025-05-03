@@ -52,15 +52,26 @@ class PushButton(QPushButton, Widget):
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         if self.menu():
             painter.save()
-            painter.setPen(QPen(getBorderColour(
-                is_highlight=self.isEnabled()) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour(),
-                                1.0,
-                                Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-            painter.setBrush(
-                getBorderColour(
-                    is_highlight=self.isEnabled()) if self.isDown() or self.isChecked() else getForegroundColour())
-            painter.translate((self.width() - 8) - 3, self.height() / 2 - 4)
-            painter.drawPolygon([QPoint(0, 0), QPoint(4, 8), QPoint(8, 0)])
+            x = (self.width() - 8) - 3
+            y = self.height() / 2 - 2
+            if self.isDown():
+                y += 2
+            borderColour = getBorderColour(
+                is_highlight=self.isEnabled()
+            ) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour()
+            borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())) - QPointF(x, y),
+                                             max(self.width(), self.height()))
+            borderGradient.setColorAt(0.0, borderColour)
+            borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+            painter.setPen(QPen(
+                QBrush(borderGradient),
+                1.0,
+                Qt.PenStyle.SolidLine,
+                Qt.PenCapStyle.RoundCap,
+                Qt.PenJoinStyle.RoundJoin
+            ))
+            painter.translate(x, y)
+            painter.drawLines([QLineF(QPointF(0, 0), QPointF(4, 4)), QLineF(QPointF(4, 4), QPointF(8, 0))])
             painter.restore()
         op = QStyleOptionButton()
         op.initFrom(self)
@@ -121,15 +132,26 @@ class ToolButton(QToolButton, Widget):
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         if self.menu():
             painter.save()
-            painter.setPen(QPen(getBorderColour(
-                is_highlight=self.isEnabled()) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour(),
-                                1.0,
-                                Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-            painter.setBrush(
-                getBorderColour(
-                    is_highlight=self.isEnabled()) if self.isDown() or self.isChecked() else getForegroundColour())
-            painter.translate((self.width() - 8) - 3, self.height() / 2 - 4)
-            painter.drawPolygon([QPoint(0, 0), QPoint(4, 8), QPoint(8, 0)])
+            x = (self.width() - 8) - 3
+            y = self.height() / 2 - 2
+            if self.isDown():
+                y += 2
+            borderColour = getBorderColour(
+                is_highlight=self.isEnabled()
+            ) if self.isDown() or self.isChecked() or self.hasFocus() or self.underMouse() else getForegroundColour()
+            borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())) - QPointF(x, y),
+                                             max(self.width(), self.height()))
+            borderGradient.setColorAt(0.0, borderColour)
+            borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+            painter.setPen(QPen(
+                QBrush(borderGradient),
+                1.0,
+                Qt.PenStyle.SolidLine,
+                Qt.PenCapStyle.RoundCap,
+                Qt.PenJoinStyle.RoundJoin
+            ))
+            painter.translate(x, y)
+            painter.drawLines([QLineF(QPointF(0, 0), QPointF(4, 4)), QLineF(QPointF(4, 4), QPointF(8, 0))])
             painter.restore()
         op = QStyleOptionToolButton()
         op.initFrom(self)
@@ -284,7 +306,7 @@ class CheckBox(QCheckBox, Widget):
                     (self.isDown() or self.isChecked()) and self.isEnabled())
         )
         borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(rect.width(), rect.height()))
+                                         max(self.width(), self.height()))
         borderGradient.setColorAt(0.0, borderColour)
         borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
         painter.setPen(QPen(QBrush(borderGradient), 1))
@@ -374,7 +396,7 @@ class RadioButton(QRadioButton, Widget):
                     (self.isDown() or self.isChecked()) and self.isEnabled())
         )
         borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(rect.width(), rect.height()))
+                                         max(self.width(), self.height()))
         borderGradient.setColorAt(0.0, borderColour)
         borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
         painter.setPen(QPen(QBrush(borderGradient), 1))
@@ -459,17 +481,17 @@ class SwitchButton(QAbstractButton, Widget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         borderColour = getBorderColour()
         backgroundColour = getBackgroundColour()
-        rect = QRect(1, (self.height() - 22) // 2, 50, 21)
+        outerrect = QRect(1, (self.height() - 22) // 2, 50, 21)
         borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(rect.width(), rect.height()))
+                                         max(outerrect.width(), outerrect.height()))
         borderGradient.setColorAt(0.0, borderColour)
         borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
         painter.setPen(QPen(QBrush(borderGradient), 1))
-        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, outerrect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
         backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
         painter.setBrush(QBrush(backgroundGradient))
-        painter.drawRoundedRect(rect, self.height() // 2 - 1, self.height() // 2 - 1)
+        painter.drawRoundedRect(outerrect, self.height() // 2 - 1, self.height() // 2 - 1)
         rect = QRect(3 if not self.isChecked() else 49 - 17, (self.height() - 22) // 2 + 2, 17, 17)
         borderColour = getBorderColour(
             is_highlight=(self.isDown() or self.isChecked()) or
@@ -481,7 +503,7 @@ class SwitchButton(QAbstractButton, Widget):
                     (self.isDown() or self.isChecked()) and self.isEnabled())
         )
         borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(rect.width(), rect.height()))
+                                         max(outerrect.width(), outerrect.height()))
         borderGradient.setColorAt(0.0, borderColour)
         borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
         painter.setPen(QPen(QBrush(borderGradient), 1))

@@ -306,11 +306,14 @@ def LaunchMinecraft(
             jvm_args = default_jvm_args + shlex.split(jvm_args)
     else:
         jvm_args = default_jvm_args
-    minecraft = Minecraft(game_version=version_launch, game_work_dir=minecraft_path,
-                          game_jar=minecraft_path / "versions" / version_launch / f"{version_launch}.jar",
-                          game_json=minecraft_path / "versions" / version_launch / f"{version_launch}.json",
-                          game_natives_dir=minecraft_path / "versions" / version_launch / f"{version_launch}-natives",
-                          game_libs=minecraft_path / "libraries", game_asset_dir=minecraft_path / "assets", )
+    minecraft = Minecraft(
+        game_version=version_launch,
+        game_work_dir=minecraft_path,
+        game_jar=minecraft_path / "versions" / version_launch / f"{version_launch}.jar",
+        game_json=minecraft_path / "versions" / version_launch / f"{version_launch}.json",
+        game_natives_dir=minecraft_path / "versions" / version_launch / f"{version_launch}-natives",
+        game_libs=minecraft_path / "libraries", game_asset_dir=minecraft_path / "assets"
+    )
     initial_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))
     max_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))
     command = GenerateMinecraftLaunchCommand(java_path, minecraft, player_data,
