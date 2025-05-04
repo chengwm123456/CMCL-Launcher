@@ -68,9 +68,9 @@ class Widget(QWidget):
             case QEvent.Type.Leave:
                 if self.isEnabled():
                     if not self.hasFocus() and \
-                            not (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and
-                                          child.focusPolicy() == Qt.FocusPolicy.TabFocus
-                                          for child in self.findChildren(QWidget)) and self.isActiveWindow()):
+                            not (any(child.hasFocus() and child.isVisible() and child.isEnabled() and
+                                     child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                     for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("widgetOpacity"))
@@ -87,9 +87,9 @@ class Widget(QWidget):
             case QEvent.Type.FocusOut:
                 if self.isEnabled():
                     if not self.underMouse() and \
-                            not (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and
-                                          child.focusPolicy() == Qt.FocusPolicy.TabFocus
-                                          for child in self.findChildren(QWidget)) and self.isActiveWindow()):
+                            not (any(child.hasFocus() and child.isVisible() and child.isEnabled() and
+                                     child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                     for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         ani = QPropertyAnimation(self, b"widgetOpacity", self)
                         ani.setDuration(500)
                         ani.setStartValue(self.property("widgetOpacity"))
@@ -122,9 +122,9 @@ class Widget(QWidget):
             case QEvent.Type.Paint | QEvent.Type.UpdateRequest | QEvent.Type.UpdateLater | QEvent.Type.KeyPress | QEvent.Type.KeyRelease | QEvent.Type.MouseButtonPress | QEvent.Type.MouseButtonRelease:
                 if self.isEnabled():
                     if self.underMouse() or self.hasFocus() or \
-                            (True in (child.hasFocus() and child.isVisible() and child.isEnabled() and
-                                      child.focusPolicy() == Qt.FocusPolicy.TabFocus
-                                      for child in self.findChildren(QWidget)) and self.isActiveWindow()):
+                            (any(child.hasFocus() and child.isVisible() and child.isEnabled() and
+                                 child.focusPolicy() == Qt.FocusPolicy.TabFocus
+                                 for child in self.findChildren(QWidget)) and self.isActiveWindow()):
                         if self.property("widgetOpacity") != 1.0 and not bool(self.findChild(QPropertyAnimation)):
                             ani = QPropertyAnimation(self, b"widgetOpacity", self)
                             ani.setDuration(500)

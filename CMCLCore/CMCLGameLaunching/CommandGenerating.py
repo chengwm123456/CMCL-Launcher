@@ -25,10 +25,10 @@ def GenerateMinecraftLaunchCommand(
         launcher_name: str,
         launcher_version: str,
 ) -> str:
-    mcJsonFile = json.loads(Path(minecraft.mc_gameJsonFile).read_text(encoding="utf-8"))
+    mcJsonFile = minecraft.mc_gameJsonFileContent
     mcGameJarFile = minecraft.mc_gameJarFile
     mcAssetsIndex = minecraft.mc_gameAssetsIndex
-    mcMainClass = mcJsonFile.get("mainClass")
+    mcMainClass = minecraft.mc_gameMainClass
     mcVersionType = mcJsonFile.get("type")
     mcLibrariesFileDatas = minecraft.mc_gameLibrariesFiles
     mcLibrariesFiles = os.pathsep.join(GenerateMinecraftLibrariesFiles(minecraft, mcLibrariesFileDatas))
