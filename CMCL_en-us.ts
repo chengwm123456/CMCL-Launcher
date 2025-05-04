@@ -4,34 +4,34 @@
 <context>
     <name>AboutPage</name>
     <message>
-        <location filename="main.py" line="2743"/>
+        <location filename="main.py" line="2744"/>
         <source>AboutPage.label1.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2761"/>
+        <location filename="main.py" line="2762"/>
         <source>AboutPage.label2.Text.LocalisedName</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2762"/>
+        <location filename="main.py" line="2763"/>
         <source>AboutPage.label2.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2771"/>
-        <location filename="main.py" line="2809"/>
+        <location filename="main.py" line="2772"/>
+        <location filename="main.py" line="2870"/>
         <source>AboutPage.Page1.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2788"/>
+        <location filename="main.py" line="2789"/>
         <source>AboutPage.Page2.CMCL_info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2798"/>
-        <location filename="main.py" line="2810"/>
+        <location filename="main.py" line="2799"/>
+        <location filename="main.py" line="2871"/>
         <source>AboutPage.Page2.Title</source>
         <translation type="unfinished"></translation>
     </message>
@@ -39,77 +39,77 @@
 <context>
     <name>CustomiseSettings</name>
     <message>
-        <location filename="main.py" line="2567"/>
+        <location filename="main.py" line="2568"/>
         <source>SettingsPage.CustomiseSettings.groupBox.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2568"/>
+        <location filename="main.py" line="2569"/>
         <source>SettingsPage.CustomiseSettings.group1_radioButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2570"/>
+        <location filename="main.py" line="2571"/>
         <source>SettingsPage.CustomiseSettings.group1_radioButton_2.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2572"/>
+        <location filename="main.py" line="2573"/>
         <source>SettingsPage.CustomiseSettings.group1_radioButton_3.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2573"/>
+        <location filename="main.py" line="2574"/>
         <source>SettingsPage.CustomiseSettings.groupBox_2.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2574"/>
+        <location filename="main.py" line="2575"/>
         <source>SettingsPage.CustomiseSettings.group2_radioButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2576"/>
+        <location filename="main.py" line="2577"/>
         <source>SettingsPage.CustomiseSettings.group2_radioButton_2.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2577"/>
+        <location filename="main.py" line="2578"/>
         <source>SettingsPage.CustomiseSettings.tipLabel.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2578"/>
+        <location filename="main.py" line="2579"/>
         <source>SettingsPage.CustomiseSettings.label1.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2579"/>
+        <location filename="main.py" line="2580"/>
         <source>SettingsPage.CustomiseSettings.groupBox_3.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2580"/>
+        <location filename="main.py" line="2581"/>
         <source>SettingsPage.CustomiseSettings.group3_checkBox.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2581"/>
+        <location filename="main.py" line="2582"/>
         <source>SettingsPage.CustomiseSettings.groupBox_4.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2582"/>
+        <location filename="main.py" line="2583"/>
         <source>SettingsPage.CustomiseSettings.label2.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2584"/>
+        <location filename="main.py" line="2585"/>
         <source>SettingsPage.CustomiseSettings.translationMayNotBeCorrectLabel.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2631"/>
+        <location filename="main.py" line="2632"/>
         <source>SettingsPage.CustomiseSettings.LanguageChangedRestartTip.Label.Text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -117,19 +117,11 @@
 <context>
     <name>DownloadMods</name>
     <message>
-        <location filename="main.py" line="1856"/>
-        <location filename="main.py" line="1894"/>
-        <location filename="main.py" line="1993"/>
-        <location filename="main.py" line="2033"/>
-        <source>DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="main.py" line="1857"/>
         <location filename="main.py" line="1895"/>
         <location filename="main.py" line="1994"/>
         <location filename="main.py" line="2034"/>
-        <source>DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2</source>
+        <source>DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -137,26 +129,34 @@
         <location filename="main.py" line="1896"/>
         <location filename="main.py" line="1995"/>
         <location filename="main.py" line="2035"/>
+        <source>DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="1859"/>
+        <location filename="main.py" line="1897"/>
+        <location filename="main.py" line="1996"/>
+        <location filename="main.py" line="2036"/>
         <source>DownloadPage.DownloadMods.contentTabel.horizontalHeaderLabels.3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1888"/>
+        <location filename="main.py" line="1889"/>
         <source>DownloadPage.DownloadMods.filterPanel.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1889"/>
+        <location filename="main.py" line="1890"/>
         <source>DownloadPage.DownloadMods.searchLineEdit.PlaceholderText</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1891"/>
+        <location filename="main.py" line="1892"/>
         <source>DownloadPage.DownloadMods.previousButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1892"/>
+        <location filename="main.py" line="1893"/>
         <source>DownloadPage.DownloadMods.nextButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -164,29 +164,29 @@
 <context>
     <name>DownloadOptions</name>
     <message>
-        <location filename="main.py" line="1280"/>
-        <location filename="main.py" line="1322"/>
+        <location filename="main.py" line="1281"/>
+        <location filename="main.py" line="1323"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page1.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1304"/>
-        <location filename="main.py" line="1327"/>
+        <location filename="main.py" line="1305"/>
+        <location filename="main.py" line="1328"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page2.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1319"/>
+        <location filename="main.py" line="1320"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.lLabel.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1323"/>
+        <location filename="main.py" line="1324"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.label_2.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1329"/>
+        <location filename="main.py" line="1330"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.startDownloadButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -194,12 +194,12 @@
 <context>
     <name>DownloadPage</name>
     <message>
-        <location filename="main.py" line="2123"/>
+        <location filename="main.py" line="2124"/>
         <source>DownloadPage.pushButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2124"/>
+        <location filename="main.py" line="2125"/>
         <source>DownloadPage.pushButton_2.Text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -207,21 +207,12 @@
 <context>
     <name>DownloadVanilla</name>
     <message>
-        <location filename="main.py" line="1381"/>
-        <location filename="main.py" line="1440"/>
-        <location filename="main.py" line="1518"/>
-        <location filename="main.py" line="1533"/>
-        <location filename="main.py" line="1617"/>
-        <source>DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="main.py" line="1382"/>
         <location filename="main.py" line="1441"/>
         <location filename="main.py" line="1519"/>
         <location filename="main.py" line="1534"/>
         <location filename="main.py" line="1618"/>
-        <source>DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2</source>
+        <source>DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -230,63 +221,72 @@
         <location filename="main.py" line="1520"/>
         <location filename="main.py" line="1535"/>
         <location filename="main.py" line="1619"/>
+        <source>DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="1384"/>
+        <location filename="main.py" line="1443"/>
+        <location filename="main.py" line="1521"/>
+        <location filename="main.py" line="1536"/>
+        <location filename="main.py" line="1620"/>
         <source>DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1412"/>
+        <location filename="main.py" line="1413"/>
         <source>DownloadPage.DownloadVanilla.ComboBox.Item1.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1436"/>
+        <location filename="main.py" line="1437"/>
         <source>DownloadPage.DownloadVanilla.lineEdit.PlaceholderText</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1437"/>
+        <location filename="main.py" line="1438"/>
         <source>DownloadPage.DownloadVanilla.lineEdit.ToolTip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1438"/>
+        <location filename="main.py" line="1439"/>
         <source>DownloadPage.DownloadVanilla.label.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1495"/>
-        <location filename="main.py" line="1546"/>
-        <location filename="main.py" line="1571"/>
-        <location filename="main.py" line="1597"/>
+        <location filename="main.py" line="1496"/>
+        <location filename="main.py" line="1547"/>
+        <location filename="main.py" line="1572"/>
+        <location filename="main.py" line="1598"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Release</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1497"/>
-        <location filename="main.py" line="1548"/>
-        <location filename="main.py" line="1576"/>
-        <location filename="main.py" line="1599"/>
+        <location filename="main.py" line="1498"/>
+        <location filename="main.py" line="1549"/>
+        <location filename="main.py" line="1577"/>
+        <location filename="main.py" line="1600"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Snapshot</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1499"/>
-        <location filename="main.py" line="1550"/>
-        <location filename="main.py" line="1601"/>
+        <location filename="main.py" line="1500"/>
+        <location filename="main.py" line="1551"/>
+        <location filename="main.py" line="1602"/>
         <source>DownloadPage.DownloadVanilla.VersionType.OldBeta</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1501"/>
-        <location filename="main.py" line="1552"/>
-        <location filename="main.py" line="1603"/>
+        <location filename="main.py" line="1502"/>
+        <location filename="main.py" line="1553"/>
+        <location filename="main.py" line="1604"/>
         <source>DownloadPage.DownloadVanilla.VersionType.OldAlpha</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1510"/>
-        <location filename="main.py" line="1557"/>
-        <location filename="main.py" line="1608"/>
+        <location filename="main.py" line="1511"/>
+        <location filename="main.py" line="1558"/>
+        <location filename="main.py" line="1609"/>
         <source>DownloadPage.DownloadVanilla.VersionType.AprilFool</source>
         <translation type="unfinished"></translation>
     </message>
@@ -294,22 +294,22 @@
 <context>
     <name>GameSettings</name>
     <message>
-        <location filename="main.py" line="2195"/>
+        <location filename="main.py" line="2196"/>
         <source>SettingsPage.GameSettings.label.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2196"/>
+        <location filename="main.py" line="2197"/>
         <source>SettingsPage.GameSettings.groupBox.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2197"/>
+        <location filename="main.py" line="2198"/>
         <source>SettingsPage.GameSettings.checkBox.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2198"/>
+        <location filename="main.py" line="2199"/>
         <source>SettingsPage.GameSettings.checkBox_2.Text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -317,83 +317,83 @@
 <context>
     <name>JavaSettings</name>
     <message>
-        <location filename="main.py" line="2293"/>
-        <location filename="main.py" line="2377"/>
+        <location filename="main.py" line="2294"/>
+        <location filename="main.py" line="2378"/>
         <source>SettingsPage.JavaSettings.comboBox.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2352"/>
+        <location filename="main.py" line="2353"/>
         <source>SettingsPage.JavaSettings.groupBox.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2353"/>
+        <location filename="main.py" line="2354"/>
         <source>SettingsPage.JavaSettings.radioButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2354"/>
+        <location filename="main.py" line="2355"/>
         <source>SettingsPage.JavaSettings.radioButton.ToolTip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2355"/>
+        <location filename="main.py" line="2356"/>
         <source>SettingsPage.JavaSettings.radioButton_2.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2357"/>
+        <location filename="main.py" line="2358"/>
         <source>SettingsPage.JavaSettings.radioButton_2.ToolTip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2358"/>
+        <location filename="main.py" line="2359"/>
         <source>SettingsPage.JavaSettings.label_2.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2359"/>
+        <location filename="main.py" line="2360"/>
         <source>SettingsPage.JavaSettings.pushButton_2.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2360"/>
+        <location filename="main.py" line="2361"/>
         <source>SettingsPage.JavaSettings.pushButton_3.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2362"/>
+        <location filename="main.py" line="2363"/>
         <source>SettingsPage.JavaSettings.label.Text.1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2363"/>
+        <location filename="main.py" line="2364"/>
         <source>SettingsPage.JavaSettings.label.Text.2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2364"/>
+        <location filename="main.py" line="2365"/>
         <source>SettingsPage.JavaSettings.pushButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2408"/>
+        <location filename="main.py" line="2409"/>
         <source>SettingsPage.JavaSettings.applyJavaDialogue.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2432"/>
+        <location filename="main.py" line="2433"/>
         <source>SettingsPage.JavaSettings.JVMEditConfirmation.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2437"/>
+        <location filename="main.py" line="2438"/>
         <source>SettingsPage.JavaSettings.JVMEditConfirmation.OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2441"/>
+        <location filename="main.py" line="2442"/>
         <source>SettingsPage.JavaSettings.JVMEditConfirmation.Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -420,29 +420,29 @@
 <context>
     <name>LoggingWindow</name>
     <message>
-        <location filename="main.py" line="3409"/>
+        <location filename="main.py" line="3524"/>
         <source>LoggingWindow.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3437"/>
+        <location filename="main.py" line="3552"/>
         <source>LoggingWindow.inputtext.ToolTip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3448"/>
-        <location filename="main.py" line="3464"/>
+        <location filename="main.py" line="3563"/>
+        <location filename="main.py" line="3579"/>
         <source>LoggingWindow.stopOutputBtn.StopOut.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3449"/>
-        <location filename="main.py" line="3465"/>
+        <location filename="main.py" line="3564"/>
+        <location filename="main.py" line="3580"/>
         <source>LoggingWindow.stopOutputBtn.StartOut.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3450"/>
+        <location filename="main.py" line="3565"/>
         <source>LoggingWindow.triggerExceptionBtn.Text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -546,37 +546,37 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="main.py" line="3147"/>
+        <location filename="main.py" line="3262"/>
         <source>MainWindow.HomePage.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3149"/>
+        <location filename="main.py" line="3264"/>
         <source>MainWindow.DownloadPage.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3151"/>
+        <location filename="main.py" line="3266"/>
         <source>MainWindow.SettingsPage.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3153"/>
+        <location filename="main.py" line="3268"/>
         <source>MainWindow.AboutPage.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3155"/>
+        <location filename="main.py" line="3270"/>
         <source>MainWindow.UserPage.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3246"/>
+        <location filename="main.py" line="3361"/>
         <source>MainPage.ToggleTheme.Light.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3247"/>
+        <location filename="main.py" line="3362"/>
         <source>MainPage.ToggleTheme.Dark.Text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -584,19 +584,19 @@
 <context>
     <name>ModInfoPage</name>
     <message>
-        <location filename="main.py" line="1760"/>
-        <location filename="main.py" line="1780"/>
+        <location filename="main.py" line="1761"/>
+        <location filename="main.py" line="1781"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.Page1.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1770"/>
-        <location filename="main.py" line="1782"/>
+        <location filename="main.py" line="1771"/>
+        <location filename="main.py" line="1783"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.Page2.Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1801"/>
+        <location filename="main.py" line="1802"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.Page2.DownloadPath</source>
         <translation type="unfinished"></translation>
     </message>
@@ -604,17 +604,17 @@
 <context>
     <name>OfflinePlayerCreationDialogue</name>
     <message>
-        <location filename="main.py" line="2838"/>
+        <location filename="main.py" line="2900"/>
         <source>OfflinePlayerCreationDialogue.label.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2839"/>
+        <location filename="main.py" line="2901"/>
         <source>OfflinePlayerCreationDialogue.CancelButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2840"/>
+        <location filename="main.py" line="2902"/>
         <source>OfflinePlayerCreationDialogue.OKButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -688,17 +688,17 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="main.py" line="2713"/>
+        <location filename="main.py" line="2714"/>
         <source>SettingsPage.pushButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2714"/>
+        <location filename="main.py" line="2715"/>
         <source>SettingsPage.pushButton_2.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2715"/>
+        <location filename="main.py" line="2716"/>
         <source>SettingsPage.pushButton_3.Text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -706,8 +706,8 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="main.py" line="3650"/>
-        <location filename="main.py" line="3671"/>
+        <location filename="main.py" line="3765"/>
+        <location filename="main.py" line="3786"/>
         <source>SplashScreen.LoadingText</source>
         <translation type="unfinished"></translation>
     </message>
@@ -715,51 +715,82 @@
 <context>
     <name>UserPage</name>
     <message>
-        <location filename="main.py" line="2902"/>
-        <location filename="main.py" line="2916"/>
-        <location filename="main.py" line="2933"/>
-        <location filename="main.py" line="2976"/>
-        <location filename="main.py" line="2997"/>
-        <location filename="main.py" line="3004"/>
-        <location filename="main.py" line="3012"/>
+        <location filename="main.py" line="2953"/>
+        <location filename="main.py" line="3083"/>
+        <source>UserPage.UserTypeLocalisations.msa</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="2954"/>
+        <location filename="main.py" line="3084"/>
+        <source>UserPage.UserTypeLocalisations.offline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="2955"/>
+        <location filename="main.py" line="3085"/>
+        <source>UserPage.UserTypeLocalisations.authlib-injector</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="2959"/>
+        <location filename="main.py" line="3088"/>
+        <source>UsetPage.UserTypeLocalisations.littleskin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="2970"/>
+        <location filename="main.py" line="2988"/>
+        <location filename="main.py" line="3008"/>
+        <location filename="main.py" line="3058"/>
+        <location filename="main.py" line="3091"/>
+        <location filename="main.py" line="3102"/>
+        <location filename="main.py" line="3113"/>
         <source>UserPage.UserDataFormat.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2920"/>
-        <location filename="main.py" line="2980"/>
-        <location filename="main.py" line="3008"/>
+        <location filename="main.py" line="2995"/>
+        <location filename="main.py" line="3065"/>
+        <location filename="main.py" line="3109"/>
         <source>UserPage.UserIconNoUser.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2960"/>
-        <location filename="main.py" line="2964"/>
-        <location filename="main.py" line="2982"/>
-        <location filename="main.py" line="3019"/>
+        <location filename="main.py" line="3039"/>
+        <location filename="main.py" line="3043"/>
+        <location filename="main.py" line="3067"/>
+        <location filename="main.py" line="3124"/>
         <source>UserPage.userTable.horizontalHeaderLabels.1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="2961"/>
-        <location filename="main.py" line="2965"/>
-        <location filename="main.py" line="2983"/>
-        <location filename="main.py" line="3020"/>
+        <location filename="main.py" line="3040"/>
+        <location filename="main.py" line="3044"/>
+        <location filename="main.py" line="3068"/>
+        <location filename="main.py" line="3125"/>
         <source>UserPage.userTable.horizontalHeaderLabels.2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3016"/>
+        <location filename="main.py" line="3050"/>
+        <location filename="main.py" line="3074"/>
+        <location filename="main.py" line="3131"/>
+        <source>UserPage.UserTypeLocalisations.suffix</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="3121"/>
         <source>UserPage.addUserBtn.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3036"/>
+        <location filename="main.py" line="3144"/>
         <source>UserPage.addUserBtn.Item1.Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="3040"/>
+        <location filename="main.py" line="3148"/>
         <source>UserPage.addUserBtn.Item2.Text</source>
         <translation type="unfinished"></translation>
     </message>

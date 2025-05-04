@@ -49,13 +49,14 @@ class ToolBox(QToolBox, Widget):
                 button.newTip = newTip
                 button.installEventFilter(newTip)
             painter.save()
-            rect = button.geometry().adjusted(1, 1, -1, -1)
+            painter.translate(button.pos())
+            rect = button.rect().adjusted(1, 1, -1, -1)
             borderColour = getBorderColour(
                 is_highlight=(button.isDown() or button.isChecked()) or ((
                                                                                  button.isDown() or button.isChecked() or button.underMouse() or button.hasFocus()) and self.isEnabled()))
             backgroundColour = getBackgroundColour(is_highlight=(button.isDown() or button.isChecked()) or (
                     (button.isDown() or button.isChecked()) and button.isEnabled()))
-            borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
+            borderGradient = QRadialGradient(QPointF(button.mapFromGlobal(QCursor.pos())),
                                              max(rect.width(), rect.height()))
             borderGradient.setColorAt(0.0, borderColour)
             borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
@@ -67,5 +68,5 @@ class ToolBox(QToolBox, Widget):
             painter.drawRoundedRect(rect, 10, 10)
             painter.setPen(getForegroundColour())
             painter.setBrush(getForegroundColour())
-            painter.drawText(button.geometry().adjusted(1, 1, -1, -1), Qt.AlignmentFlag.AlignCenter, button.text())
+            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, button.text())
             painter.restore()

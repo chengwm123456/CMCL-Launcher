@@ -51,16 +51,13 @@ class Minecraft:
             yield item
     
     def __bool__(self) -> bool:
-        return any(self.__iter__())
+        return any(tuple(self.__iter__()))
     
     def __getitem__(self, item: str) -> Optional[Any]:
-        try:
-            return eval(f"self.__mc_{item}", globals(), locals())
-        finally:
-            pass
+        return self.__getattribute__(item)
     
-    def __setitem__(self, key: str, value: Any):
-        exec(f"self.__mc_{key} = {value}", globals(), locals())
+    def __setitem__(self, key: str, value: Optional[Any]):
+        self.__setattr__(key, value)
     
     def __cmp__(self, other: Any) -> bool:
         if isinstance(other, Minecraft):

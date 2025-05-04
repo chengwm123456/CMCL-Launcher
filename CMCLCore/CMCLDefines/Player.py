@@ -25,16 +25,13 @@ class Player:
             yield item
     
     def __bool__(self) -> bool:
-        return any(self.__iter__()[:-1])
+        return any(tuple(self.__iter__())[:-1])
     
     def __getitem__(self, item: str) -> Optional[Any]:
-        try:
-            return eval(f"self.__player_{item}", globals(), locals())
-        finally:
-            pass
+        return self.__getattribute__(item)
     
-    def __setitem__(self, key: str, value: Any):
-        exec(f"self.__player_{key} = \"{value}\"", globals(), locals())
+    def __setitem__(self, key: str, value: Optional[Any]):
+        self.__setattr__(key, value)
     
     def __cmp__(self, other: Any) -> bool:
         if isinstance(other, Player):

@@ -59,3 +59,4 @@ def GenerateMinecraftLibrariesFiles(minecraft, libraries_datas):
             else:
                 mcLibrariesFiles.append(str(mc_lib_path_artifact))
             mcLibrariesFilesNames[mc_lib_name_id] = len(mcLibrariesFiles) - 1
+    return mcLibrariesFiles
