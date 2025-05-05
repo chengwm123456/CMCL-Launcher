@@ -1,5 +1,4 @@
 <h1 align="center">Common Minecraft Launcher</h1>
-<hr>
 <h5>Description</h5>
 
 This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (in launcher my nickname is "chengwm").
