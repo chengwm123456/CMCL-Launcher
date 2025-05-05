@@ -11,7 +11,7 @@ import subprocess
 import shlex
 from enum import Enum
 
-from . import Downloader
+from .CMCLDefines import Downloader
 from . import DownloadVersion
 from . import GetVersion
 from . import GetOperationSystem

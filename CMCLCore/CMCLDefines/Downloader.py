@@ -16,31 +16,44 @@ class Downloader:
             download_url: Union[str, LiteralString],
             download_file_name: Union[str, Path, PurePath, os.PathLike, LiteralString],
             download_file_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = ".",
-            maximum_threads: Union[int, str] = 64, chunk_size: Union[int, str] = 1024
+            maximum_threads: Union[int, str] = 64,
+            chunk_size: Union[int, str, Decimal] = 1024
     ):
         self.download_url = str(download_url)
         self.download_file_name = Path(download_file_name)
         self.download_file_path = Path(download_file_path)
-        self.maximum_threads = int(maximum_threads)
-        self.chunk_size = Decimal(str(chunk_size))
+        self.__maximumThreads = int(maximum_threads)
+        self.__chunkSize = Decimal(str(chunk_size))
     
-    def download(self, maximum_threads: Optional[Union[int, str]] = None, chunk_size: Optional[Union[int, str]] = None):
-        if maximum_threads is not None:
-            self.maximum_threads = int(maximum_threads)
-        if chunk_size is not None:
-            self.chunk_size = Decimal(str(chunk_size))
+    @property
+    def maximum_threads(self):
+        return self.maximum_threads
+    
+    @property
+    def chunk_size(self):
+        return self.chunk_size
+    
+    def download(
+            self,
+            maximum_threads: Optional[Union[int, str]] = None,
+            chunk_size: Union[int, str, Decimal] = None
+    ):
+        if maximum_threads:
+            self.__maximumThreads = int(maximum_threads)
+        if chunk_size:
+            self.__chunkSize = Decimal(str(chunk_size))
         queue = Queue()
         range_request_state = requests.head(self.download_url).headers.get("Accept-Range", "none").lower()
         if range_request_state != "none":
             content_length = Decimal(str(requests.head(self.download_url).headers.get("Content-Length", 0)))
-            with ThreadPoolExecutor(max_workers=self.maximum_threads) as executor:
+            with ThreadPoolExecutor(max_workers=self.__maximumThreads) as executor:
                 futures = []
                 start_pos = Decimal("0")
-                while start_pos < content_length + int(content_length % self.chunk_size):
+                while start_pos < content_length + int(content_length % self.__chunkSize):
                     futures.append(
                         executor.submit(self.__download_chunk, self.download_url, start_pos,
-                                        min(start_pos + self.chunk_size, content_length)))
-                    start_pos += self.chunk_size
+                                        min(start_pos + self.__chunkSize, content_length)))
+                    start_pos += self.__chunkSize
                 
                 for future in as_completed(futures):
                     queue.put(future.result())
@@ -63,3 +76,5 @@ class Downloader:
         response = requests.get(download_url, headers=headers, stream=True, verify=True)
         if response.status_code == 206:
             return {"Start": start_point, "End": end_point, "Content": response.content}
+        return {"Start": 0, "End": response.headers.get("Content-Length", 0),
+                "Content": requests.get(download_url, stream=True, verify=True).content}

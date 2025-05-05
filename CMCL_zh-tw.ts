@@ -397,17 +397,20 @@
     <message>
         <location filename="main.py" line="2433"/>
         <source>SettingsPage.JavaSettings.JVMEditConfirmation.Text</source>
-        <translation type="unfinished"></translation>
+        <translation>注意：請謹慎設定 JVM 參數，若您不熟悉此設定，請勿隨意新增或修改！
+（可能導致無法啟動或崩潰）
+點擊「確定」表示確認修改，點擊「取消」表示放棄變更。
+關閉？還是取消！誰教你關視窗的？</translation>
     </message>
     <message>
         <location filename="main.py" line="2438"/>
         <source>SettingsPage.JavaSettings.JVMEditConfirmation.OK</source>
-        <translation type="unfinished"></translation>
+        <translation>確定</translation>
     </message>
     <message>
         <location filename="main.py" line="2442"/>
         <source>SettingsPage.JavaSettings.JVMEditConfirmation.Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>取消</translation>
     </message>
 </context>
 <context>
@@ -439,7 +442,11 @@
     <message>
         <location filename="main.py" line="3552"/>
         <source>LoggingWindow.inputtext.ToolTip</source>
-        <translation type="unfinished"></translation>
+        <translation>輸入程式碼以執行。
+內建變數：
+  &apos;frame&apos;：啟動器主視窗
+  &apos;player&apos;：目前玩家
+  &apos;[一些特殊功能]&apos;：無實際用途</translation>
     </message>
     <message>
         <location filename="main.py" line="3563"/>
@@ -545,7 +552,7 @@
     <message>
         <location filename="main.py" line="1079"/>
         <source>MainPage.update_version_lst_btn.ToolTip</source>
-        <translation type="unfinished"></translation>
+        <translation>重新載入版本清單</translation>
     </message>
     <message>
         <location filename="main.py" line="1081"/>
@@ -663,58 +670,68 @@
     <message>
         <location filename="main.py" line="677"/>
         <source>SaveEditingWindow.Page1.Title</source>
-        <translation type="unfinished"></translation>
+        <translation>基本資料</translation>
     </message>
     <message>
         <location filename="main.py" line="684"/>
         <source>SaveEditingWindow.ValueLocalisations.Difficulty.0</source>
-        <translation type="unfinished"></translation>
+        <translation>和平</translation>
     </message>
     <message>
         <location filename="main.py" line="685"/>
         <source>SaveEditingWindow.ValueLocalisations.Difficulty.1</source>
-        <translation type="unfinished"></translation>
+        <translation>簡單</translation>
     </message>
     <message>
         <location filename="main.py" line="686"/>
         <source>SaveEditingWindow.ValueLocalisations.Difficulty.2</source>
-        <translation type="unfinished"></translation>
+        <translation>普通</translation>
     </message>
     <message>
         <location filename="main.py" line="688"/>
         <source>SaveEditingWindow.ValueLocalisations.Difficulty.3</source>
-        <translation type="unfinished"></translation>
+        <translation>困難</translation>
     </message>
     <message>
         <location filename="main.py" line="690"/>
         <source>SaveEditingWindow.ValueLocalisations.Gamemode.0</source>
-        <translation type="unfinished"></translation>
+        <translation>生存</translation>
     </message>
     <message>
         <location filename="main.py" line="691"/>
         <source>SaveEditingWindow.ValueLocalisations.Gamemode.1</source>
-        <translation type="unfinished"></translation>
+        <translation>創造</translation>
     </message>
     <message>
         <location filename="main.py" line="692"/>
         <source>SaveEditingWindow.ValueLocalisations.Gamemode.2</source>
-        <translation type="unfinished"></translation>
+        <translation>冒險</translation>
     </message>
     <message>
         <location filename="main.py" line="693"/>
         <source>SaveEditingWindow.ValueLocalisations.Gamemode.3</source>
-        <translation type="unfinished"></translation>
+        <translation>旁觀</translation>
     </message>
     <message>
         <location filename="main.py" line="697"/>
         <source>SaveEditingWindow.ValueLocalisations.Gamemode.4</source>
-        <translation type="unfinished"></translation>
+        <translation>極限</translation>
     </message>
     <message>
         <location filename="main.py" line="697"/>
         <source>SaveEditingWindow.Infomation.Text</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
+存檔名稱：{}&lt;br/&gt;
+難度：{}&lt;br/&gt;
+最後遊玩時間：{}
+&lt;hr/&gt;
+玩家遊戲模式：{}模式&lt;br/&gt;
+玩家血量：{}({}顆心)&lt;br/&gt;
+玩家飢餓值：{}&lt;br/&gt;
+玩家位置：{}&lt;br/&gt;
+&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
+
 </context>
 <context>
     <name>SettingsPage</name>
@@ -749,25 +766,32 @@
         <location filename="main.py" line="2953"/>
         <location filename="main.py" line="3083"/>
         <source>UserPage.UserTypeLocalisations.msa</source>
-        <translation type="unfinished"></translation>
+        <translation>微軟</translation>
     </message>
     <message>
         <location filename="main.py" line="2954"/>
         <location filename="main.py" line="3084"/>
         <source>UserPage.UserTypeLocalisations.offline</source>
-        <translation type="unfinished"></translation>
+        <translation>離線</translation>
     </message>
     <message>
         <location filename="main.py" line="2955"/>
         <location filename="main.py" line="3085"/>
         <source>UserPage.UserTypeLocalisations.authlib-injector</source>
-        <translation type="unfinished"></translation>
+        <translation>Authlib-Injector 驗證</translation>
     </message>
     <message>
         <location filename="main.py" line="2959"/>
         <location filename="main.py" line="3088"/>
-        <source>UsetPage.UserTypeLocalisations.littleskin</source>
-        <translation type="unfinished"></translation>
+        <source>UserPage.UserTypeLocalisations.littleskin</source>
+        <translation>Littleskin 皮膚站</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="3050"/>
+        <location filename="main.py" line="3074"/>
+        <location filename="main.py" line="3131"/>
+        <source>UserPage.UserTypeLocalisations.suffix</source>
+        <translation>帳號</translation>
     </message>
     <message>
         <location filename="main.py" line="2970"/>
@@ -804,13 +828,6 @@
         <location filename="main.py" line="3125"/>
         <source>UserPage.userTable.horizontalHeaderLabels.2</source>
         <translation>玩家帳號類型</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="3050"/>
-        <location filename="main.py" line="3074"/>
-        <location filename="main.py" line="3131"/>
-        <source>UserPage.UserTypeLocalisations.suffix</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="main.py" line="3121"/>

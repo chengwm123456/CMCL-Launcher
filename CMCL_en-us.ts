@@ -735,7 +735,7 @@
     <message>
         <location filename="main.py" line="2959"/>
         <location filename="main.py" line="3088"/>
-        <source>UsetPage.UserTypeLocalisations.littleskin</source>
+        <source>UserPage.UserTypeLocalisations.littleskin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

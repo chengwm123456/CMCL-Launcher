@@ -777,13 +777,13 @@ Player&apos;s position: {}&lt;br/&gt;
         <location filename="main.py" line="2955"/>
         <location filename="main.py" line="3085"/>
         <source>UserPage.UserTypeLocalisations.authlib-injector</source>
-        <translation type="unfinished"></translation>
+        <translation>Authlib-Injector verification</translation>
     </message>
     <message>
         <location filename="main.py" line="2959"/>
         <location filename="main.py" line="3088"/>
-        <source>UsetPage.UserTypeLocalisations.littleskin</source>
-        <translation type="unfinished"></translation>
+        <source>UserPage.UserTypeLocalisations.littleskin</source>
+        <translation>Littleskin Skin Server</translation>
     </message>
     <message>
         <location filename="main.py" line="2970"/>
@@ -826,7 +826,7 @@ Has Minecraft: {}</translation>
         <location filename="main.py" line="3074"/>
         <location filename="main.py" line="3131"/>
         <source>UserPage.UserTypeLocalisations.suffix</source>
-        <translation type="unfinished"> Account</translation>
+        <translation> Account</translation>
     </message>
     <message>
         <location filename="main.py" line="3121"/>

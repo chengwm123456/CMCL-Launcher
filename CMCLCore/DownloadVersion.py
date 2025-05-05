@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import json
-import os
-from typing import *
 from pathlib import PurePath
 
 from . import GetOperationSystem
-from .Downloader import Downloader
+from CMCLDefines.Downloader import Downloader
 from .GetVersion import *
 
 

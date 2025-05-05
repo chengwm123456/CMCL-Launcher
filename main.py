@@ -337,11 +337,56 @@ class LoadingAnimation(QFrame):
         def update_size(self, value):
             self.parent().setFixedSize(value)
     
+    class CentreAnimation(QWidget):
+        def __init__(self, parent):
+            super().__init__(parent)
+            self.setProperty("animationValue", 0)
+            self.timer = QTimer(self)
+            self.timer.timeout.connect(self.timeout)
+            
+            self.error = False
+        
+        def timeout(self):
+            self.setProperty("animationValue", (self.property("animationValue") or 0) + 0.1)
+        
+        def paintEvent(self, a0):
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            
+            gradient = QConicalGradient(QRectF(self.rect()).center(), self.property("animationValue") % 360)
+            gradient.setColorAt(0.0, self.beRed(getBorderColour(is_highlight=True), 75 if self.error else 0))
+            gradient.setColorAt(
+                1.0,
+                self.beRed(
+                    getBackgroundColour(is_highlight=True).darker(150),
+                    75 if self.error else 0
+                )
+            )
+            painter.setPen(Qt.GlobalColor.transparent)
+            painter.setBrush(QBrush(gradient))
+            painter.drawEllipse(self.rect())
+        
+        def beRed(self, colour, value=25):
+            r, g, b = Colour(colour)
+            r += value
+            g -= value
+            b -= value
+            return Colour(r, g, b)
+        
+        def seterror(self):
+            self.error = True
+            self.timer.stop()
+        
+        def showEvent(self, a0):
+            super().showEvent(a0)
+            self.setProperty("animationValue", 0)
+            self.timer.start(1)
+            self.error = False
+    
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        self.__svgWidget = QSvgWidget(self)
-        self.__svgWidget.load(":/Loading.svg")
+        self.__svgWidget = self.CentreAnimation(self)
         self.__svgWidget.setFixedSize(96, 96)
         self.__svgWidget.setStyleSheet("background: transparent;")
         dsg = QGraphicsDropShadowEffect(self.__svgWidget)
@@ -349,16 +394,6 @@ class LoadingAnimation(QFrame):
         dsg.setOffset(0, 4)
         dsg.setColor(QColor(0, 0, 0, 200))
         self.__svgWidget.setGraphicsEffect(dsg)
-        self.__failedSvg = QSvgWidget(self)
-        self.__failedSvg.load(":/LoadingFailed.svg")
-        self.__failedSvg.setFixedSize(96, 96)
-        self.__failedSvg.setStyleSheet("background: transparent;")
-        self.__failedSvg.hide()
-        fdsg = QGraphicsDropShadowEffect(self.__failedSvg)
-        fdsg.setBlurRadius(30)
-        fdsg.setOffset(0, 4)
-        fdsg.setColor(QColor(0, 0, 0, 200))
-        self.__failedSvg.setGraphicsEffect(fdsg)
         self.__statusLabel = Label(self)
         self.__statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.__loadingTimer = QTimer(self)
@@ -381,7 +416,6 @@ class LoadingAnimation(QFrame):
                                                int(self.height() / 2 - (self.__svgWidget.height() / 2)),
                                                self.__svgWidget.width(),
                                                self.__svgWidget.height()))
-            self.__failedSvg.setGeometry(self.__svgWidget.geometry())
         except AttributeError:
             pass
         try:
@@ -397,7 +431,7 @@ class LoadingAnimation(QFrame):
     
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        if not self.__failedSvg.isVisible():
+        if not self.__svgWidget.error:
             self.setStyleSheet(
                 f"background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});")
         else:
@@ -411,9 +445,6 @@ class LoadingAnimation(QFrame):
     def start(self, ani=True):
         self.__svgWidget.setFixedSize(96, 96)
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text"))
-        self.__svgWidget.load(":/Loading.svg")
-        self.__failedSvg.load(":/LoadingFailed.svg")
-        self.__failedSvg.hide()
         if ani:
             self.setStyleSheet("background: transparent")
             self.TransparencyAnimation(self, "in").start()
@@ -439,13 +470,11 @@ class LoadingAnimation(QFrame):
                 else:
                     self.hide()
                 self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.SuccessText"))
-                self.__failedSvg.hide()
             else:
                 self.setStyleSheet(
                     f"background: rgb({'255, 200, 200' if getTheme() == Theme.Light else '100, 50, 50'});")
                 self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.FailedText"))
-                self.__failedSvg.show()
-                self.__svgWidget.hide()
+                self.__svgWidget.seterror()
         except RuntimeError:
             pass
     
@@ -2798,19 +2827,24 @@ class AboutPage(QFrame):
         
         self.toolBox.addItem(self.page2, self.tr("AboutPage.Page2.Title"))
         
+        translationjson = json.loads(Path("aboutPageTranslations.json").read_text(encoding="utf-8"))
+        
+        def gettrans(numb, text):
+            if numb:
+                return translationjson[current_language][numb].get(text, translationjson["zh-cn"][numb][text])
+            return translationjson[current_language].get(text, translationjson["zh-cn"][text])
+        
         self.page3 = QFrame()
         self.verticalLayout_4 = QVBoxLayout(self.page3)
         
         self.noteTip = Tip(self.page3)
         
         self.label3 = Label(self.noteTip)
-        self.label3.setText("""声明：
-1, 此处排序没有任何的含义。
-2, 不是我懒得拷贝头像（其实也有），是我不敢拷…………（不敢直接下载…………请诸君谅解）。
-3, 可以自行提供头像，前提是你是那个人 / 那个组织，冒充的不行啊。""")
+        self.label3.setText(gettrans(None, "announcement"))
         self.label3.adjustSize()
         self.noteTip.setCloseEnabled(False)
         self.noteTip.setMinimumHeight(self.label3.height() + 10)
+        self.noteTip.setMinimumWidth(self.label3.width() + 10)
         self.noteTip.setCentralWidget(self.label3)
         
         self.verticalLayout_4.addWidget(self.noteTip)
@@ -2824,7 +2858,7 @@ class AboutPage(QFrame):
         self.horizontalLayout_4.addWidget(self.avatar3)
         
         self.label3 = Label(self.card1)
-        self.label3.setText("中文 Minecraft Wiki\n编写启动器（底层代码）时很多东西都是从那上面扒下来（其实是参考）的。")
+        self.label3.setText(gettrans("1", "name") + "\n" + gettrans("1", "description"))
         self.horizontalLayout_4.addWidget(self.label3, 1)
         
         self.verticalLayout_4.addWidget(self.card1)
@@ -2838,14 +2872,22 @@ class AboutPage(QFrame):
         self.horizontalLayout_5.addWidget(self.avatar4)
         
         self.label4 = Label(self.card2)
-        self.label4.setText(
-            "龙腾猫跃\n冷知识：启动器启动部分的参考指令就是 PCL2 启动器（此人编写）生成的指令，\n对于启动器启动部分，这个作者的 PCL2 功不可没（确实）。")
+        self.label4.setText(gettrans("2", "name") + "\n" + gettrans("2", "description"))
         self.horizontalLayout_5.addWidget(self.label4, 1)
         
         self.verticalLayout_4.addWidget(self.card2)
         
         self.card3 = Panel(self.page3)
         self.horizontalLayout_6 = QHBoxLayout(self.card3)
+        
+        self.avatar5 = ToolButton(self.card3)
+        self.avatar5.setFixedSize(QSize(42, 42))
+        self.avatar5.setIconSize(QSize(32, 32))
+        self.horizontalLayout_6.addWidget(self.avatar5)
+        
+        self.label5 = Label(self.card2)
+        self.label5.setText(gettrans("3", "name") + "\n" + gettrans("3", "description"))
+        self.horizontalLayout_6.addWidget(self.label5, 1)
         
         self.verticalLayout_4.addWidget(self.card3)
         
@@ -2856,14 +2898,10 @@ class AboutPage(QFrame):
         self.page3container.setWidget(self.page3)
         self.page3container.setWidgetResizable(True)
         
-        self.toolBox.addItem(self.page3container, "特别感谢")
+        self.toolBox.addItem(self.page3container, gettrans(None, "title"))
         
         self.verticalLayout.addWidget(self.toolBox)
         
-        # Special Thanks:
-        # 中文 Minecraft Wiki -> 提供教程
-        # 龙腾猫跃 -> PCL2启动器的作者
-        # zhiyiYo -> 无边框窗口代码
         self.retranslateUI()
     
     def retranslateUI(self):
@@ -2950,10 +2988,10 @@ class UserPage(QFrame):
         # DEBUG: END#
         
         self.user_type_localisations = {
-            "msa": self.tr("UserPage.UserTypeLocalisations.msa"),  # 微软
-            "offline": self.tr("UserPage.UserTypeLocalisations.offline"),  # 离线
-            "authlib-injector": self.tr("UserPage.UserTypeLocalisations.authlib-injector"),  # Authlib-Injector 验证
-            "littleskin": self.tr("UsetPage.UserTypeLocalisations.littleskin")  # Littleskin 皮肤站
+            "msa": self.tr("UserPage.UserTypeLocalisations.msa"),
+            "offline": self.tr("UserPage.UserTypeLocalisations.offline"),
+            "authlib-injector": self.tr("UserPage.UserTypeLocalisations.authlib-injector"),
+            "littleskin": self.tr("UserPage.UserTypeLocalisations.littleskin")
         }
         
         self.verticalLayout = QVBoxLayout(self)
