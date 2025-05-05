@@ -1,5 +1,4 @@
 <h1 align="center">Common Minecraft Launcher</h1>
-<hr>
 <h5>介绍</h5>
 
 这是一个第三方的 Minecraft Java 版启动器，由 chengwm123456（启动器内叫做 chengwm）开发

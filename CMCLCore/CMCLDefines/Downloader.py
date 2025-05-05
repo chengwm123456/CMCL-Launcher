@@ -42,27 +42,27 @@ class Downloader:
             self.__maximumThreads = int(maximum_threads)
         if chunk_size:
             self.__chunkSize = Decimal(str(chunk_size))
-        queue = Queue()
-        range_request_state = requests.head(self.download_url).headers.get("Accept-Range", "none").lower()
-        if range_request_state != "none":
-            content_length = Decimal(str(requests.head(self.download_url).headers.get("Content-Length", 0)))
+        chunks = Queue()
+        rangeRequestState = requests.head(self.download_url).headers.get("Accept-Range", "none").lower()
+        if rangeRequestState != "none":
+            contentLength = Decimal(str(requests.head(self.download_url).headers.get("Content-Length", 0)))
             with ThreadPoolExecutor(max_workers=self.__maximumThreads) as executor:
                 futures = []
-                start_pos = Decimal("0")
-                while start_pos < content_length + int(content_length % self.__chunkSize):
+                startPosition = Decimal("0")
+                while startPosition < contentLength + int(contentLength % self.__chunkSize):
                     futures.append(
-                        executor.submit(self.__download_chunk, self.download_url, start_pos,
-                                        min(start_pos + self.__chunkSize, content_length)))
-                    start_pos += self.__chunkSize
+                        executor.submit(self.__download_chunk, self.download_url, startPosition,
+                                        min(startPosition + self.__chunkSize, contentLength)))
+                    startPosition += self.__chunkSize
                 
                 for future in as_completed(futures):
-                    queue.put(future.result())
+                    chunks.put(future.result())
         else:
             content = requests.get(self.download_url).content
-            queue.put({"Start": 0, "End": len(content), "Content": content})
+            chunks.put({"Start": 0, "End": len(content), "Content": content})
         with Path(self.download_file_path / self.download_file_name).open(mode="ab") as file:
-            for i in range(queue.qsize()):
-                response_data = queue.get()
+            for chunk in range(chunks.qsize()):
+                response_data = chunks.get()
                 file.seek(response_data["Start"])
                 file.write(response_data["Content"])
     
@@ -75,6 +75,13 @@ class Downloader:
         headers = {"Range": f"bytes={int(start_point)}-{int(end_point)}"}
         response = requests.get(download_url, headers=headers, stream=True, verify=True)
         if response.status_code == 206:
-            return {"Start": start_point, "End": end_point, "Content": response.content}
-        return {"Start": 0, "End": response.headers.get("Content-Length", 0),
-                "Content": requests.get(download_url, stream=True, verify=True).content}
+            return {
+                "Start": start_point,
+                "End": end_point,
+                "Content": response.content
+            }
+        return {
+            "Start": 0,
+            "End": response.headers.get("Content-Length", 0),
+            "Content": requests.get(download_url, stream=True, verify=True).content
+        }

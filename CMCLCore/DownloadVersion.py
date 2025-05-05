@@ -4,7 +4,7 @@ import json
 from pathlib import PurePath
 
 from . import GetOperationSystem
-from CMCLDefines.Downloader import Downloader
+from .CMCLDefines.Downloader import Downloader
 from .GetVersion import *
 
 
