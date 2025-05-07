@@ -42,7 +42,7 @@ class ItemDelegate(QItemDelegate):
             *borderColour,
             (255 if self.parent().hasFocus() and self.parent().isEnabled() else 32)
         ))
-        painter.setPen(QPen(QBrush(borderGradient), 1))
+        painter.setPen(QPen(QBrush(borderGradient), 1.0))
         backgroundGradient = QLinearGradient(QPointF(0, option.rect.y()),
                                              QPointF(0, option.rect.y() + option.rect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
@@ -98,7 +98,7 @@ class ItemView(QAbstractItemView, Widget):
             *borderColour,
             (255 if self.hasFocus() and self.isEnabled() else 32)
         ))
-        painter.setPen(QPen(QBrush(borderGradient), 1))
+        painter.setPen(QPen(QBrush(borderGradient), 1.0))
         backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
         backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))

@@ -41,7 +41,7 @@ class ListView(QListView, Widget):
             *borderColour,
             (255 if self.hasFocus() and self.isEnabled() else 32)
         ))
-        painter.setPen(QPen(QBrush(borderGradient), 1))
+        painter.setPen(QPen(QBrush(borderGradient), 1.0))
         backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
         backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
@@ -86,7 +86,7 @@ class ListWidget(QListWidget, Widget):
             *borderColour,
             (255 if self.hasFocus() and self.isEnabled() else 32)
         ))
-        painter.setPen(QPen(QBrush(borderGradient), 1))
+        painter.setPen(QPen(QBrush(borderGradient), 1.0))
         backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
         backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
