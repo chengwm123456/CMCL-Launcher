@@ -37,7 +37,10 @@ class ListView(QListView, Widget):
         borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
                                          max(rect.width(), rect.height()))
         borderGradient.setColorAt(0.0, borderColour)
-        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        borderGradient.setColorAt(1.0, Colour(
+            *borderColour,
+            (255 if self.hasFocus() and self.isEnabled() else 32)
+        ))
         painter.setPen(QPen(QBrush(borderGradient), 1))
         backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
@@ -79,7 +82,10 @@ class ListWidget(QListWidget, Widget):
         borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
                                          max(rect.width(), rect.height()))
         borderGradient.setColorAt(0.0, borderColour)
-        borderGradient.setColorAt(1.0, Colour(*borderColour, 32))
+        borderGradient.setColorAt(1.0, Colour(
+            *borderColour,
+            (255 if self.hasFocus() and self.isEnabled() else 32)
+        ))
         painter.setPen(QPen(QBrush(borderGradient), 1))
         backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)

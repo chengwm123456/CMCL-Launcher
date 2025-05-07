@@ -63,16 +63,16 @@ class ToolTipWidget(QWidget):
     def setFont(self, a0):
         super().setFont(a0)
         self.label.setFont(a0)
+    
+    def hideEvent(self, a0):
+        super().hideEvent(a0)
+        self.deleteLater()
 
 
 class ToolTip(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
-        self.__tooltip = ToolTipWidget(self.parent().parent())
-        self.__tooltip.setText(self.parent().toolTip())
-        self.__tooltip.adjustSize()
-        self.__tooltip.move(QCursor.pos())
-        self.__tooltip.raise_()
+        self.__tooltip = None
     
     def event(self, a0):
         self.hide()
@@ -82,37 +82,38 @@ class ToolTip(QWidget):
         match a1.type():
             case QEvent.Type.ToolTip:
                 if a0.toolTip():
-                    if not self.__tooltip.isVisible():
+                    if not self.__tooltip:
+                        self.__tooltip = ToolTipWidget(self.parent().parent())
                         self.__tooltip.setText(a0.toolTip())
                         self.__tooltip.adjustSize()
                         self.__tooltip.raise_()
                         self.__tooltip.show()
                         if a0.toolTipDuration() > 0:
-                            QTimer.singleShot(a0.toolTipDuration(), self.__tooltip.hide)
-                    maxWidth, maxHeight = (QGuiApplication.primaryScreen().geometry().width(),
-                                           QGuiApplication.primaryScreen().geometry().height())
-                    self.__tooltip.move(QCursor.pos())
-                    if self.__tooltip.y() + self.__tooltip.height() > maxHeight:
-                        self.__tooltip.move(self.__tooltip.x(), self.__tooltip.y() - self.__tooltip.height())
-                    if self.__tooltip.x() + self.__tooltip.width() > maxWidth:
-                        self.__tooltip.move(self.__tooltip.x() - self.__tooltip.width(), self.__tooltip.y())
+                            QTimer.singleShot(a0.toolTipDuration(), self.closeTooltip)
+                        maxWidth, maxHeight = (QGuiApplication.primaryScreen().geometry().width(),
+                                               QGuiApplication.primaryScreen().geometry().height())
+                        self.__tooltip.move(QCursor.pos())
+                        if self.__tooltip.y() + self.__tooltip.height() > maxHeight:
+                            self.__tooltip.move(self.__tooltip.x(), self.__tooltip.y() - self.__tooltip.height())
+                        if self.__tooltip.x() + self.__tooltip.width() > maxWidth:
+                            self.__tooltip.move(self.__tooltip.x() - self.__tooltip.width(), self.__tooltip.y())
                 return True
-            case QEvent.Type.Move:
-                maxWidth, maxHeight = (QGuiApplication.primaryScreen().geometry().width(),
-                                       QGuiApplication.primaryScreen().geometry().height())
-                self.__tooltip.move(QCursor.pos())
-                if self.__tooltip.y() + self.__tooltip.height() > maxHeight:
-                    self.__tooltip.move(self.__tooltip.x(), self.__tooltip.y() - self.__tooltip.height())
-                if self.__tooltip.x() + self.__tooltip.width() > maxWidth:
-                    self.__tooltip.move(self.__tooltip.x() - self.__tooltip.width(), self.__tooltip.y())
             case QEvent.Type.Leave:
-                self.__tooltip.hide()
+                self.closeTooltip()
             case QEvent.Type.Hide:
-                self.__tooltip.hide()
+                self.closeTooltip()
             case QEvent.Type.ToolTipChange:
-                self.__tooltip.setText(a0.toolTip())
+                if self.__tooltip:
+                    self.__tooltip.setText(a0.toolTip())
             case QEvent.Type.FontChange:
-                self.__tooltip.setFont(a0.font())
+                if self.__tooltip:
+                    self.__tooltip.setFont(a0.font())
             case QEvent.Type.ParentChange:
-                self.__tooltip.setParent(a0.parent())
+                if self.__tooltip:
+                    self.__tooltip.setParent(a0.parent())
         return super().eventFilter(a0, a1)
+    
+    def closeTooltip(self):
+        if self.__tooltip:
+            self.__tooltip.hide()
+        self.__tooltip = None

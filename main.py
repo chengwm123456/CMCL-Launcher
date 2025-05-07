@@ -263,7 +263,7 @@ class AnimatedStackedWidget(QStackedWidget):
         ani1.setStartValue(
             QPointF(lastWidget.x(), float(lastWidget.y())))
         ani1.setEndValue(
-            QPointF(lastWidget.x(), float(lastWidget.y()) + float(self.height())))
+            QPointF(lastWidget.x(), float(lastWidget.y()) + 100))
         ani1.setEasingCurve(QEasingCurve.Type.OutQuad)
         ani1.start()
         ani11 = OpacityAnimation(lastWidget)
@@ -271,13 +271,13 @@ class AnimatedStackedWidget(QStackedWidget):
         ani11.setEndValue(0)
         ani11.setDuration(500)
         ani11.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani11.finished.connect(lastWidget.hide)
         ani11.start()
-        QTimer.singleShot(500, lastWidget.hide)
         currentWidget = w
         ani2 = QPropertyAnimation(currentWidget, b"pos", parent=currentWidget)
         ani2.setDuration(500)
         ani2.setStartValue(
-            QPointF(currentWidget.x(), float(currentWidget.y()) + float(self.height())))
+            QPointF(currentWidget.x(), float(currentWidget.y()) + 100))
         ani2.setEndValue(QPointF(currentWidget.x(), float(currentWidget.y())))
         ani2.setEasingCurve(QEasingCurve.Type.OutQuad)
         ani2.start()
@@ -287,12 +287,13 @@ class AnimatedStackedWidget(QStackedWidget):
         ani22.setDuration(500)
         ani22.setEasingCurve(QEasingCurve.Type.OutQuad)
         ani22.start()
+        currentWidget.raise_()
         t = QTimer(self)
         t.setInterval(1)
         t.timeout.connect(lambda: self.update())
         t.start()
         QTimer.singleShot(500, lambda: t.stop())
-        QTimer.singleShot(500, lambda: super(AnimatedStackedWidget, self).setCurrentWidget(w))
+        QTimer.singleShot(499, lambda: super(AnimatedStackedWidget, self).setCurrentWidget(w))
 
 
 class ContentPanel(AnimatedStackedWidget, Panel):
@@ -347,7 +348,7 @@ class LoadingAnimation(QFrame):
             self.error = False
         
         def timeout(self):
-            self.setProperty("animationValue", (self.property("animationValue") or 0) + 0.1)
+            self.setProperty("animationValue", (self.property("animationValue") or 0) - 0.1)
         
         def paintEvent(self, a0):
             painter = QPainter(self)

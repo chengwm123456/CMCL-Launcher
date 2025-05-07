@@ -26,12 +26,20 @@ class Downloader:
         self.__chunkSize = Decimal(str(chunk_size))
     
     @property
-    def maximum_threads(self):
-        return self.maximum_threads
+    def maximumThreads(self) -> Union[int, str]:
+        return self.__maximumThreads
+    
+    @maximumThreads.setter
+    def maximumThreads(self, value: Union[int, str]):
+        self.__maximumThreads = int(value)
     
     @property
-    def chunk_size(self):
-        return self.chunk_size
+    def chunkSize(self) -> Union[int, str, Decimal]:
+        return self.__chunkSize
+    
+    @chunkSize.setter
+    def chunkSize(self, value: Union[int, str, Decimal]):
+        self.__chunkSize = Decimal(str(value))
     
     def download(
             self,
@@ -39,49 +47,54 @@ class Downloader:
             chunk_size: Union[int, str, Decimal] = None
     ):
         if maximum_threads:
-            self.__maximumThreads = int(maximum_threads)
+            self.maximumThreads = int(maximum_threads)
         if chunk_size:
-            self.__chunkSize = Decimal(str(chunk_size))
+            self.chunkSize = Decimal(str(chunk_size))
         chunks = Queue()
         rangeRequestState = requests.head(self.download_url).headers.get("Accept-Range", "none").lower()
         if rangeRequestState != "none":
             contentLength = Decimal(str(requests.head(self.download_url).headers.get("Content-Length", 0)))
-            with ThreadPoolExecutor(max_workers=self.__maximumThreads) as executor:
+            with ThreadPoolExecutor(max_workers=self.maximumThreads) as executor:
                 futures = []
                 startPosition = Decimal("0")
                 while startPosition < contentLength + int(contentLength % self.__chunkSize):
                     futures.append(
-                        executor.submit(self.__download_chunk, self.download_url, startPosition,
-                                        min(startPosition + self.__chunkSize, contentLength)))
+                        executor.submit(
+                            self.__downloadChunk,
+                            self.download_url,
+                            startPosition,
+                            min(startPosition + self.__chunkSize, contentLength)
+                        )
+                    )
                     startPosition += self.__chunkSize
                 
                 for future in as_completed(futures):
                     chunks.put(future.result())
         else:
             content = requests.get(self.download_url).content
-            chunks.put({"Start": 0, "End": len(content), "Content": content})
+            chunks.put({"StartPosition": 0, "EndPosition": len(content), "ResponseContent": content})
         with Path(self.download_file_path / self.download_file_name).open(mode="ab") as file:
             for chunk in range(chunks.qsize()):
-                response_data = chunks.get()
-                file.seek(response_data["Start"])
-                file.write(response_data["Content"])
+                responseData = chunks.get()
+                file.seek(responseData["StartPosition"])
+                file.write(responseData["ResponseContent"])
     
     @staticmethod
-    def __download_chunk(
+    def __downloadChunk(
             download_url: Union[str, LiteralString],
             start_point: Union[int, float, Decimal],
             end_point: Union[int, float, Decimal]
     ):
-        headers = {"Range": f"bytes={int(start_point)}-{int(end_point)}"}
-        response = requests.get(download_url, headers=headers, stream=True, verify=True)
+        response = requests.get(download_url, headers={"Range": f"bytes={int(start_point)}-{int(end_point)}"},
+                                stream=True, verify=True)
         if response.status_code == 206:
             return {
-                "Start": start_point,
-                "End": end_point,
-                "Content": response.content
+                "StartPosition": start_point,
+                "EndPosition": end_point,
+                "ResponseContent": response.content
             }
         return {
-            "Start": 0,
-            "End": response.headers.get("Content-Length", 0),
-            "Content": requests.get(download_url, stream=True, verify=True).content
+            "StartPosition": 0,
+            "EndPosition": response.headers.get("Content-Length", 0),
+            "ResponseContent": requests.get(download_url, stream=True, verify=True).content
         }
