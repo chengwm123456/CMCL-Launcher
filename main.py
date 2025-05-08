@@ -18,7 +18,7 @@ import platform
 import sys
 import traceback
 import re
-import locale, _locale
+import locale
 import webbrowser as webb
 from pathlib import Path
 from io import StringIO
@@ -179,6 +179,11 @@ languages_map = {
 }
 
 window_class = MainWindow
+backgroundGradient = random.choice(
+    [QGradient.Preset.PerfectWhite, QGradient.Preset.FreshOasis, QGradient.Preset.LandingAircraft,
+     QGradient.Preset.DeepBlue]), random.choice(
+    [QGradient.Preset.PerfectBlue, QGradient.Preset.PlumPlate, QGradient.Preset.NightSky]
+)
 
 
 class AcrylicBackground(QWidget):
@@ -3408,7 +3413,7 @@ class MainWindow(window_class):
         p.fillRect(
             QRect(x, y, QGuiApplication.primaryScreen().geometry().width(),
                   QGuiApplication.primaryScreen().geometry().height()),
-            QGradient(QGradient.Preset.FreshOasis if getTheme() == Theme.Light else QGradient.Preset.NightSky))
+            QGradient(backgroundGradient[int(not getTheme() == Theme.Light)]))
         p.end()
         scene = QGraphicsScene()
         item = QGraphicsPixmapItem()

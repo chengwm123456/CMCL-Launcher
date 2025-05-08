@@ -69,14 +69,10 @@ class ToolTipWidget(QWidget):
         self.deleteLater()
 
 
-class ToolTip(QWidget):
+class ToolTip(QObject):
     def __init__(self, parent):
         super().__init__(parent)
         self.__tooltip = None
-    
-    def event(self, a0):
-        self.hide()
-        return super().event(a0)
     
     def eventFilter(self, a0, a1):
         match a1.type():
