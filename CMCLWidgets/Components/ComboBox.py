@@ -25,9 +25,8 @@ class ComboBox(QComboBox, Widget):
             self.lineEdit().setStyleSheet(
                 f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {str(0.6)}); background: transparent; border: none; padding: 5px;")
             self.lineEdit().setFont(self.font())
-        self.setStyle(QStyleFactory.create("Windows"))
-        listView = ListView(self)
-        self.setView(listView)
+        self.setStyle(QStyleFactory.create("windows11"))
+        self.setView(ListView(self))
         self.view().parent().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.view().parent().setWindowFlags(
             Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint |

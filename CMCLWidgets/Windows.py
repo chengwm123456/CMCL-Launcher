@@ -19,7 +19,7 @@ class TitleBarButton(QPushButton):
                 self.setFixedSize(46, 30)
             case "linux":
                 self.setFixedSize(20, 20)
-
+    
     def paintEvent(self, a0):
         pass
 
@@ -35,21 +35,21 @@ class TitleBar(QWidget):
         self.maximiseButton.pressed.connect(
             lambda: self.parent().showNormal() if self.parent().isMaximized() else self.parent().showMaximized())
         self.closeButton.pressed.connect(self.parent().close)
-
+    
     def showEvent(self, a0):
         self.setGeometry(QRect(0, 0, 0, 0))
         self.setGeometry(QRect(0, 0, self.parent().width(), self.height()))
         super().showEvent(a0)
-
+    
     def mousePressEvent(self, a0):
         if a0.button() == Qt.MouseButton.LeftButton:
             self.parent().windowHandle().startSystemMove()
-
+    
     def mouseMoveEvent(self, a0):
         if a0.button() == Qt.MouseButton.LeftButton:
             if self.parent().isMaximized():
                 self.parent().showNormal()
-
+    
     def mouseDoubleClickEvent(self, a0):
         if not self.parent().windowFlags() & Qt.WindowType.WindowMaximizeButtonHint:
             return
@@ -59,7 +59,7 @@ class TitleBar(QWidget):
                     self.parent().showNormal()
                 else:
                     self.parent().showMaximized()
-
+    
     def resizeEvent(self, a0):
         match platform.system().lower():
             case "windows":
@@ -74,11 +74,11 @@ class TitleBar(QWidget):
                 self.minimiseButton.move(self.maximiseButton.x() - self.minimiseButton.width() - 10, 6)
                 if not self.maximiseButton.isVisible():
                     self.minimiseButton.move(self.maximiseButton.x(), 6)
-
+    
     def leaveEvent(self, a0):
         self.repaint()
         super().leaveEvent(a0)
-
+    
     def paintEvent(self, a0):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -120,7 +120,7 @@ class TitleBar(QWidget):
                     else:
                         painter.setBrush(QColor(0, 0, 0, 0))
                     painter.drawRect(self.closeButton.geometry())
-
+                    
                     painter.setClipRect(self.closeButton.geometry())
                     painter.setPen(getForegroundColour())
                     close_icon_pp = QPainterPath()
@@ -140,7 +140,7 @@ class TitleBar(QWidget):
                     else:
                         painter.setBrush(QColor(0, 0, 0, 0))
                     painter.drawRect(self.maximiseButton.geometry())
-
+                    
                     painter.setClipRect(self.maximiseButton.geometry())
                     painter.setPen(getForegroundColour())
                     maximise_icon_pp = QPainterPath()
@@ -163,7 +163,7 @@ class TitleBar(QWidget):
                     else:
                         painter.setBrush(QColor(0, 0, 0, 0))
                     painter.drawRect(self.minimiseButton.geometry())
-
+                    
                     painter.setClipRect(self.minimiseButton.geometry())
                     painter.setPen(getForegroundColour())
                     minimise_icon_pp = QPainterPath()
@@ -182,7 +182,7 @@ class TitleBar(QWidget):
                     else:
                         painter.setBrush(QColor(55, 55, 55))
                     painter.drawEllipse(self.closeButton.geometry())
-
+                    
                     painter.setClipRect(self.closeButton.geometry())
                     painter.setPen(Qt.GlobalColor.white)
                     close_icon_pp = QPainterPath()
@@ -191,9 +191,9 @@ class TitleBar(QWidget):
                     close_icon_pp.moveTo(QPointF(9 + self.closeButton.x() + 5.5, 11.5))
                     close_icon_pp.lineTo(QPointF(0 + self.closeButton.x() + 5.5, 9 + 11.5))
                     painter.drawPath(close_icon_pp)
-
+                    
                     painter.restore()
-
+                
                 if self.maximiseButton.isVisible():
                     painter.save()
                     if self.maximiseButton.underMouse():
@@ -204,7 +204,7 @@ class TitleBar(QWidget):
                     else:
                         painter.setBrush(QColor(55, 55, 55))
                     painter.drawEllipse(self.maximiseButton.geometry())
-
+                    
                     painter.setClipRect(self.maximiseButton.geometry())
                     painter.setPen(Qt.GlobalColor.white)
                     maximise_icon_pp = QPainterPath()
@@ -216,9 +216,9 @@ class TitleBar(QWidget):
                     else:
                         maximise_icon_pp.addRect(QRectF(0 + self.maximiseButton.x() + 6, 11, 9, 9))
                     painter.drawPath(maximise_icon_pp)
-
+                    
                     painter.restore()
-
+                
                 if self.minimiseButton.isVisible():
                     painter.save()
                     if self.minimiseButton.underMouse():
@@ -229,7 +229,7 @@ class TitleBar(QWidget):
                     else:
                         painter.setBrush(QColor(55, 55, 55))
                     painter.drawEllipse(self.minimiseButton.geometry())
-
+                    
                     painter.setClipRect(self.minimiseButton.geometry())
                     painter.setPen(Qt.GlobalColor.white)
                     minimise_icon_pp = QPainterPath()
@@ -238,7 +238,7 @@ class TitleBar(QWidget):
                     minimise_icon_pp.lineTo(0 + self.minimiseButton.x() + 15,
                                             self.minimiseButton.height() + self.minimiseButton.y() - 7)
                     painter.drawPath(minimise_icon_pp)
-
+                    
                     painter.restore()
 
 
@@ -246,7 +246,7 @@ class Window(FramelessWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.titleBar = TitleBar(self)
-
+    
     def resizeEvent(self, a0):
         if hasattr(self, "titleBar"):
             self.titleBar.resize(self.width(), self.titleBar.height())
@@ -262,7 +262,7 @@ class MainWindow(FramelessMainWindow, Window):
 
 class RoundedWindow(MainWindow):
     BORDER_RADIUS = 10
-
+    
     def __getCurrentDpiScaleRate(self):
         match platform.system():
             case "Windows":
@@ -272,7 +272,7 @@ class RoundedWindow(MainWindow):
                 return 1
             case "Linux":
                 return 1
-
+    
     def __updateWindowRegion(self):
         match platform.system():
             case "Windows":
@@ -289,7 +289,7 @@ class RoundedWindow(MainWindow):
                                                int(self.BORDER_RADIUS * dpiScaleRate)
                                            ),
                                            False)
-
+                
                 user32 = WinDLL("user32")
                 user32.SetClassLongPtrW(int(self.winId()), win32con.GCL_STYLE,
                                         user32.GetClassLongPtrW(int(self.winId()),
@@ -299,7 +299,7 @@ class RoundedWindow(MainWindow):
             case "Linux":
                 pass
         # self.update()
-
+    
     def event(self, a0, **kwargs):
         self.__updateWindowRegion()
         return super().event(a0)
@@ -309,12 +309,12 @@ class DialogueMask(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
+    
     def paintEvent(self, a0):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(self.rect(), QColor(0, 0, 0, 120))
-
+    
     def event(self, a0):
         if self.parent():
             self.setGeometry(self.parent().rect())
@@ -324,7 +324,7 @@ class DialogueMask(QWidget):
 
 class RoundedDialogue(QDialog, Window):
     BORDER_RADIUS = 10
-
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.titleBar.maximiseButton.hide()
@@ -333,11 +333,11 @@ class RoundedDialogue(QDialog, Window):
             self.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
         self.setResizeEnabled(False)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
+    
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         Window.resizeEvent(self, a0)
-
+    
     def paintEvent(self, *args, **kwargs):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -350,7 +350,7 @@ class MaskedDialogue(RoundedDialogue):
     def __init__(self, parent):
         super().__init__(parent)
         self.dialogueMask = DialogueMask(parent)
-
+        
         pos = self.parent().mapToGlobal(QPoint(0, 0)) if self.parent() else QPoint(0, 0)
         x = pos.x()
         y = pos.y()
@@ -358,31 +358,31 @@ class MaskedDialogue(RoundedDialogue):
         point = QPoint(geometry.width() // 2 - self.width() // 2 + x,
                        geometry.height() // 2 - self.height() // 2 + y)
         self.move(point)
-
+    
     def paintEvent(self, *args, **kwargs):
         super().paintEvent(*args, **kwargs)
         self.updateMaskVisible()
-
+    
     def showEvent(self, a0):
         super().showEvent(a0)
         self.updateMaskVisible()
-
+    
     def hideEvent(self, *args, **kwargs):
         super().hideEvent(*args, **kwargs)
         self.updateMaskVisible()
-
+    
     def moveEvent(self, *args, **kwargs):
         super().moveEvent(*args, **kwargs)
         self.updateDialoguePosition()
-
+    
     def resizeEvent(self, *args, **kwargs):
         super().resizeEvent(*args, **kwargs)
         self.updateDialoguePosition()
-
+    
     def updateMaskVisible(self):
         if hasattr(self, "dialogueMask"):
             self.dialogueMask.setVisible(self.isVisible())
-
+    
     def updateDialoguePosition(self):
         if not hasattr(self, "dialogueMask"):
             return
@@ -397,20 +397,22 @@ class MaskedDialogue(RoundedDialogue):
 
 class RoundedMenu(QMenu):
     BORDER_RADIUS = 10
-
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.__updateQSS()
-
-    def __updateQSS(self):
-        self.setStyleSheet(f"""RoundedMenu{{
+        self.updateQSS()
+    
+    def updateQSS(self, name=None):
+        if not name:
+            name = self.__class__.__name__
+        self.setStyleSheet(f"""{name}{{
             background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});
             color: rgb({str(getForegroundColour(is_tuple=True)).strip('()')});
             border: 1px solid rgb({str(getBorderColour(is_tuple=True)).strip('()')});
             border-radius: {self.BORDER_RADIUS}px;
         }}
-        RoundedMenu::item{{
+        {name}::item{{
             background: rgba({str(getBackgroundColour(is_tuple=True)).strip('()')}, 0.6);
             color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, 0.6);
             border-radius: 10px;
@@ -419,23 +421,23 @@ class RoundedMenu(QMenu):
             margin: 3px;
             height: 30px;
         }}
-        RoundedMenu::item:selected{{
+        {name}::item:selected{{
             background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});
         }}
-        RoundedMenu::item:selected, RoundedMenu::item:pressed{{
+        {name}::item:selected, {name}::item:pressed{{
             border: 1px solid rgb({str(getBorderColour(is_highlight=True, is_tuple=True)).strip('()')});
             color: rgb({str(getForegroundColour(is_tuple=True)).strip('()')});
         }}
-        RoundedMenu::item:pressed{{
+        {name}::item:pressed{{
             background: rgb({str(getBackgroundColour(is_highlight=True, is_tuple=True)).strip('()')});
         }}
-        RoundedMenu::item:disabled{{
+        {name}::item:disabled{{
             background: rgba({str(getBackgroundColour(is_tuple=True)).strip('()')}, 0.3);
             color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, 0.3);
             border: 1px solid rgba({str(getBorderColour(is_tuple=True)).strip('()')}, 0.3);
         }}
         """)
-
+    
     def showEvent(self, a0):
         super().showEvent(a0)
-        self.__updateQSS()
+        self.updateQSS()

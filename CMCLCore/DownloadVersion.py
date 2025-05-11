@@ -42,7 +42,7 @@ def _DownloadLibraryFile(url: str, path: Union[str, Path, PurePath, os.PathLike,
     file_path = Path(path / file_name)
     if not Path(file_path).exists():
         downloader = Downloader(url, file_path)
-        downloader.download()
+        downloader.downloadFile()
 
 
 def DownloadAssetIndexFile(minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = ".",
@@ -139,7 +139,7 @@ def DownloadMinecraft(minecraft_path: Union[str, Path, PurePath, os.PathLike, Li
     if not Path(minecraft_path / "versions" / version / f"{version}.jar").exists():
         client_url = GetMinecraftClientDownloadUrl(version=version)
         downloader = Downloader(client_url, f"{version}.jar", Path(minecraft_path / "versions" / version))
-        downloader.download()
+        downloader.downloadFile()
     DownloadLibraryFiles(minecraft_path=minecraft_path, version=version)
     DownloadAssetIndexFile(minecraft_path=minecraft_path,
                            json_path=Path(minecraft_path / "versions" / version / f"{version}.json"))

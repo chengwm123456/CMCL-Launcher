@@ -547,7 +547,7 @@
     <message>
         <location filename="main.py" line="1078"/>
         <source>MainPage.stop_all_games_btn.ToolTip</source>
-        <translation>停止所有嘅Minecraft進程。</translation>
+        <translation>停止所有嘅 Minecraft 進程。</translation>
     </message>
     <message>
         <location filename="main.py" line="1079"/>

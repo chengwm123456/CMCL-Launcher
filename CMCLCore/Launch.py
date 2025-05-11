@@ -128,7 +128,7 @@ def FixMinecraftFiles(minecraft_path: Union[str, Path, PurePath, os.PathLike, Li
                 if GetOperationSystem.GetOperationSystemInMojangApi()[0].lower() != rule_of_os:
                     continue
             downloader = Downloader.Downloader(data_of_file["url"], path)
-            downloader.download()
+            downloader.downloadFile()
     game_jar_path = os.path.join(minecraft_path, "versions", version_fix, f"{version_fix}.jar")
     file = Path(str(game_jar_path))
     sha1 = hashlib.sha1(file.read_bytes())
@@ -136,7 +136,7 @@ def FixMinecraftFiles(minecraft_path: Union[str, Path, PurePath, os.PathLike, Li
         url = GetVersion.GetMinecraftClientDownloadUrl(version=version_fix)
         downloader = Downloader.Downloader(url, os.path.join(minecraft_path, "versions", version_fix,
                                                              f"{version_fix}.jar"))
-        downloader.download()
+        downloader.downloadFile()
 
 
 def UnpackMinecraftNativeFiles(

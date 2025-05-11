@@ -12,7 +12,7 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 
 - Translations in this launcher and these project files may not be 100% accurate.
 
-- There're full of bugs in these files......(for example, close a window may cause the RuntimeError or the launcher
+- There are full of bugs in these files......(for example, close a window may cause the RuntimeError or the launcher
   crashes, click a button may cause the launcher crashes, the launcher's windows is very slow, etc.)
 
 - I'm weak in English so these files may have a lot of incorrect spelling, spelling mistake, spelling by pinyin or

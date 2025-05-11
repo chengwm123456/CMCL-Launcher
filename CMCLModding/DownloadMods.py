@@ -15,5 +15,5 @@ def DownloadMod(mod_name, mod_version, target_path):
     downloaders = []
     for file in mod_files:
         downloader = Downloader(file["url"], file["filename"], target_path)
-        downloader.download()
+        downloader.downloadFile()
         downloaders.append(downloader)

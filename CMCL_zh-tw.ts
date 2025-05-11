@@ -731,7 +731,6 @@
 玩家位置：{}&lt;br/&gt;
 &lt;/body&gt;&lt;/html&gt;</translation>
     </message>
-
 </context>
 <context>
     <name>SettingsPage</name>

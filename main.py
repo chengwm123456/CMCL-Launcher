@@ -97,7 +97,7 @@ def log(type, context, msg):
 
 qInstallMessageHandler(log)
 
-CMCL_version = ("AlphaDev-25001", "Alpha Development-25001")
+CMCL_version = ("AlphaDev-25002", "Alpha Development-25002")
 minecraft_path = Path(".")
 current_language = locale._getdefaultlocale()[0].lower().replace("_", "-")
 
@@ -128,11 +128,11 @@ theme_colour_defines = {
         Theme.Light: {
             ColourRole.Background: {
                 False: (253, 253, 253),
-                True: (250, 176, 206)
+                True: (250, 109, 194)
             },
             ColourRole.Border: {
                 False: (215, 220, 229),
-                True: (250, 178, 237)
+                True: (250, 137, 207)
             }
         },
         Theme.Dark: {
@@ -179,11 +179,11 @@ languages_map = {
 }
 
 window_class = MainWindow
-backgroundGradient = random.choice(
-    [QGradient.Preset.PerfectWhite, QGradient.Preset.FreshOasis, QGradient.Preset.LandingAircraft,
-     QGradient.Preset.DeepBlue]), random.choice(
-    [QGradient.Preset.PerfectBlue, QGradient.Preset.PlumPlate, QGradient.Preset.NightSky]
-)
+
+lightGradients = [QGradient.Preset.PerfectWhite, QGradient.Preset.FreshOasis, QGradient.Preset.LandingAircraft,
+                  QGradient.Preset.DeepBlue]
+darkGradients = [QGradient.Preset.PerfectBlue, QGradient.Preset.PlumPlate, QGradient.Preset.NightSky]
+backgroundGradient = random.choice(lightGradients), random.choice(darkGradients)
 
 
 class AcrylicBackground(QWidget):
@@ -364,7 +364,7 @@ class LoadingAnimation(QFrame):
             gradient.setColorAt(
                 1.0,
                 self.beRed(
-                    getBackgroundColour(is_highlight=True).darker(150),
+                    getBackgroundColour(is_highlight=True),
                     75 if self.error else 0
                 )
             )
@@ -392,14 +392,14 @@ class LoadingAnimation(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        self.__svgWidget = self.CentreAnimation(self)
-        self.__svgWidget.setFixedSize(96, 96)
-        self.__svgWidget.setStyleSheet("background: transparent;")
-        dsg = QGraphicsDropShadowEffect(self.__svgWidget)
+        self.__centreAnimation = self.CentreAnimation(self)
+        self.__centreAnimation.setFixedSize(96, 96)
+        self.__centreAnimation.setStyleSheet("background: transparent;")
+        dsg = QGraphicsDropShadowEffect(self.__centreAnimation)
         dsg.setBlurRadius(30)
         dsg.setOffset(0, 4)
         dsg.setColor(QColor(0, 0, 0, 200))
-        self.__svgWidget.setGraphicsEffect(dsg)
+        self.__centreAnimation.setGraphicsEffect(dsg)
         self.__statusLabel = Label(self)
         self.__statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.__loadingTimer = QTimer(self)
@@ -418,10 +418,10 @@ class LoadingAnimation(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setGeometry(self.parent().rect())
         try:
-            self.__svgWidget.setGeometry(QRect(int(self.width() / 2 - (self.__svgWidget.width() / 2)),
-                                               int(self.height() / 2 - (self.__svgWidget.height() / 2)),
-                                               self.__svgWidget.width(),
-                                               self.__svgWidget.height()))
+            self.__centreAnimation.setGeometry(QRect(int(self.width() / 2 - (self.__centreAnimation.width() / 2)),
+                                                     int(self.height() / 2 - (self.__centreAnimation.height() / 2)),
+                                                     self.__centreAnimation.width(),
+                                                     self.__centreAnimation.height()))
         except AttributeError:
             pass
         try:
@@ -437,7 +437,7 @@ class LoadingAnimation(QFrame):
     
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        if not self.__svgWidget.error:
+        if not self.__centreAnimation.error:
             self.setStyleSheet(
                 f"background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});")
         else:
@@ -449,12 +449,12 @@ class LoadingAnimation(QFrame):
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text") + "." * (self.__counter % 4))
     
     def start(self, ani=True):
-        self.__svgWidget.setFixedSize(96, 96)
+        self.__centreAnimation.setFixedSize(96, 96)
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text"))
         if ani:
             self.setStyleSheet("background: transparent")
             self.TransparencyAnimation(self, "in").start()
-            self.SizingAnimation(self.__svgWidget, "in").start()
+            self.SizingAnimation(self.__centreAnimation, "in").start()
         else:
             self.setStyleSheet(
                 f"background: rgb({str(getBackgroundColour(is_tuple=True)).replace('(', '').replace(')', '')});")
@@ -469,7 +469,7 @@ class LoadingAnimation(QFrame):
             if not failed:
                 if ani:
                     self.TransparencyAnimation(self, "out").start()
-                    self.SizingAnimation(self.__svgWidget, "out").start()
+                    self.SizingAnimation(self.__centreAnimation, "out").start()
                     hideani = self.HideAnimation(self)
                     self.destroyed.connect(hideani.terminate)
                     hideani.start()
@@ -480,7 +480,7 @@ class LoadingAnimation(QFrame):
                 self.setStyleSheet(
                     f"background: rgb({'255, 200, 200' if getTheme() == Theme.Light else '100, 50, 50'});")
                 self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.FailedText"))
-                self.__svgWidget.seterror()
+                self.__centreAnimation.seterror()
         except RuntimeError:
             pass
     
@@ -1786,7 +1786,7 @@ class DownloadPage(QFrame):
                 self.modBody = TextEdit(self.modInfo)
                 self.modBody.setReadOnly(True)
                 self.modBody.setMarkdown(self.mod_body)
-                self.verticalLayout_2.addWidget(self.modBody)
+                self.verticalLayout_2.addWidget(self.modBody, 1)
                 
                 self.modInfoContainer = ScrollArea(self.toolBox)
                 self.modInfoContainer.setWidget(self.modInfo)
@@ -2566,6 +2566,7 @@ class SettingsPage(QFrame):
             self.verticalLayout_2.addLayout(self.formLayout)
             
             self.groupBox_3 = GroupBox(self)
+            self.groupBox_3.setCheckable(True)
             self.verticalLayout.addWidget(self.groupBox_3)
             
             self.verticalLayout_3 = QVBoxLayout(self.groupBox_3)
@@ -3967,7 +3968,11 @@ else:
                 "Customise": {
                     "CurrentThemePreset": "PresetBlue",
                     "CurrentTheme": "Light",
-                    "BackgroundBlur": 5
+                    "BackgroundBlur": 0,
+                    "Animations": {
+                        "Enabled": True,
+                        "EnabledItems": []
+                    }
                 },
                 "ModSearching": {
                     "OnePageModNum": 10
@@ -3987,7 +3992,7 @@ app = QApplication(sys.argv)
 app.setApplicationName("Common Minecraft Launcher")
 app.setApplicationVersion(CMCL_version[0])
 app.setFont(QFont("HarmonyOS Sans SC"))
-font_id = QFontDatabase.addApplicationFont(r".\Unifont 13.0.01.ttf")
+font_id = -1  # QFontDatabase.addApplicationFont(r".\Unifont 13.0.01.ttf")
 if font_id != -1:
     font_families = QFontDatabase.applicationFontFamilies(font_id)
     if font_families:

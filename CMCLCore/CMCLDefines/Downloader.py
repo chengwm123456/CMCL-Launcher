@@ -41,7 +41,7 @@ class Downloader:
     def chunkSize(self, value: Union[int, str, Decimal]):
         self.__chunkSize = Decimal(str(value))
     
-    def download(
+    def downloadFile(
             self,
             maximum_threads: Optional[Union[int, str]] = None,
             chunk_size: Union[int, str, Decimal] = None

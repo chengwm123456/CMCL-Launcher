@@ -20,9 +20,11 @@ class GroupBox(QGroupBox, Widget):
     
     def __init__(self, *__args):
         super().__init__(*__args)
+        self.setStyleSheet("padding: 15px 0px 5px 0px;")
+        self.setStyle(QStyleFactory.create("windows11"))
     
     def paintEvent(self, a0):
-        self.setStyleSheet("padding: 10px 0px 5px 0px;")
+        self.setStyleSheet("padding: 15px 0px 5px 0px;")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
@@ -30,58 +32,53 @@ class GroupBox(QGroupBox, Widget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         borderColour = getBorderColour()
         backgroundColour = getBackgroundColour()
-        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(self.width(), self.height()))
+        painter.save()
+        painter.setOpacity((((max(painter.opacity(), 0.6) - 0.6) * 10) / 4))
+        borderGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
+        borderGradient.setColorAt(0.0, Colour(*getBorderColour(), 64))
+        borderGradient.setColorAt(1.0, borderColour)
+        painter.setPen(QPen(QBrush(borderGradient), 1))
+        painter.setBrush(Qt.GlobalColor.transparent)
+        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 12, 12)
+        painter.restore()
+        painter.save()
+        painter.setOpacity(self.property("widgetOpacity"))
+        borderGradient = QLinearGradient(QPointF(3, 3), QPointF(3, self.height() - 3))
         borderGradient.setColorAt(0.0, borderColour)
-        borderGradient.setColorAt(1.0, Colour(
-            *borderColour,
-            (255 if self.hasFocus() and self.isEnabled() else 32)
-        ))
-        painter.setPen(QPen(QBrush(borderGradient), 1.0))
-        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
+        borderGradient.setColorAt(1.0, Colour(*getBorderColour(), 64))
+        backgroundGradient = QLinearGradient(QPointF(3, 3), QPointF(self.width() - 3, 3))
         backgroundGradient.setColorAt(0.0, backgroundColour)
-        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        backgroundGradient.setColorAt(0.5, Colour(*backgroundColour, 230))
+        backgroundGradient.setColorAt(1.0, backgroundColour)
+        painter.setPen(QPen(QBrush(borderGradient), 1))
         painter.setBrush(QBrush(backgroundGradient))
-        y = self.fontMetrics().boundingRect(QRect(8, 0, self.width() - 20, self.height()), self.alignment(),
-                                            self.title()).height() + 1 if self.title() else 0
-        rect = self.rect().adjusted(1, 1, -1, -1)
-        rect = QRect(rect.x(), rect.y() + (y // 2 if self.title() else 0), rect.width(),
-                     rect.height() - (y // 2 if self.title() else 0))
-        painter.drawRoundedRect(rect, 10, 10)
+        painter.drawRoundedRect(self.rect().adjusted(3, 3, -3, -3), 10, 10)
+        painter.restore()
         op = QStyleOptionGroupBox()
         op.initFrom(self)
         self.initStyleOption(op)
+        op.rect = op.rect.adjusted(4, 4, -4, -4)
         if self.title() or self.isCheckable():
-            rect = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
-                                               QStyle.SubControl.SC_GroupBoxLabel).united(
-                self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
-                                            QStyle.SubControl.SC_GroupBoxCheckBox)).adjusted(1, 1, -1, -1)
-            borderColour = getBorderColour()
-            backgroundColour = getBackgroundColour()
-            borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                             max(self.width(), self.height()))
-            borderGradient.setColorAt(0.0, borderColour)
-            borderGradient.setColorAt(1.0, Colour(
-                *borderColour,
-                (255 if self.hasFocus() and self.isEnabled() else 32)
-            ))
-            painter.setPen(QPen(QBrush(borderGradient), 1.0))
-            backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
-            backgroundGradient.setColorAt(0.0, backgroundColour)
-            backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
-            painter.setBrush(QBrush(backgroundGradient))
-            painter.drawRoundedRect(rect, 10, 10)
+            height = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
+                                                 QStyle.SubControl.SC_GroupBoxLabel).height() - 2
+            painter.save()
+            painter.setPen(getBorderColour())
+            painter.drawLine(QLine(QPoint(5, height), QPoint(self.width() - 5, height)))
+            painter.restore()
         if self.title():
             painter.save()
             painter.setPen(getForegroundColour())
             painter.setBrush(Qt.GlobalColor.transparent)
             painter.drawText(
-                self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op, QStyle.SubControl.SC_GroupBoxLabel),
+                self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
+                                            QStyle.SubControl.SC_GroupBoxLabel).adjusted(0, 0, 0, -5),
                 Qt.AlignmentFlag.AlignCenter, self.title())
             painter.restore()
         if self.isCheckable():
             rect = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
-                                               QStyle.SubControl.SC_GroupBoxCheckBox).adjusted(1, 1, -1, -1)
+                                               QStyle.SubControl.SC_GroupBoxCheckBox).adjusted(
+                -2, -2, 2, 2).adjusted(
+                0, -2, 0, -2)
             borderColour = getBorderColour(
                 is_highlight=(self.isChecked()) or
                              ((self.isChecked() or self.underMouse() or self.hasFocus()) and
@@ -91,22 +88,37 @@ class GroupBox(QGroupBox, Widget):
                 is_highlight=(self.isChecked()) or (
                         (self.isChecked()) and self.isEnabled())
             )
-            borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                             max(self.width(), self.height()))
+            painter.save()
+            painter.setOpacity((((max(painter.opacity(), 0.6) - 0.6) * 10) / 4))
+            borderGradient = QLinearGradient(QPointF(rect.x(), rect.y()), QPointF(rect.x(), rect.y() + rect.height()))
+            borderGradient.setColorAt(0.0, Colour(*getBorderColour(), 64))
+            borderGradient.setColorAt(1.0, borderColour)
+            painter.setPen(QPen(QBrush(borderGradient), 1))
+            painter.setBrush(Qt.GlobalColor.transparent)
+            painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+            painter.restore()
+            painter.save()
+            painter.setOpacity(self.property("widgetOpacity"))
+            borderGradient = QLinearGradient(QPointF(rect.x() + 3, rect.y() + 3),
+                                             QPointF(rect.x() + 3, rect.height() - 3 + rect.y()))
             borderGradient.setColorAt(0.0, borderColour)
-            borderGradient.setColorAt(1.0, Colour(
-                *borderColour,
-                (255 if self.hasFocus() and self.isEnabled() else 32)
-            ))
-            painter.setPen(QPen(QBrush(borderGradient), 1.0))
-            backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+            borderGradient.setColorAt(1.0, Colour(*getBorderColour(), 64))
+            backgroundGradient = QLinearGradient(QPointF(rect.x() + 3, rect.y() + 3),
+                                                 QPointF(self.width() - 3, 3 + rect.y()))
             backgroundGradient.setColorAt(0.0, backgroundColour)
-            backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+            backgroundGradient.setColorAt(0.5, Colour(*backgroundColour, 230))
+            backgroundGradient.setColorAt(1.0, backgroundColour)
+            painter.setPen(QPen(QBrush(borderGradient), 1))
             painter.setBrush(QBrush(backgroundGradient))
-            painter.drawRoundedRect(rect, 10, 10)
+            painter.drawRoundedRect(rect.adjusted(3, 3, -3, -3), 10, 10)
+            painter.restore()
             painter.save()
             painter.setPen(getForegroundColour())
             painter.setBrush(Qt.GlobalColor.transparent)
+            rect = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
+                                               QStyle.SubControl.SC_GroupBoxCheckBox).adjusted(
+                1, 1, -1, -1).adjusted(
+                0, -2, 0, -2)
             if self.isChecked():
                 painter.drawLines([QLine(
                     QPoint(4 + rect.x(), rect.y() + 8),
