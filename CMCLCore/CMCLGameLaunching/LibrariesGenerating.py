@@ -3,15 +3,23 @@ from typing import *
 import os
 from pathlib import Path
 from .. import GetOperationSystem
+from CMCLCore.CMCLDefines.Minecraft import Minecraft
 
 
 def GenerateFileNameByNames(names: Union[str, Iterable[str]]):
     if isinstance(names, str):
         names = names.split(":")
-    return Path(f"{'-'.join(names[1:])}.jar")
+    return Path(f"{'-'.join(map(str, names[1:]))}.jar")
 
 
-def GenerateMinecraftLibrariesFiles(minecraft, libraries_datas):
+def GenerateArtifactPath(minecraft: Minecraft, names: Union[str, Iterable[str]]):
+    if isinstance(names, str):
+        names = names.split(":")
+    return Path(Path(minecraft.mc_gameLibrariesDir) / names[0].replace(".", os.sep) / names[1] / names[
+        2] / GenerateFileNameByNames(names))
+
+
+def GenerateMinecraftLibrariesFiles(minecraft: Minecraft, libraries_datas: Iterable[dict]):
     mcLibrariesFiles = []
     mcLibrariesFilesNames = {}
     for mcLib in libraries_datas:
@@ -29,11 +37,7 @@ def GenerateMinecraftLibrariesFiles(minecraft, libraries_datas):
             downloads = mcLib.get("downloads", {})
             if downloads.get("artifact") and allow:
                 mcLibJarNames = mcLib.get("name", "::").split(":")
-                mcLibJarFile = GenerateFileNameByNames(mcLibJarNames)
-                mcLibPath = Path(
-                    Path(mcLibJarNames[0].replace(".", os.sep)) / mcLibJarNames[1] / mcLibJarNames[
-                        2] / mcLibJarFile)
-                mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mcLibPath)
+                mc_lib_path_artifact = GenerateArtifactPath(minecraft, mcLibJarNames)
                 if len(mcLibJarNames) > 3:
                     mc_lib_name_id = tuple(mcLibJarNames[:-2] + [mcLibJarNames[-1]])
                 else:
@@ -44,12 +48,8 @@ def GenerateMinecraftLibrariesFiles(minecraft, libraries_datas):
                     mcLibrariesFiles.append(str(mc_lib_path_artifact))
                 mcLibrariesFilesNames[mc_lib_name_id] = len(mcLibrariesFiles) - 1
         else:
-            mcLibJarNames = mcLib.get("name", ":::").split(":")
-            mcLibJarFile = GenerateFileNameByNames(mcLibJarNames)
-            mcLibPath = Path(
-                Path(mcLibJarNames[0].replace(".", os.sep)) / mcLibJarNames[1] / mcLibJarNames[
-                    2] / mcLibJarFile)
-            mc_lib_path_artifact = Path(minecraft.mc_gameLibrariesDir / mcLibPath)
+            mcLibJarNames = mcLib.get("name", "::").split(":")
+            mc_lib_path_artifact = GenerateArtifactPath(minecraft, mcLibJarNames)
             if len(mcLibJarNames) > 3:
                 mc_lib_name_id = tuple(mcLibJarNames[:-2] + [mcLibJarNames[-1]])
             else:

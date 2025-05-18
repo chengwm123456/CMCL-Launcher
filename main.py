@@ -2184,8 +2184,7 @@ class SettingsPage(QFrame):
             self.lineEdit.textChanged.connect(self.updatePresetsState)
             self.lineEdit.textChanged.connect(self.updateSettings)
             self.lineEdit.setClearButtonEnabled(True)
-            font = QFont("Consolas")
-            font.setPointSize(13)
+            font = fixedFont
             self.lineEdit.setFont(font)
             
             self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.lineEdit)
@@ -2199,7 +2198,7 @@ class SettingsPage(QFrame):
             self.gridLayout.setObjectName(u"gridLayout")
             self.checkBox = CheckBox(self.groupBox)
             self.checkBox.setObjectName(u"checkBox")
-            self.checkBox.toggled.connect(lambda state=False: self.presentChecked(state, "-demo"))
+            self.checkBox.toggled.connect(lambda state=False: self.presetChecked(state, "-demo"))
             
             # self.checkBox.setFixedHeight(10)
             # self.checkBox.setFixedHeight(100)
@@ -2209,7 +2208,7 @@ class SettingsPage(QFrame):
             
             self.checkBox_2 = CheckBox(self.groupBox)
             self.checkBox_2.setObjectName(u"checkBox_2")
-            self.checkBox_2.toggled.connect(lambda state=False: self.presentChecked(state, "-fullscreen"))
+            self.checkBox_2.toggled.connect(lambda state=False: self.presetChecked(state, "-fullscreen"))
             
             self.gridLayout.addWidget(self.checkBox_2, 1, 0, 1, 1)
             
@@ -2235,23 +2234,31 @@ class SettingsPage(QFrame):
         
         # retranslateUi
         
-        def presentChecked(self, state, command):
+        def presetChecked(self, state, command):
             text = self.lineEdit.text()
-            splited_command = shlex.split(text)
-            if state:
-                if command not in splited_command:
-                    splited_command.append(command)
+            try:
+                splited_command = shlex.split(text)
+            except ValueError:
+                return
             else:
-                if command in splited_command:
-                    splited_command.remove(command)
-            command = shlex.join(splited_command)
+                if state:
+                    if command not in splited_command:
+                        splited_command.append(command)
+                else:
+                    if command in splited_command:
+                        splited_command.remove(command)
+                command = shlex.join(splited_command)
             self.lineEdit.setText(command)
         
         def updatePresetsState(self):
             text = self.lineEdit.text()
-            splited_command = shlex.split(text)
-            self.checkBox.setChecked("-demo" in splited_command)
-            self.checkBox_2.setChecked("-fullscreen" in splited_command)
+            try:
+                splited_command = shlex.split(text)
+            except ValueError:
+                return
+            else:
+                self.checkBox.setChecked("-demo" in splited_command)
+                self.checkBox_2.setChecked("-fullscreen" in splited_command)
         
         def updateSettings(self, value):
             settings["Settings"]["GameSettings"]["ExtraGameCommand"] = value
@@ -2312,8 +2319,7 @@ class SettingsPage(QFrame):
             self.comboBox.setEditable(True)
             self.comboBox.currentTextChanged.connect(self.updateJavaPath)
             self.comboBox.setSizeAdjustPolicy(ComboBox.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
-            font = QFont("Consolas")
-            font.setPointSize(13)
+            font = fixedFont
             self.comboBox.setFont(font)
             self.horizontalLayout_3.addWidget(self.comboBox, 1)
             
@@ -3259,6 +3265,7 @@ class ErrorDialogue(MaskedDialogue):
         self.message = errorMessage
         
         self.label = self.ErrorText(self)
+        self.label.setFont(fixedFont)
         self.label.setText(self.message)
         self.label.setReadOnly(True)
         self.label.setLineWrapMode(self.ErrorText.LineWrapMode.NoWrap)
@@ -3583,9 +3590,7 @@ class LoggingWindow(window_class):
         self.loggingtext = self.LoggingText(self)
         self.loggingtext.setReadOnly(True)
         # self.loggingtext.setLineWrapMode(self.LoggingText.LineWrapMode.NoWrap)
-        font = QFont("Consolas")
-        font.setPointSize(13)
-        self.loggingtext.setFont(font)
+        self.loggingtext.setFont(fixedFont)
         self.bftext = output.getvalue()
         self.loggingtext.setText(output.getvalue())
         timer = QTimer(self)
@@ -3593,7 +3598,7 @@ class LoggingWindow(window_class):
         timer.start(100)
         self.inputtext = LineEdit(self)
         self.inputtext.returnPressed.connect(self.process_command)
-        self.inputtext.setFont(font)
+        self.inputtext.setFont(fixedFont)
         self.inputtext.setToolTip(self.tr("LoggingWindow.inputtext.ToolTip"))
         self.canOutput = True
         self.retranslateUI()
@@ -3992,12 +3997,8 @@ app = QApplication(sys.argv)
 app.setApplicationName("Common Minecraft Launcher")
 app.setApplicationVersion(CMCL_version[0])
 app.setFont(QFont("HarmonyOS Sans SC"))
-font_id = -1  # QFontDatabase.addApplicationFont(r".\Unifont 13.0.01.ttf")
-if font_id != -1:
-    font_families = QFontDatabase.applicationFontFamilies(font_id)
-    if font_families:
-        font = QFont(font_families[0])
-        app.setFont(font)
+fixedFont = QFont(["Jetbrains Mono", "Consolas", "Ubuntu", "Monospace", "HarmonyOS Sans SC"], 13)
+#                                  --- Monospace ---                      --- Chinese ---
 
 # app.setEffectEnabled(Qt.UIEffect.UI_AnimateMenu)
 # app.setEffectEnabled(Qt.UIEffect.UI_FadeMenu)

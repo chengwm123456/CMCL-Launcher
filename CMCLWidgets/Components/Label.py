@@ -30,9 +30,10 @@ class LabelBase(QLabel, Widget):
     
     def contextMenuEvent(self, e):
         super().contextMenuEvent(e)
-        menu = self.children()[-1]
-        menu.BORDER_RADIUS = 10
-        RoundedMenu.updateQSS(menu)
+        if isinstance(self.children()[-1], QMenu):
+            menu = self.children()[-1]
+            menu.BORDER_RADIUS = 10
+            RoundedMenu.updateQSS(menu)
 
 
 class Label(LabelBase):

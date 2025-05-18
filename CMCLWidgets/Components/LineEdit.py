@@ -4,7 +4,7 @@ from typing import overload
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from .Button import CloseButton
-from .ListView import ListView
+from .ListView import ListView, ItemDelegate
 from ..Windows import RoundedMenu
 from ..ThemeController import *
 
@@ -48,6 +48,7 @@ class LineEdit(QLineEdit, Widget):
                 Qt.WindowType.Popup | Qt.WindowType.Sheet
             )
             completer.setPopup(completerMenu)
+            completer.popup().setItemDelegate(ItemDelegate(completerMenu))
     
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -59,6 +60,11 @@ class LineEdit(QLineEdit, Widget):
             new_button.move(old_button.x(), old_button.y())
             new_button.setEnabled(bool(self.text()))
             old_button.setVisible(False)
+            
+            if new_button.underMouse():
+                self.setCursor(Qt.CursorShape.ArrowCursor)
+            else:
+                self.setCursor(Qt.CursorShape.IBeamCursor)
         painter = QPainter(self)
         painter.setOpacity(self.property("widgetOpacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)

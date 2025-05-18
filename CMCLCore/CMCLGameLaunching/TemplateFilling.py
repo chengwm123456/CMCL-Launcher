@@ -37,9 +37,9 @@ def MinecraftArgumentTemplateFilling(
     argument = argument.replace("${version_name}", f'"{minecraft.mc_gameVersion}"')
     argument = argument.replace("${game_directory}", f'"{minecraft.mc_gameWorkDir}"')
     if assets_legacy:
-        gameAssetsDir = PurePath(minecraft.mc_gameAssetsDir) / "virtual" / "legacy"
+        gameAssetsDir = Path(minecraft.mc_gameAssetsDir) / "virtual" / "legacy"
     else:
-        gameAssetsDir = PurePath(minecraft.mc_gameAssetsDir)
+        gameAssetsDir = Path(minecraft.mc_gameAssetsDir)
     argument = argument.replace("${assets_root}", f'"{gameAssetsDir}"').replace("${game_assets}",
                                                                                 f'"{Path(gameAssetsDir)}"')
     argument = argument.replace("${assets_index_name}", f'"{assets_index}"')

@@ -2,6 +2,8 @@
 
 <h4 align="center">Changelog / 更新日志</h4>
 
+- AlphaDev-25002
+    - Updated the version number / 更新版本号
 - AlphaDev-25001
     - Updated the version number / 更新版本号
     - A little supporting on modding / 模组小支持
