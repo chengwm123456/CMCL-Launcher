@@ -2840,7 +2840,9 @@ class AboutPage(QFrame):
         
         self.toolBox.addItem(self.page2, self.tr("AboutPage.Page2.Title"))
         
-        translationjson = json.loads(Path("aboutPageTranslations.json").read_text(encoding="utf-8"))
+        translationjson = QFile(":/aboutPageTranslations.json")
+        translationjson.open(QIODevice.OpenModeFlag.ReadOnly | QIODevice.OpenModeFlag.Text)
+        translationjson = json.loads(QTextStream(translationjson).readAll())
         
         def gettrans(numb, text):
             if numb:

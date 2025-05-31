@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePath
 from queue import Queue
 import requests
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor  # , as_completed
 
 
 class Downloader:
@@ -21,13 +21,13 @@ class Downloader:
             download_file_name: Union[str, Path, PurePath, os.PathLike, LiteralString],
             download_file_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = ".",
             maximum_threads: Union[int, str] = 64,
-            chunk_size: Union[int, str] = 1024
+            chunk_size: Union[int, str] = 1024 * 1024
     ):
         self.download_url = str(download_url)
         self.download_file_name = Path(download_file_name)
         self.download_file_path = Path(download_file_path)
         self.__maximumThreads = int(maximum_threads)
-        self.__chunkSize = chunk_size
+        self.__chunkSize = max(1024, int(chunk_size))
     
     @property
     def maximumThreads(self) -> Union[int, str]:
@@ -66,7 +66,7 @@ class Downloader:
                         executor.submit(
                             self.__downloadChunk,
                             startPosition,
-                            min(startPosition + self.__chunkSize, contentLength)
+                            min(startPosition + self.__chunkSize, contentLength) - 1
                         )
                     )
                     startPosition += self.__chunkSize
@@ -81,14 +81,13 @@ class Downloader:
                 file.seek(chunkData.startPosition)
                 file.write(chunkData.responseContent)
     
-    @classmethod
     def __downloadChunk(
-            cls,
+            self,
             start_point: int,
             end_point: int
     ) -> 'Downloader.ChunkData':
-        response = requests.get(cls.download_url, headers={"Range": f"bytes={int(start_point)}-{int(end_point)}"})
-        return cls.ChunkData(
+        response = requests.get(self.download_url, headers={"Range": f"bytes={int(start_point)}-{int(end_point)}"})
+        return self.ChunkData(
             startPosition=int(start_point),
             responseContent=response.content
         )

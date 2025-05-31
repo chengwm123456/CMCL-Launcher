@@ -16,6 +16,22 @@ class Minecraft:
     mc_gameAssetsDir: Optional[Union[str, os.PathLike[str]]]
     mc_gameLibrariesDir: Optional[Union[str, os.PathLike[str]]]
     
+    def __post_init__(self):
+        if self.mc_gameVersion:
+            self.mc_gameVersion = str(self.mc_gameVersion)
+        if self.mc_gameWorkDir:
+            self.mc_gameWorkDir = Path(self.mc_gameWorkDir).absolute()
+        if self.mc_gameJarFile:
+            self.mc_gameJarFile = Path(self.mc_gameJarFile).with_suffix(".jar").absolute()
+        if self.mc_gameJsonFile:
+            self.mc_gameJsonFile = Path(self.mc_gameJsonFile).with_suffix(".json").absolute()
+        if self.mc_gameNativesDir:
+            self.mc_gameNativesDir = Path(self.mc_gameNativesDir).absolute()
+        if self.mc_gameAssetsDir:
+            self.mc_gameAssetsDir = Path(self.mc_gameAssetsDir).absolute()
+        if self.mc_gameLibrariesDir:
+            self.mc_gameLibrariesDir = Path(self.mc_gameLibrariesDir).absolute()
+    
     @property
     def mc_gameJsonFileContent(self) -> Optional[dict]:
         if self.mc_gameJsonFile and Path(self.mc_gameJsonFile).exists():

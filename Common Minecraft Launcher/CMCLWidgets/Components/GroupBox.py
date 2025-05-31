@@ -21,10 +21,10 @@ class GroupBox(QGroupBox, Widget):
     def __init__(self, *__args):
         super().__init__(*__args)
         self.setStyle(QStyleFactory.create("windows11"))
-        self.setStyleSheet("padding: 10px 0px 5px 0px;")
+        self.setStyleSheet("padding: 15px 0px 5px 0px;")
     
     def paintEvent(self, a0):
-        self.setStyleSheet("padding: 10px 0px 5px 0px;")
+        self.setStyleSheet("padding: 15px 0px 5px 0px;")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
