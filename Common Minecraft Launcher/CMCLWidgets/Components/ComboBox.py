@@ -5,7 +5,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from ..ThemeController import *
 from .ToolTip import ToolTip
-from CMCLWidgets.Windows import RoundedMenu
+from ..Windows import RoundedMenu
 from .ListView import ListView
 
 from .Widget import Widget
@@ -110,12 +110,14 @@ class ComboBox(QComboBox, Widget):
         self.setStyleSheet("padding: 5px;")
     
     def contextMenuEvent(self, e):
+        super().contextMenuEvent(e)
         if self.lineEdit() and self.isEditable():
-            default = self.lineEdit().createStandardContextMenu()
-            menu = RoundedMenu(self)
-            for i in default.actions():
-                menu.addAction(i)
-            menu.exec(self.mapToGlobal(e.pos()))
+            menus = self.findChildren(QMenu)
+            if menus:
+                menu = menus[-1]
+                menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
+                RoundedMenu.updateQSS(menu)
+                menu.popup(QCursor.pos())
     
     def hasFocus(self):
         return super().hasFocus() or self.view().hasFocus()

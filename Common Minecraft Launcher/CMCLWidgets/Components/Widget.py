@@ -20,6 +20,21 @@ class Widget(QWidget):
         match a1.type():
             case QEvent.Type.MouseButtonPress | QEvent.Type.MouseButtonRelease:
                 self.setAttribute(Qt.WidgetAttribute.WA_UnderMouse)
+                if self.isEnabled():
+                    if not self.hasFocus():
+                        opacityAnimation = QPropertyAnimation(self, b"widgetOpacity", self)
+                        opacityAnimation.setDuration(500)
+                        opacityAnimation.setStartValue(self.property("widgetOpacity"))
+                        opacityAnimation.setEndValue(1.0)
+                        opacityAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        opacityAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                else:
+                    opacityAnimation = QPropertyAnimation(self, b"widgetOpacity", self)
+                    opacityAnimation.setDuration(500)
+                    opacityAnimation.setStartValue(self.property("widgetOpacity"))
+                    opacityAnimation.setEndValue(0.3)
+                    opacityAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    opacityAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
             case QEvent.Type.Enter:
                 if self.isEnabled():
                     if not self.hasFocus():

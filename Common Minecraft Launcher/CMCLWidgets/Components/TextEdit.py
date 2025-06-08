@@ -3,7 +3,7 @@ from typing import overload
 
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
-from CMCLWidgets.Windows import RoundedMenu
+from ..Windows import RoundedMenu
 from ..ThemeController import *
 from .ScrollBar import ScrollBar
 
@@ -54,11 +54,13 @@ class TextEdit(QTextEdit, Widget):
         super().paintEvent(e)
     
     def contextMenuEvent(self, e):
-        default = self.createStandardContextMenu()
-        menu = RoundedMenu(self)
-        for i in default.actions():
-            menu.addAction(i)
-        menu.exec(self.mapToGlobal(e.pos()))
+        super().contextMenuEvent(e)
+        menus = self.findChildren(QMenu)
+        if menus:
+            menu = menus[-1]
+            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
+            RoundedMenu.updateQSS(menu)
+            menu.popup(QCursor.pos())
 
 
 class PlainTextEdit(QPlainTextEdit, Widget):
@@ -105,8 +107,10 @@ class PlainTextEdit(QPlainTextEdit, Widget):
         super().paintEvent(e)
     
     def contextMenuEvent(self, e):
-        default = self.createStandardContextMenu()
-        menu = RoundedMenu(self)
-        for i in default.actions():
-            menu.addAction(i)
-        menu.exec(self.mapToGlobal(e.pos()))
+        super().contextMenuEvent(e)
+        menus = self.findChildren(QMenu)
+        if menus:
+            menu = menus[-1]
+            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
+            RoundedMenu.updateQSS(menu)
+            menu.popup(QCursor.pos())

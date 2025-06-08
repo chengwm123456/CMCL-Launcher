@@ -174,31 +174,20 @@ class ScrollBar(QScrollBar, Widget):
         painter.restore()
     
     def contextMenuEvent(self, a0):
-        menu = RoundedMenu(self)
-        menu.addAction("Scroll Here",
-                       lambda: self.setValue(
-                           int(self.style().sliderValueFromPosition(
-                               self.minimum(),
-                               self.maximum(),
-                               self.mapFromGlobal(
-                                   QCursor.pos()).x() if self.orientation() == Qt.Orientation.Horizontal else self.mapFromGlobal(
-                                   QCursor.pos()).y(),
-                               self.width() if self.orientation() == Qt.Orientation.Horizontal else self.height(),
-                           ))))
-        menu.addSeparator()
-        menu.addAction("Top", lambda: self.setValue(0))
-        menu.addAction("Bottom", lambda: self.setValue(self.maximum()))
-        menu.addSeparator()
-        menu.addAction("Page up", lambda: self.setValue(max(0, self.value() - self.pageStep())))
-        menu.addAction("Page down", lambda: self.setValue(min(self.maximum(), self.value() + self.pageStep())))
-        menu.addSeparator()
-        menu.addAction("Scroll up", lambda: self.setValue(max(0, self.value() - 20)))
-        menu.addAction("Scroll down", lambda: self.setValue(min(self.maximum(), self.value() + 20)))
-        menu.popup(QCursor.pos())
+        def updateContextMenu(self):
+            menus = self.findChildren(QMenu)
+            if menus:
+                menu = menus[-1]
+                menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
+                RoundedMenu.updateQSS(menu)
+                menu.popup(QCursor.pos())
+        
+        QTimer.singleShot(1, lambda: updateContextMenu(self))
+        super().contextMenuEvent(a0)
 
 
 class ScrollArea(QScrollArea):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)

@@ -169,7 +169,7 @@ Language: {}</translation>
         <location filename="main.py" line="1281"/>
         <location filename="main.py" line="1323"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.ToolBox.Page1.Title</source>
-        <translation>Vanilla</translation>
+        <translation>Game Base</translation>
     </message>
     <message>
         <location filename="main.py" line="1305"/>

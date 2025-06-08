@@ -91,8 +91,10 @@ class LineEdit(QLineEdit, Widget):
         super().paintEvent(a0)
     
     def contextMenuEvent(self, e):
-        default = self.createStandardContextMenu()
-        menu = RoundedMenu(self)
-        for i in default.actions():
-            menu.addAction(i)
-        menu.exec(self.mapToGlobal(e.pos()))
+        super().contextMenuEvent(e)
+        menus = self.findChildren(QMenu)
+        if menus:
+            menu = menus[-1]
+            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
+            RoundedMenu.updateQSS(menu)
+            menu.popup(QCursor.pos())

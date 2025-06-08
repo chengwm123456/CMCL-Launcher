@@ -379,8 +379,8 @@ class LoadingAnimation(QFrame):
             b -= value
             return Colour(r, g, b)
         
-        def seterror(self):
-            self.error = True
+        def setError(self, isError=True):
+            self.error = isError
             self.timer.stop()
         
         def showEvent(self, a0):
@@ -402,6 +402,8 @@ class LoadingAnimation(QFrame):
         self.__centreAnimation.setGraphicsEffect(dsg)
         self.__statusLabel = Label(self)
         self.__statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.__reloadButton = PushButton(self)
+        self.__reloadButton.setText("重新加载")
         self.__loadingTimer = QTimer(self)
         self.__loadingTimer.timeout.connect(self.__updateText)
         self.destroyed.connect(lambda: self.__loadingTimer.stop())
@@ -432,6 +434,13 @@ class LoadingAnimation(QFrame):
                                                  self.__statusLabel.height()))
         except AttributeError:
             pass
+        try:
+            self.__reloadButton.adjustSize()
+            self.__reloadButton.setGeometry(
+                QRect(self.__statusLabel.x() + self.__statusLabel.width() + 2, self.__statusLabel.y(),
+                      self.__reloadButton.width(), self.__reloadButton.height()))
+        except AttributeError:
+            pass
         self.raise_()
         return super().event(e)
     
@@ -450,7 +459,10 @@ class LoadingAnimation(QFrame):
     
     def start(self, ani=True):
         self.__centreAnimation.setFixedSize(96, 96)
+        self.__centreAnimation.setError(False)
         self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.Text"))
+        self.__reloadButton.hide()
+        self.__reloadButton.setDown(False)
         if ani:
             self.setStyleSheet("background: transparent")
             self.TransparencyAnimation(self, "in").start()
@@ -480,9 +492,16 @@ class LoadingAnimation(QFrame):
                 self.setStyleSheet(
                     f"background: rgb({'255, 200, 200' if getTheme() == Theme.Light else '100, 50, 50'});")
                 self.__statusLabel.setText(self.tr("LoadingAnimation.statusLabel.FailedText"))
-                self.__centreAnimation.seterror()
+                self.__reloadButton.show()
+                self.__centreAnimation.setError()
         except RuntimeError:
             pass
+    
+    def addReloadFunction(self, function):
+        self.__reloadButton.pressed.connect(function)
+    
+    def setReloadText(self, text):
+        self.__reloadButton.setText(text)
     
     def hideEvent(self, *args, **kwargs):
         try:
@@ -1062,8 +1081,6 @@ class MainPage(QFrame):
         self.verticalLayout.addWidget(self.scrollArea)
         self.scrollAreaContentWidget = QWidget()
         self.verticalLayout_2 = QVBoxLayout(self.scrollAreaContentWidget)
-        # testtextof2233(self.scrollAreaContentWidget, self.verticalLayout_2, self)
-        # print(self.verticalLayout_2.addWidget(self.label2))
         self.bottom_space = QSpacerItem(0, 80, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         self.verticalLayout_2.addItem(self.bottom_space)
         self.scrollArea.setWidget(self.scrollAreaContentWidget)
@@ -1303,10 +1320,28 @@ class DownloadPage(QFrame):
                 
                 self.pushButton = PushButton(self.page)
                 self.pushButton.setObjectName(u"pushButton")
+                self.pushButton.pressed.connect(self.closeButton.pressed.emit)
+                self.pushButton.setToolTip("单击重新选择版本")
                 
                 self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.pushButton)
                 
                 self.verticalLayout_3.addLayout(self.formLayout)
+                
+                self.formLayout_2 = QFormLayout()
+                self.formLayout_2.setObjectName(u"formLayout_2")
+                self.lLabel_2 = Label(self.page)
+                self.lLabel_2.setObjectName(u"lLabel_2")
+                self.lLabel_2.setText("模组加载器：")
+                
+                self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.lLabel_2)
+                
+                self.pushButton_2 = PushButton(self.page)
+                self.pushButton_2.setObjectName(u"pushButton_2")
+                self.pushButton_2.setText("Forge: ---; NeoForge: ---; Fabric: ---; Fabric API: ---; Quilt: ---")
+                
+                self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.pushButton_2)
+                
+                self.verticalLayout_3.addLayout(self.formLayout_2)
                 
                 self.verticalSpacer_2 = QSpacerItem(20, 286, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
                 
@@ -1345,6 +1380,43 @@ class DownloadPage(QFrame):
                 self.startDownloadButton.pressed.connect(self.startDownload)
                 self.verticalLayout.addWidget(self.startDownloadButton)
                 
+                self.page_3 = QWidget()
+                self.verticalLayout_5 = QVBoxLayout(self.page_3)
+                
+                self.groupBox = GroupBox(self.page_3)
+                self.groupBox.setTitle("元素周期表（指优化模组）下载")
+                self.groupBox.setCheckable(True)
+                self.groupBox.setChecked(False)
+                self.groupBox.toggled.connect(lambda: self.groupBoxStateSet(self.groupBox.isChecked()))
+                self.verticalLayout_5.addWidget(self.groupBox)
+                
+                self.verticalLayout_6 = QVBoxLayout(self.groupBox)
+                
+                self.groupBoxDescription = Label(self.groupBox)
+                self.groupBoxDescription.setText(
+                    "由于原版那*一样的优化，我们的游戏会非常卡。\n因此，就出现了一堆优化模组，起了元素周期表（初三必背）中的元素名。\n此处可以选择想下载哪些优化模组（前提是你装了模组加载器）：")
+                self.verticalLayout_6.addWidget(self.groupBoxDescription)
+                
+                self.girdLayout = QGridLayout()
+                self.verticalLayout_6.addLayout(self.girdLayout)
+                
+                self.girdLayout_sodiumButton = CheckBox(self.groupBox)
+                self.girdLayout_sodiumButton.setText("Sodium")
+                self.girdLayout.addWidget(self.girdLayout_sodiumButton, 0, 0)
+                
+                self.girdLayout_lithiumButton = CheckBox(self.groupBox)
+                self.girdLayout_lithiumButton.setText("Lithium")
+                self.girdLayout.addWidget(self.girdLayout_lithiumButton, 0, 1)
+                
+                self.verticalSpacer_3 = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+                self.verticalLayout_5.addItem(self.verticalSpacer_3)
+                
+                self.page_3_container = ScrollArea()
+                self.page_3_container.setWidget(self.page_3)
+                self.page_3_container.setWidgetResizable(True)
+                
+                self.toolBox.addItem(self.page_3_container, "其它选项")
+                
                 self.retranslateUI()
                 
                 self.toolBox.setCurrentIndex(0)
@@ -1379,6 +1451,10 @@ class DownloadPage(QFrame):
             def paintEvent(self, a0):
                 self.setTintColour(getBackgroundColour())
                 super().paintEvent(a0)
+            
+            def groupBoxStateSet(self, state=False):
+                for cb in (self.girdLayout_sodiumButton, self.girdLayout_lithiumButton):
+                    cb.setChecked(state)
         
         class GetVersionThread(QThread):
             gotVersion = pyqtSignal(dict)
@@ -1494,13 +1570,15 @@ class DownloadPage(QFrame):
         
         def showEvent(self, *args, **kwargs):
             super().showEvent(*args, **kwargs)
-            if self.versions:
+            if self.getVersionThread:
                 pass
             else:
                 self.getVersionThread = self.GetVersionThread(self)
                 self.getVersionThread.gotVersion.connect(self.displayVersion)
                 self.getVersionThread.start()
                 self.loadingAnimation = LoadingAnimation(self)
+                self.loadingAnimation.setReloadText("重新加载")
+                self.loadingAnimation.addReloadFunction(self.reloadFunction)
                 self.startAnimation(False)
         
         def hideEvent(self, a0):
@@ -1516,6 +1594,12 @@ class DownloadPage(QFrame):
             if not self.loadingAnimation:
                 return
             self.loadingAnimation.finish(ani, not stat)
+        
+        def reloadFunction(self):
+            self.getVersionThread = self.GetVersionThread(self)
+            self.getVersionThread.gotVersion.connect(self.displayVersion)
+            self.getVersionThread.start()
+            self.startAnimation(False)
         
         def displayVersion(self, data):
             if data["status"] == "successfully":
@@ -2655,9 +2739,15 @@ class SettingsPage(QFrame):
                 " ")[-1].strip("()")
             current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
             app.removeTranslator(app.translator)
+            app.removeTranslator(app.qt_translator)
             app.translator = QTranslator()
             app.translator.load(f":/CMCL_{current_language}.qm")
             app.installTranslator(app.translator)
+            app.qt_translator = QTranslator()
+            app.qt_translator.load(QLocale(locale.normalize(current_language.replace("-", "_")).split(".")[0]),
+                                   "qtbase", "_",
+                                   QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath))
+            app.installTranslator(app.qt_translator)
             self.retranslateUI()
             frame.HomePage.retranslateUI()
             frame.DownloadPage.retranslateUi()
@@ -2841,7 +2931,7 @@ class AboutPage(QFrame):
         self.toolBox.addItem(self.page2, self.tr("AboutPage.Page2.Title"))
         
         translationjson = QFile(":/aboutPageTranslations.json")
-        translationjson.open(QIODevice.OpenModeFlag.ReadOnly | QIODevice.OpenModeFlag.Text)
+        translationjson.open(QIODevice.OpenModeFlag.ReadOnly)
         translationjson = json.loads(QTextStream(translationjson).readAll())
         
         def gettrans(numb, text):
@@ -4024,6 +4114,10 @@ current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
 app.translator = QTranslator()
 app.translator.load(f":/CMCL_{current_language}.qm")
 app.installTranslator(app.translator)
+app.qt_translator = QTranslator()
+app.qt_translator.load(QLocale(locale.normalize(current_language.replace("-", "_")).split(".")[0]), "qtbase", "_",
+                       QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath))
+app.installTranslator(app.qt_translator)
 
 match settings["Settings"]["LauncherSettings"]["Customise"]["CurrentTheme"]:
     case "Light":
@@ -4045,7 +4139,7 @@ QTimer.singleShot(3001, frame.activateWindow)
 # April FOOL Code
 if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
     def sttttttttttttttttttttttttttttttop():
-        if frame.dx and frame.dy:
+        if frame.dx and frame.dy and random.random():
             frame.dy = frame.dx = 0
             frame.setWindowTitle(":D" * 15)
         stopbutton.close()

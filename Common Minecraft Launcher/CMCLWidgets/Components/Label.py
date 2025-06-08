@@ -4,7 +4,7 @@ from typing import overload
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from ..ThemeController import *
-from CMCLWidgets.Windows import RoundedMenu
+from ..Windows import RoundedMenu
 
 from .Widget import Widget
 
@@ -30,10 +30,12 @@ class LabelBase(QLabel, Widget):
     
     def contextMenuEvent(self, e):
         super().contextMenuEvent(e)
-        if isinstance(self.children()[-1], QMenu):
-            menu = self.children()[-1]
-            menu.BORDER_RADIUS = 10
+        menus = self.findChildren(QMenu)
+        if menus:
+            menu = menus[-1]
+            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
             RoundedMenu.updateQSS(menu)
+            menu.popup(QCursor.pos())
 
 
 class Label(LabelBase):

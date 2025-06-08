@@ -26,7 +26,8 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 - You can help me translate this launcher in more languages. (English translations: CMCL_en-gb.ts / CMCL_en-us.ts,
   Chinese translations: CMCL_zh-cn.ts / CMCL_zh-hk.ts / CMCL_zh-tw.ts / CMCL_lzh.ts, Other translations please make a
   Pull request.)
-  <h5>How to run this launcher</h5>
+
+<h5>How to run this launcher</h5>
 
 1. You can download the releases from the "Releases" on the right side.
 

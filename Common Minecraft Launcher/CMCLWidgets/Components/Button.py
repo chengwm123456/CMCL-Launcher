@@ -134,13 +134,11 @@ class ToolButton(QToolButton, Widget):
             y = self.height() / 2 - 2
             if self.isDown():
                 y += 2
-            borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())) - QPointF(x, y),
-                                             max(self.width(), self.height()))
+            borderGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
             borderGradient.setColorAt(0.0, borderColour)
-            borderGradient.setColorAt(1.0, Colour(
-                *borderColour,
-                (255 if self.hasFocus() and self.isEnabled() else 32)
-            ))
+            borderGradient.setColorAt(1.0, Colour(*borderColour,
+                                                  int(255 * ((max(0.6,
+                                                                  self.property("widgetOpacity")) - 0.6) * 10) / 4)))
             painter.setPen(QPen(
                 QBrush(borderGradient),
                 1.0,
@@ -509,7 +507,7 @@ class SwitchButton(QAbstractButton, Widget):
                     (self.isDown() or self.isChecked()) and self.isEnabled())
         )
         borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(outerrect.width(), outerrect.height()))
+                                         max(outerRect.width(), outerRect.height()))
         borderGradient.setColorAt(0.0, borderColour)
         borderGradient.setColorAt(1.0, Colour(
             *borderColour,
