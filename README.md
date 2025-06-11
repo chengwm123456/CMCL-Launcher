@@ -40,7 +40,7 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 
     - Extract the .zip file.
 
-    - Go to the [Official Python website] to download Python 3.12 as your Python interpreter.
+    - Go to the [Official Python website](https://www.python.org/) to download Python 3.12 as your Python interpreter.
       > If you have it ...... then I'm a deaf, I didn't say anything before.
 
     - Run：
