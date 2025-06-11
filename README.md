@@ -5,8 +5,10 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
 
 <h5>Note</h5>
 
-- Some file is not the project's file **so you don't have to see them**. You can see these file's name in .gitignore
-  file.
+- Some files are not the project files **so you don't have to see them** (e.g. `newdesign.py` is a temporary file for
+  designing new UI, `autoupdate.py` is for auto upgrading). You can see these files' name in .gitignore
+  file (e.g. `newdesign.py`).
+  > Or, all the project files are in the `Common Minecraft Launcher` directory.
 
 - You can also call the author "chengwm".
 
@@ -27,20 +29,29 @@ This is a third-party launcher for Minecraft Java Edition, by "chengwm123456" (i
   Chinese translations: CMCL_zh-cn.ts / CMCL_zh-hk.ts / CMCL_zh-tw.ts / CMCL_lzh.ts, Other translations please make a
   Pull request.)
 
+- Contributing is not illegal, be brave to do it ~~, that's why I use git, because I want to avoid evil destruction!~~
+
 <h5>How to run this launcher</h5>
 
 1. You can download the releases from the "Releases" on the right side.
 
 2. You can download the source code.
-    - Click "Code" -> "Download ZIP" to download the source code's zip.
+    - Click "Code" -> "Download ZIP" to download the .zip file of all the source code.
 
-    - Extract the zip file.
+    - Extract the .zip file.
 
-    - Download Python 3.12 if you don't already have one.
+    - Go to the [Official Python website] to download Python 3.12 as your Python interpreter.
+      > If you have it ...... then I'm a deaf, I didn't say anything before.
 
-    - Run `pip install -r requirements.txt`.
+    - Run：
+        - `python -m pip install -r requirements.txt`: On Windows
+        - `python3 -m pip install -r requirements_linux.txt`: On Linux
+            - Make sure you've got a venv (virtualenv). On Linux, download `python3-pip` via apt (or other thing can
+              prove that I know too little.) cannot do this without a venv.
 
-    - Run `python main.py`.
+    - Run：
+        - `python "Common Minecraft Launcher\main.py"`: On Windows
+        - `python3 Common\ Minecraft\ Launcher/main.py`: On Linux
 
 <h5>IMPORTANT MESSAGES</h5>
 

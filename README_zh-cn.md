@@ -5,7 +5,9 @@
 
 <h5>注意</h5>
 
-- 一些文件不属于项目正式文件**所以你没有那个必要那么好奇**。这些文件基本上在 .gitignore 文件里。
+- 一些文件不属于项目正式文件**所以你没有那个必要那么好奇**（比如，`newdesign.py`是用来设计新的界面设计的临时文件，
+  `autoupdate.py`是用来搞自动升级的）。这些文件基本上在 .gitignore 文件里（比如`newdesign.py`就在）。
+  > 或者，`Common Minecraft Launcher`文件夹里面的都是。
 
 - 你还可以把作者叫做 chengwm。
 
@@ -24,20 +26,30 @@
   CMCL_en-us.ts，中文翻译文件：CMCL_zh-cn.ts / CMCL_zh-hk.ts / CMCL_zh-tw.ts / CMCL_lzh.ts，其它翻译请新建一个 Pull
   request）
 
+- 做出贡献又不违法，勇敢去做 ~~，不然为什么我要搞个 git，避免有人恶意搞破坏呀！~~
+
 <h5>运行启动器</h5>
 
-1. 你可以从右侧的 Releases（版本）下载启动器。
+1. 你可以从右侧的 "Releases"（版本）下载启动器。
 
 2. 下载源代码。
-    - 点击 Code -> Download ZIP，下载源代码的 zip 压缩包。
+    - 点击 "Code" -> "Download ZIP"，下载源代码的 .zip 压缩包。
 
-    - 解压压缩包。
+    - 解压 .zip 压缩包。
 
-    - 确保你有 Python 3.12 作为 Python 解释器。
+    - 去[ Python 官网](https://www.python.org)下载 Python 3.12 作为 Python 解释器。
+      > 如果你有 Python 3.12 的话……当这条不存在！
 
-    - 运行 `pip install -r requirements.txt`。
+    - 进入解压的文件夹，进到根目录（有`requirements.txt`的那个）
 
-    - 运行 `python main.py`。
+    - 运行：
+        - `python -m pip install -r requirements.txt`：Windows
+        - `python3 -m pip install -r requirements_linux.txt`：Linux
+            - 确保你搞了个 venv，Linux 通过 apt（或者其它我不晓得的）下载的`python3-pip`不能这么干。
+
+    - 运行：
+        - `python "Common Minecraft Launcher\main.py"`：Windows
+        - `python3 Common\ Minecraft\ Launcher/main.py`：Linux
 
 <h5>重要内容</h5>
 
