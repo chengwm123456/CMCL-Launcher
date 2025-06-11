@@ -5,9 +5,9 @@
 
 <h5>注意</h5>
 
-- 一些文件不属于项目正式文件**所以你没有那个必要那么好奇**（比如，`newdesign.py`是用来设计新的界面设计的临时文件，
+- 一些文件不属于正式项目文件**所以你没有那个必要那么好奇**（比如，`newdesign.py`是用来设计新的界面设计的临时文件，
   `autoupdate.py`是用来搞自动升级的）。这些文件基本上在 .gitignore 文件里（比如`newdesign.py`就在）。
-  > 或者，`Common Minecraft Launcher`文件夹里面的都是。
+  > 或者，`Common Minecraft Launcher`文件夹里面的文件都是正式项目文件。
 
 - 你还可以把作者叫做 chengwm。
 
@@ -37,7 +37,7 @@
 
     - 解压 .zip 压缩包。
 
-    - 去[ Python 官网](https://www.python.org)下载 Python 3.12 作为 Python 解释器。
+    - 去[ Python 官网](https://www.python.org/)下载 Python 3.12 作为 Python 解释器。
       > 如果你有 Python 3.12 的话……当这条不存在！
 
     - 进入解压的文件夹，进到根目录（有`requirements.txt`的那个）
