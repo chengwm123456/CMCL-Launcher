@@ -47,6 +47,7 @@ import requests
 
 from CMCLModding.GetMods import GetMods, ListModVersions, GetOneMod
 from CMCLModding.DownloadMods import DownloadMod
+from CMCLModding.GetFabric import GetFabricLoaderVersions, GetFabricApiVersions
 
 from CMCLSaveEditing.LevelDat import LoadData
 import nbtlib
@@ -244,61 +245,64 @@ class AcrylicBackground(QWidget):
 
 class AnimatedStackedWidget(QStackedWidget):
     def setCurrentWidget(self, w):
-        class OpacityAnimation(QVariantAnimation):
-            def __init__(self, parent=None):
-                super().__init__(parent)
-                self.valueChanged.connect(self.__updateOpacity)
+        if 1 in settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"]:
+            class OpacityAnimation(QVariantAnimation):
+                def __init__(self, parent=None):
+                    super().__init__(parent)
+                    self.valueChanged.connect(self.__updateOpacity)
+                
+                def __updateOpacity(self, value):
+                    op = QGraphicsOpacityEffect(self.parent())
+                    op.setOpacity(self.currentValue() / 100)
+                    if self.currentValue() == self.endValue():
+                        self.parent().setGraphicsEffect(None)
+                        return
+                    self.parent().setGraphicsEffect(op)
             
-            def __updateOpacity(self, value):
-                op = QGraphicsOpacityEffect(self.parent())
-                op.setOpacity(self.currentValue() / 100)
-                if self.currentValue() == self.endValue():
-                    self.parent().setGraphicsEffect(None)
-                    return
-                self.parent().setGraphicsEffect(op)
-        
-        lastWidget = self.currentWidget()
-        if lastWidget == w:
-            return
-        self.setProperty("currentIndex", self.indexOf(w))
-        lastWidget.show()
-        w.stackUnder(lastWidget)
-        ani1 = QPropertyAnimation(lastWidget, b"pos", parent=lastWidget)
-        ani1.setDuration(500)
-        ani1.setStartValue(
-            QPointF(lastWidget.x(), float(lastWidget.y())))
-        ani1.setEndValue(
-            QPointF(lastWidget.x(), float(lastWidget.y()) + 100))
-        ani1.setEasingCurve(QEasingCurve.Type.OutQuad)
-        ani1.start()
-        ani11 = OpacityAnimation(lastWidget)
-        ani11.setStartValue(100)
-        ani11.setEndValue(0)
-        ani11.setDuration(500)
-        ani11.setEasingCurve(QEasingCurve.Type.OutQuad)
-        ani11.finished.connect(lastWidget.hide)
-        ani11.start()
-        currentWidget = w
-        ani2 = QPropertyAnimation(currentWidget, b"pos", parent=currentWidget)
-        ani2.setDuration(500)
-        ani2.setStartValue(
-            QPointF(currentWidget.x(), float(currentWidget.y()) + 100))
-        ani2.setEndValue(QPointF(currentWidget.x(), float(currentWidget.y())))
-        ani2.setEasingCurve(QEasingCurve.Type.OutQuad)
-        ani2.start()
-        ani22 = OpacityAnimation(currentWidget)
-        ani22.setStartValue(0)
-        ani22.setEndValue(100)
-        ani22.setDuration(500)
-        ani22.setEasingCurve(QEasingCurve.Type.OutQuad)
-        ani22.start()
-        currentWidget.raise_()
-        t = QTimer(self)
-        t.setInterval(1)
-        t.timeout.connect(lambda: self.update())
-        t.start()
-        QTimer.singleShot(500, lambda: t.stop())
-        QTimer.singleShot(499, lambda: super(AnimatedStackedWidget, self).setCurrentWidget(w))
+            lastWidget = self.currentWidget()
+            if lastWidget == w:
+                return
+            self.setProperty("currentIndex", self.indexOf(w))
+            lastWidget.show()
+            w.stackUnder(lastWidget)
+            ani1 = QPropertyAnimation(lastWidget, b"pos", parent=lastWidget)
+            ani1.setDuration(500)
+            ani1.setStartValue(
+                QPointF(lastWidget.x(), float(lastWidget.y())))
+            ani1.setEndValue(
+                QPointF(lastWidget.x(), float(lastWidget.y()) + 100))
+            ani1.setEasingCurve(QEasingCurve.Type.OutQuad)
+            ani1.start()
+            ani11 = OpacityAnimation(lastWidget)
+            ani11.setStartValue(100)
+            ani11.setEndValue(0)
+            ani11.setDuration(500)
+            ani11.setEasingCurve(QEasingCurve.Type.OutQuad)
+            ani11.finished.connect(lastWidget.hide)
+            ani11.start()
+            currentWidget = w
+            ani2 = QPropertyAnimation(currentWidget, b"pos", parent=currentWidget)
+            ani2.setDuration(500)
+            ani2.setStartValue(
+                QPointF(currentWidget.x(), float(currentWidget.y()) + 100))
+            ani2.setEndValue(QPointF(currentWidget.x(), float(currentWidget.y())))
+            ani2.setEasingCurve(QEasingCurve.Type.OutQuad)
+            ani2.start()
+            ani22 = OpacityAnimation(currentWidget)
+            ani22.setStartValue(0)
+            ani22.setEndValue(100)
+            ani22.setDuration(500)
+            ani22.setEasingCurve(QEasingCurve.Type.OutQuad)
+            ani22.start()
+            currentWidget.raise_()
+            t = QTimer(self)
+            t.setInterval(1)
+            t.timeout.connect(lambda: self.update())
+            t.start()
+            QTimer.singleShot(500, lambda: t.stop())
+            QTimer.singleShot(499, lambda: super(AnimatedStackedWidget, self).setCurrentWidget(w))
+        else:
+            super().setCurrentWidget(w)
 
 
 class ContentPanel(AnimatedStackedWidget, Panel):
@@ -353,7 +357,7 @@ class LoadingAnimation(QFrame):
             self.error = False
         
         def timeout(self):
-            self.setProperty("animationValue", (self.property("animationValue") or 0) - 0.1)
+            self.setProperty("animationValue", (self.property("animationValue") or 0) + 0.1)
         
         def paintEvent(self, a0):
             painter = QPainter(self)
@@ -381,7 +385,10 @@ class LoadingAnimation(QFrame):
         
         def setError(self, isError=True):
             self.error = isError
-            self.timer.stop()
+            if isError:
+                self.timer.stop()
+            else:
+                self.timer.start()
         
         def showEvent(self, a0):
             super().showEvent(a0)
@@ -621,20 +628,11 @@ class LoginWindow(MaskedDialogue):
                 traceback.print_exc()
             self.loginFinished.emit()
     
-    class QWebEngineView(QWebEngineView):
-        def contextMenuEvent(self, a0):
-            menu = RoundedMenu(self)
-            reload = QAction(menu)
-            reload.setText(self.tr("LoginWindow.WebEngineView.Reload.Text"))
-            reload.triggered.connect(self.reload)
-            menu.addAction(reload)
-            menu.popup(self.mapToGlobal(a0.pos()))
-    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(self.tr("LoginWindow.Title"))
         self.resize(800, 600)
-        self.view = self.QWebEngineView(self)
+        self.view = QWebEngineView(self)
         self.view.show()
         self.view.load(QUrl(
             "https://login.live.com/oauth20_authorize.srf?client_id=00000000402b5328&response_type=code&scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf"))
@@ -729,6 +727,7 @@ class SaveEditingWindow(RoundedDialogue):
         self.verticalLayout_2.addItem(self.verticalSpacer)
         self.verticalLayout.addWidget(self.panel)
         self.toolBox.addItem(self.basicDataPage, self.tr("SaveEditingWindow.Page1.Title"))  # 基础数据
+        app.registerRetranslateFunction(self.retranslateUI)
         self.retranslateUI()
     
     def retranslateUI(self):
@@ -755,7 +754,7 @@ class SaveEditingWindow(RoundedDialogue):
             self.leveldata['hardcore'] else
             value_localisations['gamemode'][
                 'hardcore'],
-            time.strftime('%Y-%m-%d %H:%M:%S',
+            time.strftime(settings["Settings"]["LauncherSettings"]["Customise"]["DateTimeFormat"],
                           time.localtime(
                               self.leveldata[
                                   'LastPlayed'] / 1000)),
@@ -856,6 +855,7 @@ class SaveEditingWindow(RoundedDialogue):
 #
 #         self.verticalLayout.addWidget(self.stackedWidget, 1)
 #
+#         app.registerRetranslateFunction(self.retranslateUi)
 #         self.retranslateUi()
 #         #
 #         # QMetaObject.connectSlotsByName(Form)
@@ -925,6 +925,7 @@ class MainPage(QFrame):
                 self.toolBox.addItem(self.versionSaves,
                                      self.tr("MainPage.VersionSettingsPage.VersionDetailsPage.Page2.Title"))
                 
+                app.registerRetranslateFunction(self.retranslateUI)
                 self.retranslateUI()
             
             def retranslateUI(self):
@@ -1118,6 +1119,7 @@ class MainPage(QFrame):
         timer.timeout.connect(self.update_icon)
         timer.start(100)
         self.retranslateUI()
+        app.registerRetranslateFunction(self.retranslateUI)
         self.bottomPanelIsShow = True
         self.versionSettings = None
         self.versionSettingsY = None
@@ -1285,6 +1287,50 @@ class DownloadPage(QFrame):
                     if self.__version:
                         DownloadMinecraft(self.__path, self.__version)
             
+            class LoaderDialogue(MaskedDialogue):
+                def __init__(self, parent):
+                    super().__init__(parent)
+                    self.verticalLayout = QVBoxLayout(self)
+                    self.verticalLayout.setContentsMargins(5, 35, 5, 5)
+                    self.groupBox = GroupBox(self)
+                    self.groupBox.setTitle("Forge")
+                    self.groupBox.setCheckable(True)
+                    self.groupBox.setChecked(False)
+                    self.groupBox.clicked.connect(lambda: self.updateGroupBoxState(1))
+                    self.verticalLayout.addWidget(self.groupBox)
+                    self.groupBox_2 = GroupBox(self)
+                    self.groupBox_2.setTitle("Fabric & Fabric API")
+                    self.groupBox_2.setCheckable(True)
+                    self.groupBox_2.setChecked(False)
+                    self.groupBox_2.clicked.connect(lambda: self.updateGroupBoxState(2))
+                    self.verticalLayout.addWidget(self.groupBox_2)
+                    
+                    self.horizontalLayout_2 = QHBoxLayout(self.groupBox_2)
+                    self.groupBox_4 = GroupBox(self.groupBox_2)
+                    self.groupBox_4.setTitle("Fabric")
+                    self.horizontalLayout_2.addWidget(self.groupBox_4)
+                    self.groupBox_5 = GroupBox(self.groupBox_2)
+                    self.groupBox_5.setTitle("Fabric API")
+                    self.horizontalLayout_2.addWidget(self.groupBox_5)
+                    
+                    self.groupBox_3 = GroupBox(self)
+                    self.groupBox_3.setTitle("Quilt")
+                    self.groupBox_3.setCheckable(True)
+                    self.groupBox_3.setChecked(False)
+                    self.groupBox_3.clicked.connect(lambda: self.updateGroupBoxState(3))
+                    self.verticalLayout.addWidget(self.groupBox_3)
+                
+                def updateGroupBoxState(self, which=1):
+                    if which == 1 and self.groupBox.isChecked():
+                        self.groupBox_2.setChecked(False)
+                        self.groupBox_3.setChecked(False)
+                    elif which == 2:
+                        self.groupBox.setChecked(False)
+                        self.groupBox_3.setChecked(False)
+                    elif which == 3:
+                        self.groupBox.setChecked(False)
+                        self.groupBox_2.setChecked(False)
+            
             def __init__(self, parent, version=None):
                 super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
                 self.version = version
@@ -1338,6 +1384,7 @@ class DownloadPage(QFrame):
                 self.pushButton_2 = PushButton(self.page)
                 self.pushButton_2.setObjectName(u"pushButton_2")
                 self.pushButton_2.setText("Forge: ---; NeoForge: ---; Fabric: ---; Fabric API: ---; Quilt: ---")
+                self.pushButton_2.pressed.connect(self.selectLoader)
                 
                 self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.pushButton_2)
                 
@@ -1417,6 +1464,7 @@ class DownloadPage(QFrame):
                 
                 self.toolBox.addItem(self.page_3_container, "其它选项")
                 
+                app.registerRetranslateFunction(self.retranslateUI)
                 self.retranslateUI()
                 
                 self.toolBox.setCurrentIndex(0)
@@ -1451,6 +1499,14 @@ class DownloadPage(QFrame):
             def paintEvent(self, a0):
                 self.setTintColour(getBackgroundColour())
                 super().paintEvent(a0)
+            
+            def selectLoader(self):
+                self.pushButton_2.setDown(False)
+                dialogue = self.LoaderDialogue(frame)
+                dialogue.exec()
+            
+            def updateLoaderText(self):
+                pass
             
             def groupBoxStateSet(self, state=False):
                 for cb in (self.girdLayout_sodiumButton, self.girdLayout_lithiumButton):
@@ -1490,9 +1546,12 @@ class DownloadPage(QFrame):
             self.tableView.clicked.connect(self.downloadOptionsOpen)
             self.versionModel = QStandardItemModel(self.tableView)
             self.versionModel.setHorizontalHeaderLabels(
-                [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
-                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
-                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
+                [
+                    self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
+                    self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
+                    self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")
+                ]
+            )
             self.tableView.setModel(self.versionModel)
             self.versions = {}
             sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -1534,6 +1593,7 @@ class DownloadPage(QFrame):
             
             self.verticalLayout.addWidget(self.bottomFrame)
             
+            app.registerRetranslateFunction(self.retranslateUi)
             self.retranslateUi()
             
             self.loadingAnimation = None
@@ -1549,9 +1609,14 @@ class DownloadPage(QFrame):
             self.lineEdit.setToolTip(self.tr("DownloadPage.DownloadVanilla.lineEdit.ToolTip"))
             self.label.setText(self.tr("DownloadPage.DownloadVanilla.label.Text"))
             self.versionModel.setHorizontalHeaderLabels(
-                [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
-                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
-                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
+                [
+                    self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
+                    self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
+                    self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")
+                ]
+            )
+            self.comboBox.clear()
+            self.comboBox.addItem(self.tr("DownloadPage.DownloadVanilla.ComboBox.Item1.Text"))
         
         # retranslateUi
         
@@ -1570,7 +1635,7 @@ class DownloadPage(QFrame):
         
         def showEvent(self, *args, **kwargs):
             super().showEvent(*args, **kwargs)
-            if self.getVersionThread:
+            if self.getVersionThread or self.versions:
                 pass
             else:
                 self.getVersionThread = self.GetVersionThread(self)
@@ -1583,6 +1648,9 @@ class DownloadPage(QFrame):
         
         def hideEvent(self, a0):
             super().hideEvent(a0)
+            if self.getVersionThread:
+                self.getVersionThread.terminate()
+            self.getVersionThread = None
             self.finishAnimation(False)
         
         def startAnimation(self, ani=True):
@@ -1624,7 +1692,8 @@ class DownloadPage(QFrame):
                     release_datetime = datetime.datetime.strptime(unformatted_release_time,
                                                                   "%Y-%m-%dT%H:%M:%S+00:00")
                     localised_release_datetime = release_datetime.replace(tzinfo=datetime.UTC).astimezone(tz.tzlocal())
-                    release_time = localised_release_datetime.strftime("%Y-%m-%d %H:%M:%S")
+                    release_time = localised_release_datetime.strftime(
+                        settings["Settings"]["LauncherSettings"]["Customise"]["DateTimeFormat"])
                     if release_datetime.month == 4 and release_datetime.day == 1:
                         version_type = self.tr("DownloadPage.DownloadVanilla.VersionType.AprilFool")
                         version_type_real = "april_fool"
@@ -1635,9 +1704,12 @@ class DownloadPage(QFrame):
                     completer_l.append(version)
                 self.lineEdit.setCompleter(QCompleter(completer_l, self.lineEdit))
                 self.versionModel.setHorizontalHeaderLabels(
-                    [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
-                     self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
-                     self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
+                    [
+                        self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
+                        self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
+                        self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")
+                    ]
+                )
                 self.tableView.setModel(self.versionModel)
                 self.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
                 self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -1675,7 +1747,8 @@ class DownloadPage(QFrame):
                     if release_datetime.month == 4 and release_datetime.day == 1:
                         version_type = self.tr("DownloadPage.DownloadVanilla.VersionType.AprilFool")
                     localised_release_datetime = release_datetime.replace(tzinfo=datetime.UTC).astimezone(tz.tzlocal())
-                    release_time = localised_release_datetime.strftime("%Y-%m-%d %H:%M:%S")
+                    release_time = localised_release_datetime.strftime(
+                        settings["Settings"]["LauncherSettings"]["Customise"]["DateTimeFormat"])
                     for e2, i2 in enumerate([version, version_type, release_time]):
                         self.versionModel.setItem(i, e2, QStandardItem(i2))
                     i += 1
@@ -1700,7 +1773,8 @@ class DownloadPage(QFrame):
                             continue
                     release_datetime = value["ReleaseDatetime"]
                     localised_release_datetime = release_datetime.replace(tzinfo=datetime.UTC).astimezone(tz.tzlocal())
-                    release_time = localised_release_datetime.strftime("%Y-%m-%d %H:%M:%S")
+                    release_time = localised_release_datetime.strftime(
+                        settings["Settings"]["LauncherSettings"]["Customise"]["DateTimeFormat"])
                     for e2, i2 in enumerate([version, version_type, release_time]):
                         self.versionModel.setItem(i, e2, QStandardItem(i2))
                     i += 1
@@ -1727,16 +1801,20 @@ class DownloadPage(QFrame):
                                 version_type = self.tr("DownloadPage.DownloadVanilla.VersionType.AprilFool")
                             localised_release_datetime = release_datetime.replace(tzinfo=datetime.UTC).astimezone(
                                 tz.tzlocal())
-                            release_time = localised_release_datetime.strftime("%Y-%m-%d %H:%M:%S")
+                            release_time = localised_release_datetime.strftime(
+                                settings["Settings"]["LauncherSettings"]["Customise"]["DateTimeFormat"])
                             for e2, i2 in enumerate([version, version_type, release_time]):
                                 self.versionModel.setItem(i, e2, QStandardItem(i2))
                             i += 1
                     except re.error:
                         pass
             self.versionModel.setHorizontalHeaderLabels(
-                [self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
-                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
-                 self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")])
+                [
+                    self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.1"),
+                    self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.2"),
+                    self.tr("DownloadPage.DownloadVanilla.tableView.horizontalHeaderLabels.3")
+                ]
+            )
             self.tableView.setModel(self.versionModel)
             self.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
             self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -1891,6 +1969,7 @@ class DownloadPage(QFrame):
                 
                 self.verticalLayout.addWidget(self.toolBox)
                 
+                app.registerRetranslateFunction(self.retranslateUI)
                 self.retranslateUI()
             
             def retranslateUI(self):
@@ -1995,6 +2074,7 @@ class DownloadPage(QFrame):
             
             self.verticalLayout.addWidget(self.paginator)
             
+            app.registerRetranslateFunction(self.retranslateUI)
             self.retranslateUI()
             
             self.mods = {}
@@ -2102,7 +2182,7 @@ class DownloadPage(QFrame):
                     self.model.setItem(e, 1, QStandardItem(hit["author"]))
                     self.model.setItem(e, 2, QStandardItem(
                         time.strftime(
-                            "%Y-%m-%d %H:%M:%S",
+                            settings["Settings"]["LauncherSettings"]["Customise"]["DateTimeFormat"],
                             time.strptime(
                                 hit["date_modified"].split(".")[0],
                                 "%Y-%m-%dT%H:%M:%S"
@@ -2137,7 +2217,7 @@ class DownloadPage(QFrame):
                                 self.model.setItem(cnt, 1, QStandardItem(hit["author"]))
                                 self.model.setItem(cnt, 2, QStandardItem(
                                     time.strftime(
-                                        "%Y-%m-%d %H:%M:%S",
+                                        settings["Settings"]["LauncherSettings"]["Customise"]["DateTimeFormat"],
                                         time.strptime(
                                             hit["date_modified"].split(".")[0],
                                             "%Y-%m-%dT%H:%M:%S"
@@ -2233,6 +2313,7 @@ class DownloadPage(QFrame):
         
         self.verticalLayout.addWidget(self.stackedWidget, 1)
         
+        app.registerRetranslateFunction(self.retranslateUi)
         self.retranslateUi()
         #
         # QMetaObject.connectSlotsByName(Form)
@@ -2302,6 +2383,7 @@ class SettingsPage(QFrame):
             
             self.verticalLayout.addItem(self.verticalSpacer)
             
+            app.registerRetranslateFunction(self.retranslateUi)
             self.retranslateUi()
             
             self.updatePresetsState()
@@ -2468,6 +2550,7 @@ class SettingsPage(QFrame):
             
             self.verticalLayout.addItem(self.verticalSpacer)
             
+            app.registerRetranslateFunction(self.retranslateUi)
             self.retranslateUi()
             #
             # QMetaObject.connectSlotsByName(self)
@@ -2661,7 +2744,10 @@ class SettingsPage(QFrame):
             
             self.verticalLayout_3 = QVBoxLayout(self.groupBox_3)
             
-            self.group3_checkBox = CheckBox(self.groupBox_3)
+            self.group3_checkBox = SwitchButton(self.groupBox_3)
+            self.group3_checkBox.setSwitchState(
+                1 in settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"])
+            self.group3_checkBox.toggled.connect(lambda: self.updateAnimation(1))
             self.verticalLayout_3.addWidget(self.group3_checkBox)
             
             self.groupBox_4 = GroupBox(self)
@@ -2688,6 +2774,7 @@ class SettingsPage(QFrame):
             self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
             self.verticalLayout.addItem(self.verticalSpacer)
             
+            app.registerRetranslateFunction(self.retranslateUI)
             self.retranslateUI()
         
         def retranslateUI(self):
@@ -2704,7 +2791,10 @@ class SettingsPage(QFrame):
             self.tipLabel.setText(self.tr("SettingsPage.CustomiseSettings.tipLabel.Text"))
             self.label1.setText(self.tr("SettingsPage.CustomiseSettings.label1.Text"))
             self.groupBox_3.setTitle(self.tr("SettingsPage.CustomiseSettings.groupBox_3.Title"))
-            self.group3_checkBox.setText(self.tr("SettingsPage.CustomiseSettings.group3_checkBox.Text"))
+            self.group3_checkBox.setTextPrefix(self.tr("SettingsPage.CustomiseSettings.group3_checkBox.Text"))
+            # self.group3_checkBox.setTextPrefix(self.tr("SettingsPage.CustomiseSettings.group3_checkBox.Text"))
+            self.group3_checkBox.setSwitchOnText("开")
+            self.group3_checkBox.setSwitchOffText("关")
             self.groupBox_4.setTitle(self.tr("SettingsPage.CustomiseSettings.groupBox_4.Title"))
             self.label2.setText(self.tr("SettingsPage.CustomiseSettings.label2.Text"))
             self.translationMayNotBeCorrectLabel.setText(
@@ -2726,15 +2816,20 @@ class SettingsPage(QFrame):
         def updateBackgroundBlur(self, value):
             settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"] = value
         
+        def updateAnimation(self, value):
+            if value == 1:
+                print(self.group3_checkBox.isChecked())
+                settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"]
+        
         def updateComboBoxLanguageList(self):
             self.comboBox.clear()
-            for language in sorted(languages_map.keys()):
+            sorted_languages_map = sorted(languages_map)
+            for language in sorted_languages_map:
                 self.comboBox.addItem(f"{languages_map[language]} ({language})")
-            self.comboBox.setCurrentIndex(sorted(languages_map.keys()).index(current_language))
+            self.comboBox.setCurrentIndex(sorted(sorted_languages_map).index(current_language))
         
         def comboBoxLanguageChanged(self):
             global current_language
-            before_language = current_language
             settings["Settings"]["LauncherSettings"]["CurrentLanguage"] = self.comboBox.currentText().split(
                 " ")[-1].strip("()")
             current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
@@ -2748,26 +2843,8 @@ class SettingsPage(QFrame):
                                    "qtbase", "_",
                                    QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath))
             app.installTranslator(app.qt_translator)
-            self.retranslateUI()
-            frame.HomePage.retranslateUI()
-            frame.DownloadPage.retranslateUi()
-            frame.SettingsPage.retranslateUi()
-            frame.AboutPage.retranslateUI()
-            frame.UserPage.retranslateUI()
-            if before_language != current_language:
-                if "frame" in globals():
-                    saveSettings()
-                    self.comboBox.setEnabled(False)
-                    tip = PopupTip(frame)
-                    label = Label(tip)
-                    label.setText(
-                        self.tr("SettingsPage.CustomiseSettings.LanguageChangedRestartTip.Label.Text"))
-                    label.adjustSize()
-                    tip.setCentralWidget(label)
-                    tip.setMinimumSize(QSize(300, 64))
-                    tip.tip(PopupTip.PopupPosition.RIGHT, 3000)
-                    QTimer.singleShot(2500, lambda: os.execv(sys.executable, ('python',) + tuple(
-                        map(lambda x: f'"{shlex.quote(x).strip("'")}"', sys.argv))))
+            app.retranslate()
+            saveSettings()
     
     class CustomiseSettingsContainer(ScrollArea):
         def __init__(self, parent, customisesettings):
@@ -2836,6 +2913,7 @@ class SettingsPage(QFrame):
         
         self.verticalLayout.addWidget(self.stackedWidget, 1)
         
+        app.registerRetranslateFunction(self.retranslateUi)
         self.retranslateUi()
         #
         # QMetaObject.connectSlotsByName(Form)
@@ -2944,13 +3022,13 @@ class AboutPage(QFrame):
         
         self.noteTip = Tip(self.page3)
         
-        self.label3 = Label(self.noteTip)
-        self.label3.setText(gettrans(None, "announcement"))
-        self.label3.adjustSize()
+        self.label_3 = Label(self.noteTip)
+        self.label_3.setText(gettrans(None, "announcement"))
+        self.label_3.adjustSize()
         self.noteTip.setCloseEnabled(False)
-        self.noteTip.setMinimumHeight(self.label3.height() + 10)
-        self.noteTip.setMinimumWidth(self.label3.width() + 10)
-        self.noteTip.setCentralWidget(self.label3)
+        self.noteTip.setMinimumHeight(self.label_3.height() + 10)
+        self.noteTip.setMinimumWidth(self.label_3.width() + 10)
+        self.noteTip.setCentralWidget(self.label_3)
         
         self.verticalLayout_4.addWidget(self.noteTip)
         
@@ -3007,12 +3085,34 @@ class AboutPage(QFrame):
         
         self.verticalLayout.addWidget(self.toolBox)
         
+        app.registerRetranslateFunction(self.retranslateUI)
         self.retranslateUI()
     
     def retranslateUI(self):
         self.toolBox.setItemText(self.toolBox.indexOf(self.page1), self.tr("AboutPage.Page1.Title"))
+        self.label1.setText("chengwm\n" + self.tr('AboutPage.label1.Text'))
+        self.label2.setText(
+            self.tr('AboutPage.label2.Text.LocalisedName') + "\n" + self.tr(
+                'AboutPage.label2.Text'))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page2), self.tr("AboutPage.Page2.Title"))
-        self.toolBox.setItemText(self.toolBox.indexOf(self.page3), "特别感谢")
+        self.cmcl_info.setText(
+            self.tr("AboutPage.Page2.CMCL_info").format(CMCL_version[0], CMCL_version[1],
+                                                        languages_map.get(current_language, current_language)))
+        
+        translationjson = QFile(":/aboutPageTranslations.json")
+        translationjson.open(QIODevice.OpenModeFlag.ReadOnly)
+        translationjson = json.loads(QTextStream(translationjson).readAll())
+        
+        def gettrans(numb, text):
+            if numb:
+                return translationjson[current_language][numb].get(text, translationjson["zh-cn"][numb][text])
+            return translationjson[current_language].get(text, translationjson["zh-cn"][text])
+        
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page3container), gettrans(None, "title"))
+        self.label_3.setText(gettrans(None, "announcement"))
+        self.label3.setText(gettrans("1", "name") + "\n" + gettrans("1", "description"))
+        self.label4.setText(gettrans("2", "name") + "\n" + gettrans("2", "description"))
+        self.label5.setText(gettrans("3", "name") + "\n" + gettrans("3", "description"))
 
 
 class OfflinePlayerCreationDialogue(MaskedDialogue):
@@ -3037,6 +3137,7 @@ class OfflinePlayerCreationDialogue(MaskedDialogue):
         self.horizontalLayout.addWidget(self.OKButton)
         self.OKButton.pressed.connect(self.setPlayer)
         self.verticalLayout.addWidget(self.bottomPanel)
+        app.registerRetranslateFunction(self.retranslateUI)
         self.retranslateUI()
     
     def retranslateUI(self):
@@ -3192,6 +3293,7 @@ class UserPage(QFrame):
                  if i.player_accountType[0] != "offline"
                  else self.user_type_localisations["offline"]) + self.tr("UserPage.UserTypeLocalisations.suffix")))
         
+        app.registerRetranslateFunction(self.retranslateUI)
         self.retranslateUI()
         
         def tempfun(self):
@@ -3301,6 +3403,7 @@ class UserPage(QFrame):
         player = self.user_datas[self.current_user]
         self.leftUserIcon.setDown(False)
         self.rightUserIcon.setDown(False)
+        app.registerRetranslateFunction(self.retranslateUI)
         self.retranslateUI()
     
     def keep_current_user_range(self):
@@ -3430,6 +3533,9 @@ class MainWindow(window_class):
         self.centralwidget.setLayout(self.horizontalLayout)
         self.setCentralWidget(self.centralwidget)
         
+        app.registerRetranslateFunction(self.retranslateUI)
+        self.retranslateUI()
+        
         # April FOOL Code:
         if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
             self.dx = self.dy = 1
@@ -3504,6 +3610,18 @@ class MainWindow(window_class):
             self.topWidget.button("6").setText(
                 self.tr("MainPage.ToggleTheme.Light.Text") if getTheme() == Theme.Light else self.tr(
                     "MainPage.ToggleTheme.Dark.Text"))
+    
+    def retranslateUI(self):
+        if self.topWidget.button("1"):
+            self.topWidget.button("1").setText(self.tr("MainWindow.HomePage.Text"))
+        if self.topWidget.button("2"):
+            self.topWidget.button("2").setText(self.tr("MainWindow.DownloadPage.Text"))
+        if self.topWidget.button("3"):
+            self.topWidget.button("3").setText(self.tr("MainWindow.SettingsPage.Text"))
+        if self.topWidget.button("4"):
+            self.topWidget.button("4").setText(self.tr("MainWindow.AboutPage.Text"))
+        if self.topWidget.button("5"):
+            self.topWidget.button("5").setText(self.tr("MainWindow.UserPage.Text"))
     
     def paintEvent(self, a0, **kwargs):
         background = QPixmap(self.size())
@@ -3693,6 +3811,7 @@ class LoggingWindow(window_class):
         self.inputtext.setFont(fixedFont)
         self.inputtext.setToolTip(self.tr("LoggingWindow.inputtext.ToolTip"))
         self.canOutput = True
+        app.registerRetranslateFunction(self.retranslateUI)
         self.retranslateUI()
         import nothingtoseeheremovealong, hashlib
         self.cmd = self.Executer(
@@ -4005,13 +4124,26 @@ Path("error.log").write_text("", encoding="utf-8")
 Path("latest.log").write_text("", encoding="utf-8")
 
 
-class ExceptionEmitter(QObject):
-    errorSignal = pyqtSignal()
+class Application(QApplication):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setProperty("retranslateFunctions", [])
     
-    def __init__(self, func):
-        super().__init__()
-        self.errorSignal.connect(func)
-        self.errorSignal.emit()
+    def registerRetranslateFunction(self, function):
+        retranslateFunctions = self.property("retranslateFunctions")
+        if function not in retranslateFunctions:
+            retranslateFunctions.append(function)
+        self.setProperty("retranslateFunctions", retranslateFunctions)
+    
+    def removeRetranslateFunction(self, function):
+        retranslateFunctions = self.property("retranslateFunctions")
+        if function in retranslateFunctions:
+            retranslateFunctions.remove(function)
+        self.setProperty("retranslateFunctions", retranslateFunctions)
+    
+    def retranslate(self):
+        for function in self.property("retranslateFunctions"):
+            function()
 
 
 def saveSettings():
@@ -4068,8 +4200,11 @@ else:
                     "BackgroundBlur": 0,
                     "Animations": {
                         "Enabled": True,
-                        "EnabledItems": []
-                    }
+                        "EnabledItems": [
+                            1
+                        ]
+                    },
+                    "DateTimeFormat": "%Y-%m-%d %H:%M:%S"
                 },
                 "ModSearching": {
                     "OnePageModNum": 10
@@ -4085,7 +4220,7 @@ if not minecraft_path.exists():
     minecraft_path = Path(".").absolute()
     settings["Settings"]["LauncherSettings"]["CurrentMinecraftDirectory"] = str(minecraft_path)
 # QApplication.setDesktopSettingsAware(False)
-app = QApplication(sys.argv)
+app = Application(sys.argv)
 app.setApplicationName("Common Minecraft Launcher")
 app.setApplicationVersion(CMCL_version[0])
 app.setFont(QFont("HarmonyOS Sans SC"))

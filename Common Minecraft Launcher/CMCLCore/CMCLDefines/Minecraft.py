@@ -13,12 +13,12 @@ from ..GetOperationSystem import GetOperationSystemInMojangApi
 class Minecraft:
     mc_gameVersion: Union[str, LiteralString] = field(default="")
     mc_gamePlatform: str = field(default_factory=GetOperationSystemInMojangApi)
-    mc_gameWorkDir: Union[str, os.PathLike[str]] = ""
-    mc_gameJarFile: Union[str, os.PathLike[str]] = ""
-    mc_gameJsonFile: Union[str, os.PathLike[str]] = ""
-    mc_gameNativesDir: Union[str, os.PathLike[str]] = ""
-    mc_gameAssetsDir: Union[str, os.PathLike[str]] = ""
-    mc_gameLibrariesDir: Union[str, os.PathLike[str]] = ""
+    mc_gameWorkDir: Union[str, os.PathLike[str], Path] = ""
+    mc_gameJarFile: Union[str, os.PathLike[str], Path] = ""
+    mc_gameJsonFile: Union[str, os.PathLike[str], Path] = ""
+    mc_gameNativesDir: Union[str, os.PathLike[str], Path] = ""
+    mc_gameAssetsDir: Union[str, os.PathLike[str], Path] = ""
+    mc_gameLibrariesDir: Union[str, os.PathLike[str], Path] = ""
     
     def __post_init__(self):
         self.mc_gameVersion = str(self.mc_gameVersion)

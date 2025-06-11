@@ -73,17 +73,15 @@ class GroupBox(QGroupBox, Widget):
                 is_highlight=(self.isChecked()) or (
                         (self.isChecked()) and self.isEnabled())
             )
-            borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                             max(self.width(), self.height()))
+            borderGradient = QLinearGradient(QPointF(rect.x(), rect.y()), QPointF(rect.x(), rect.y() + rect.height()))
             borderGradient.setColorAt(0.0, borderColour)
-            borderGradient.setColorAt(1.0, Colour(
-                *borderColour,
-                (255 if self.hasFocus() and self.isEnabled() else 32)
-            ))
-            painter.setPen(QPen(QBrush(borderGradient), 1.0))
-            backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+            borderGradient.setColorAt(1.0, Colour(*borderColour,
+                                                  int(255 * ((max(0.6,
+                                                                  self.property("widgetOpacity")) - 0.6) * 10) / 4)))
+            backgroundGradient = QRadialGradient(QPointF(rect.bottomRight()), min(rect.width(), rect.height()))
             backgroundGradient.setColorAt(0.0, backgroundColour)
-            backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+            backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 190))
+            painter.setPen(QPen(QBrush(borderGradient), 1))
             painter.setBrush(QBrush(backgroundGradient))
             painter.drawRoundedRect(rect, 10, 10)
             painter.save()

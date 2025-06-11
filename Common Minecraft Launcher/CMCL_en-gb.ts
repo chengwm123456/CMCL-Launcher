@@ -93,7 +93,7 @@ Language: {}</translation>
     <message>
         <location filename="main.py" line="2581"/>
         <source>SettingsPage.CustomiseSettings.group3_checkBox.Text</source>
-        <translation>Page Switching Animation</translation>
+        <translation>Page Switching Animation: </translation>
     </message>
     <message>
         <location filename="main.py" line="2582"/>
@@ -250,14 +250,14 @@ Language: {}</translation>
         <source>DownloadPage.DownloadVanilla.lineEdit.ToolTip</source>
         <translation>Enter Version: Search the specified version.
 Enter Type: Filter by the specified type
-- release: Means Release Versions
-- snapshot: Means Snapshot Versions
-- old_beta: Means Old Beta Versions
-- old_alpha: Means Old Alpha Versions
-- april_fool: Means the versions for APRIL FOOLS&apos; DAY
+◉ release: Means Release Versions
+◉ snapshot: Means Snapshot Versions
+◉ old_beta: Means Old Beta Versions
+◉ old_alpha: Means Old Alpha Versions
+◉ april_fool: Means the versions for APRIL FOOLS&apos; DAY
 Enter Date: Search all the version released at that day, format: &quot;YYYY-MM-DD&quot;.
 Tip: All these methods above support using Regular Expression,
-For example,&quot;1\.14.+&quot;,&quot;old_(alpha|beta)&quot;,&quot;2024-05-28 .+&quot;,etc,
+For example,&quot;1\.14.+&quot;, &quot;old_(alpha|beta)&quot;, &quot;2024-05-28 .+&quot;, etc,
 For further syntax, search online.</translation>
     </message>
     <message>
@@ -655,14 +655,6 @@ Built-in values:
         <location filename="main.py" line="2902"/>
         <source>OfflinePlayerCreationDialogue.OKButton.Text</source>
         <translation>Continue</translation>
-    </message>
-</context>
-<context>
-    <name>QWebEngineView</name>
-    <message>
-        <location filename="main.py" line="574"/>
-        <source>LoginWindow.WebEngineView.Reload.Text</source>
-        <translation>Reload Webpage</translation>
     </message>
 </context>
 <context>

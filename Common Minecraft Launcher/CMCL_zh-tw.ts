@@ -93,7 +93,7 @@
     <message>
         <location filename="main.py" line="2581"/>
         <source>SettingsPage.CustomiseSettings.group3_checkBox.Text</source>
-        <translation>切換頁面動畫</translation>
+        <translation>切換頁面動畫：</translation>
     </message>
     <message>
         <location filename="main.py" line="2582"/>
@@ -250,11 +250,11 @@
         <source>DownloadPage.DownloadVanilla.lineEdit.ToolTip</source>
         <translation>輸入版本：查詢版本。
 輸入類型：篩選版本類型。
-- release：正式版
-- snapshot：快照版
-- old_beta：遠古 Beta 版
-- old_alpha：遠古 Alpha 版
-- april_fool：愚人節版本
+◉ release：正式版
+◉ snapshot：快照版
+◉ old_beta：遠古 Beta 版
+◉ old_alpha：遠古 Alpha 版
+◉ april_fool：愚人節版本
 輸入日期：查詢在該日期發佈的版本，格式：&quot;YYYY-MM-DD&quot;。
 註：以上方式均可使用正規表示式，
 如&quot;1\.14.+&quot;、&quot;old_(alpha|beta)&quot;、&quot;2024-05-28 .+&quot;等，
@@ -655,14 +655,6 @@
         <location filename="main.py" line="2902"/>
         <source>OfflinePlayerCreationDialogue.OKButton.Text</source>
         <translation>繼續</translation>
-    </message>
-</context>
-<context>
-    <name>QWebEngineView</name>
-    <message>
-        <location filename="main.py" line="574"/>
-        <source>LoginWindow.WebEngineView.Reload.Text</source>
-        <translation>重新載入網頁</translation>
     </message>
 </context>
 <context>

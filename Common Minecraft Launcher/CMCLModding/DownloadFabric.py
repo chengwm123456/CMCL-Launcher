@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .GetFabric import GetDownloadUrlBase
-from ..CMCLCore.CMCLDefines.Downloader import Downloader
+from CMCLCore.CMCLDefines.Downloader import Downloader
 
 
 def DownloadFabric(game, loader, path, target_path):

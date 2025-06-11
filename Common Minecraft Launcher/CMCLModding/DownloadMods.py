@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .GetMods import ListModVersions
-from ..CMCLCore.CMCLDefines.Downloader import Downloader
+from CMCLCore.CMCLDefines.Downloader import Downloader
 
 
 def DownloadMod(mod_name, mod_version, target_path):

@@ -301,17 +301,14 @@ class CheckBox(QCheckBox, Widget):
             is_highlight=(self.isDown() or self.isChecked()) or (
                     (self.isDown() or self.isChecked()) and self.isEnabled())
         )
-        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(self.width(), self.height()))
+        borderGradient = QLinearGradient(QPointF(rect.x(), rect.y()), QPointF(rect.x(), rect.y() + rect.height()))
         borderGradient.setColorAt(0.0, borderColour)
-        borderGradient.setColorAt(1.0, Colour(
-            *borderColour,
-            (255 if self.hasFocus() and self.isEnabled() else 32)
-        ))
-        painter.setPen(QPen(QBrush(borderGradient), 1.0))
-        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+        borderGradient.setColorAt(1.0, Colour(*borderColour,
+                                              int(255 * ((max(0.6, self.property("widgetOpacity")) - 0.6) * 10) / 4)))
+        backgroundGradient = QRadialGradient(QPointF(rect.bottomRight()), min(rect.width(), rect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
-        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 190))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
         painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(rect, 10, 10)
         painter.save()
@@ -394,17 +391,14 @@ class RadioButton(QRadioButton, Widget):
             is_highlight=(self.isDown() or self.isChecked()) or (
                     (self.isDown() or self.isChecked()) and self.isEnabled())
         )
-        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(self.width(), self.height()))
+        borderGradient = QLinearGradient(QPointF(rect.x(), rect.y()), QPointF(rect.x(), rect.y() + rect.height()))
         borderGradient.setColorAt(0.0, borderColour)
-        borderGradient.setColorAt(1.0, Colour(
-            *borderColour,
-            (255 if self.hasFocus() and self.isEnabled() else 32)
-        ))
-        painter.setPen(QPen(QBrush(borderGradient), 1.0))
-        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+        borderGradient.setColorAt(1.0, Colour(*borderColour,
+                                              int(255 * ((max(0.6, self.property("widgetOpacity")) - 0.6) * 10) / 4)))
+        backgroundGradient = QRadialGradient(QPointF(rect.bottomRight()), min(rect.width(), rect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
-        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 190))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
         painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(rect, 10, 10)
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
@@ -426,8 +420,6 @@ class RadioButton(QRadioButton, Widget):
 
 
 class SwitchButton(QAbstractButton, Widget):
-    switched = pyqtSignal(bool)
-    
     @overload
     def __init__(self, parent=None):
         ...
@@ -441,11 +433,13 @@ class SwitchButton(QAbstractButton, Widget):
         ...
     
     def __init__(self, *__args):
-        super().__init__(__args[-1])
-        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        super().__init__(*__args[-1:])
         self.setCheckable(True)
-        self.setProperty("switchOnText", __args[0] if len(__args) > 2 else "On")
-        self.setProperty("switchOffText", __args[1] if len(__args) > 2 else "Off")
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.setProperty("switchOnText", __args[0] if len(__args) > 2 else self.tr("On"))
+        self.setProperty("switchOffText", __args[1] if len(__args) > 2 else self.tr("Off"))
+        self.setProperty("textPrefix", "")
+        self.setProperty("textSuffix", "")
         self.setMinimumSize(52, 24)
     
     def switchOnText(self):
@@ -459,6 +453,18 @@ class SwitchButton(QAbstractButton, Widget):
     
     def setSwitchOffText(self, text):
         self.setProperty("switchOffText", text)
+    
+    def textPrefix(self):
+        return self.property("textPrefix")
+    
+    def setTextPrefix(self, text):
+        self.setProperty("textPrefix", text)
+    
+    def textSuffix(self):
+        return self.property("textSuffix")
+    
+    def setTextSuffix(self, text):
+        self.setProperty("textSuffix", text)
     
     def setText(self, text):
         if self.isChecked():
@@ -475,9 +481,13 @@ class SwitchButton(QAbstractButton, Widget):
     def paintEvent(self, a0):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        self.setMinimumSize(52 + 2 + max(self.fontMetrics().boundingRect(
-            self.switchOnText()).width(), self.fontMetrics().boundingRect(
-            self.switchOffText()).width()), 24)
+        self.setMinimumSize(
+            52 + 2 + max(
+                self.fontMetrics().boundingRect(self.switchOnText()).width(),
+                self.fontMetrics().boundingRect(self.switchOffText()).width()
+            ),
+            24
+        )
         painter = QPainter(self)
         painter.setOpacity(self.property("widgetOpacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -506,23 +516,25 @@ class SwitchButton(QAbstractButton, Widget):
             is_highlight=(self.isDown() or self.isChecked()) or (
                     (self.isDown() or self.isChecked()) and self.isEnabled())
         )
-        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(outerRect.width(), outerRect.height()))
+        borderGradient = QLinearGradient(QPointF(rect.x(), rect.y()), QPointF(rect.x(), rect.y() + rect.height()))
         borderGradient.setColorAt(0.0, borderColour)
-        borderGradient.setColorAt(1.0, Colour(
-            *borderColour,
-            (255 if self.hasFocus() and self.isEnabled() else 32)
-        ))
-        painter.setPen(QPen(QBrush(borderGradient), 1.0))
-        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+        borderGradient.setColorAt(1.0, Colour(*borderColour,
+                                              int(255 * ((max(0.6, self.property("widgetOpacity")) - 0.6) * 10) / 4)))
+        backgroundGradient = QRadialGradient(QPointF(rect.bottomRight()), min(rect.width(), rect.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
-        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 190))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
         painter.setBrush(QBrush(backgroundGradient))
         painter.drawEllipse(rect)
         painter.setPen(getForegroundColour())
         painter.setBrush(Qt.GlobalColor.transparent)
-        painter.drawText(QRect(54, 0, self.width() - 52, self.height()), Qt.AlignmentFlag.AlignCenter,
-                         self.switchOnText() if self.isChecked() else self.switchOffText())
+        painter.drawText(
+            QRect(54, 0, self.width() - 52, self.height()),
+            Qt.AlignmentFlag.AlignLeft,
+            self.textPrefix()
+            + (self.switchOnText() if self.isChecked() else self.switchOffText())
+            + self.textSuffix()
+        )
         self.setStyleSheet("padding: 5px;")
     
     def keyPressEvent(self, *__args):
@@ -535,5 +547,5 @@ class SwitchButton(QAbstractButton, Widget):
         if __args[0].key() == 16777220 and self.hasFocus() and self.isVisible():
             self.setChecked(not self.isChecked())
             self.pressed.emit()
-            self.switched.emit(self.isChecked())
+            self.toggled.emit(self.isChecked())
             self.repaint()

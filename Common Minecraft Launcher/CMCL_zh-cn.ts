@@ -93,7 +93,7 @@
     <message>
         <location filename="main.py" line="2581"/>
         <source>SettingsPage.CustomiseSettings.group3_checkBox.Text</source>
-        <translation>切换页面动画</translation>
+        <translation>切换页面动画：</translation>
     </message>
     <message>
         <location filename="main.py" line="2582"/>
@@ -250,11 +250,11 @@
         <source>DownloadPage.DownloadVanilla.lineEdit.ToolTip</source>
         <translation>输入版本：查询版本。
 输入类型：筛选版本类型。
-- release：正式版
-- snapshot：快照版
-- old_beta：远古 Beta 版
-- old_alpha：远古 Alpha 版
-- april_fool：愚人节版本
+◉ release：正式版
+◉ snapshot：快照版
+◉ old_beta：远古 Beta 版
+◉ old_alpha：远古 Alpha 版
+◉ april_fool：愚人节版本
 输入日期：查询在该日期发布的版本，格式：&quot;YYYY-MM-DD&quot;。
 注：以上方式均可使用正则表达式，
 如&quot;1\.14.+&quot;、&quot;old_(alpha|beta)&quot;、&quot;2024-05-28 .+&quot;等，
@@ -655,14 +655,6 @@
         <location filename="main.py" line="2902"/>
         <source>OfflinePlayerCreationDialogue.OKButton.Text</source>
         <translation>继续</translation>
-    </message>
-</context>
-<context>
-    <name>QWebEngineView</name>
-    <message>
-        <location filename="main.py" line="574"/>
-        <source>LoginWindow.WebEngineView.Reload.Text</source>
-        <translation>重新加载网页</translation>
     </message>
 </context>
 <context>

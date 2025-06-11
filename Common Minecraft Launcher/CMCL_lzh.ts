@@ -618,15 +618,7 @@
         <source>OfflinePlayerCreationDialogue.OKButton.Text</source>
         <translation type="unfinished"></translation>
     </message>
-</context>
-<context>
-    <name>QWebEngineView</name>
-    <message>
-        <location filename="main.py" line="574"/>
-        <source>LoginWindow.WebEngineView.Reload.Text</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
+</context
 <context>
     <name>SaveEditingWindow</name>
     <message>
