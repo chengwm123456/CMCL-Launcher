@@ -9,7 +9,7 @@ from pathlib import Path
 from ..GetOperationSystem import GetOperationSystemInMojangApi
 
 
-@dataclass()
+@dataclass(slots=True)
 class Minecraft:
     mc_gameVersion: Union[str, LiteralString] = field(default="")
     mc_gamePlatform: str = field(default_factory=GetOperationSystemInMojangApi)

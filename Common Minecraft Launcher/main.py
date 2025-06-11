@@ -2817,9 +2817,14 @@ class SettingsPage(QFrame):
             settings["Settings"]["LauncherSettings"]["Customise"]["BackgroundBlur"] = value
         
         def updateAnimation(self, value):
+            items = settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"]
             if value == 1:
                 print(self.group3_checkBox.isChecked())
-                settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"]
+                if value:
+                    items.append(1)
+                else:
+                    items.remove(1)
+            settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"] = items
         
         def updateComboBoxLanguageList(self):
             self.comboBox.clear()
