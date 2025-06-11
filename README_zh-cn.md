@@ -37,7 +37,7 @@
 
     - 解压 .zip 压缩包。
 
-    - 去[ Python 官网](https://www.python.org/)下载 Python 3.12 作为 Python 解释器。
+    - 去 [Python 官网](https://www.python.org/)下载 Python 3.12 作为 Python 解释器。
       > 如果你有 Python 3.12 的话……当这条不存在！
 
     - 进入解压的文件夹，进到根目录（有`requirements.txt`的那个）
