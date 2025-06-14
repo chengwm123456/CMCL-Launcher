@@ -30,6 +30,13 @@ class Minecraft:
         self.mc_gameAssetsDir = Path(self.mc_gameAssetsDir).absolute()
         self.mc_gameLibrariesDir = Path(self.mc_gameLibrariesDir).absolute()
     
+    def __bool__(self):
+        return bool(
+            self.mc_gameVersion
+            and self.mc_gameWorkDir and self.mc_gameJarFile and self.mc_gameJsonFile
+            and self.mc_gameNativesDir and self.mc_gameAssetsDir and self.mc_gameLibrariesDir
+        )
+    
     @property
     def mc_gameJsonFileContent(self) -> Dict[Any, Any]:
         if self.mc_gameJsonFile and Path(self.mc_gameJsonFile).exists():

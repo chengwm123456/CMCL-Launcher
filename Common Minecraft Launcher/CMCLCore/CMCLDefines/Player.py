@@ -26,4 +26,4 @@ class Player:
             self.player_hasMC = bool(self.player_hasMC)
     
     def __bool__(self):
-        return self.player_playerName and self.player_playerUUID and self.player_accessToken
+        return bool(self.player_playerName and self.player_playerUUID and self.player_accessToken)

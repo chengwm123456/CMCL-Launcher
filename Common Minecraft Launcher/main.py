@@ -170,13 +170,25 @@ theme_colour_defines = {
         }
     }
 }
-languages_map = {
+
+language_code_map = {
     "zh-cn": "简体中文（中国大陆）",
-    "zh-hk": "繁體中文（中國香港特別行政區/中國澳門特別行政區）",
+    "zh-hk": "繁體中文（中國香港/中國澳門特別行政區）",
     "zh-tw": "繁體中文（中國台灣）",
     "lzh": "文言（華夏）",
     "en-us": "English (United States)",
     "en-gb": "English (United Kingdom)",
+}
+language_code_compatibility_list = {
+    "zh": "zh-cn",
+    "zh_CN": "zh-cn",
+    "zh-CN": "zh-cn",
+    "zh-HK": "zh-hk",
+    "zh_HK": "zh-hk",
+    "zh-mo": "zh-hk",  # 香港 & 澳门繁体共用 zh-hk / 香港 & 澳門繁體共用 zh-hk
+    "zh-MO": "zh-hk",
+    "en": "en-gb",
+    "en-uk": "en-gb",
 }
 
 window_class = MainWindow
@@ -1216,7 +1228,9 @@ class MainPage(QFrame):
         self.select_version_btn.setMenu(menu)
     
     def show_version_settings_page(self):
-        self.versionSettingsY = self.height()
+        self.versionSettingsY = self.height() \
+            if 2 in settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"] \
+            else 0
         self.versionSettings = self.VersionSettingsPage(self)
         self.versionSettings.frameClosed.connect(self.hide_version_settings_page)
         rect = self.rect().adjusted(1, 1, -1, -1)
@@ -1823,7 +1837,9 @@ class DownloadPage(QFrame):
         
         def downloadOptionsOpen(self, value):
             data = self.tableView.model().item(value.row(), 0).text()
-            self.downloadOptionsY = self.height()
+            self.downloadOptionsY = self.height() \
+                if 2 in settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"] \
+                else 0
             self.downloadOptions = self.DownloadOptions(self, data)
             self.downloadOptions.frameClosed.connect(self.downloadOptionsClose)
             rect = self.rect().adjusted(1, 1, -1, -1)
@@ -2244,7 +2260,9 @@ class DownloadPage(QFrame):
                     if hit["title"] == data:
                         hit_data = hit
             if hit_data:
-                self.modInfoPageY = self.height()
+                self.modInfoPageY = self.height() \
+                    if 2 in settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"] \
+                    else 0
                 self.modInfoPage = self.ModInfoPage(self, data, hit_data["slug"])
                 self.modInfoPage.closePage.connect(self.modInfoPageClose)
                 rect = self.rect().adjusted(1, 1, -1, -1)
@@ -2750,6 +2768,12 @@ class SettingsPage(QFrame):
             self.group3_checkBox.toggled.connect(lambda: self.updateAnimation(1))
             self.verticalLayout_3.addWidget(self.group3_checkBox)
             
+            self.group3_checkBox_2 = SwitchButton(self.groupBox_3)
+            self.group3_checkBox_2.setSwitchState(
+                2 in settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"])
+            self.group3_checkBox_2.toggled.connect(lambda: self.updateAnimation(2))
+            self.verticalLayout_3.addWidget(self.group3_checkBox_2)
+            
             self.groupBox_4 = GroupBox(self)
             self.verticalLayout.addWidget(self.groupBox_4)
             
@@ -2792,9 +2816,11 @@ class SettingsPage(QFrame):
             self.label1.setText(self.tr("SettingsPage.CustomiseSettings.label1.Text"))
             self.groupBox_3.setTitle(self.tr("SettingsPage.CustomiseSettings.groupBox_3.Title"))
             self.group3_checkBox.setTextPrefix(self.tr("SettingsPage.CustomiseSettings.group3_checkBox.Text"))
-            # self.group3_checkBox.setTextPrefix(self.tr("SettingsPage.CustomiseSettings.group3_checkBox.Text"))
             self.group3_checkBox.setSwitchOnText("开")
             self.group3_checkBox.setSwitchOffText("关")
+            self.group3_checkBox_2.setTextPrefix("子界面弹出动画：")
+            self.group3_checkBox_2.setSwitchOnText("开")
+            self.group3_checkBox_2.setSwitchOffText("关")
             self.groupBox_4.setTitle(self.tr("SettingsPage.CustomiseSettings.groupBox_4.Title"))
             self.label2.setText(self.tr("SettingsPage.CustomiseSettings.label2.Text"))
             self.translationMayNotBeCorrectLabel.setText(
@@ -2819,19 +2845,23 @@ class SettingsPage(QFrame):
         def updateAnimation(self, value):
             items = settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"]
             if value == 1:
-                print(self.group3_checkBox.isChecked())
-                if value:
+                if self.group3_checkBox.isChecked():
                     items.append(1)
                 else:
                     items.remove(1)
-            settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"] = items
+            if value == 2:
+                if self.group3_checkBox_2.isChecked():
+                    items.append(2)
+                else:
+                    items.remove(2)
+            settings["Settings"]["LauncherSettings"]["Customise"]["Animations"]["EnabledItems"] = list(set(items))
         
         def updateComboBoxLanguageList(self):
             self.comboBox.clear()
-            sorted_languages_map = sorted(languages_map)
-            for language in sorted_languages_map:
-                self.comboBox.addItem(f"{languages_map[language]} ({language})")
-            self.comboBox.setCurrentIndex(sorted(sorted_languages_map).index(current_language))
+            sorted_language_code = sorted(language_code_map)
+            for language in sorted_language_code:
+                self.comboBox.addItem(f"{language_code_map[language]} ({language})")
+            self.comboBox.setCurrentIndex(sorted(sorted_language_code).index(current_language))
         
         def comboBoxLanguageChanged(self):
             global current_language
@@ -3002,7 +3032,7 @@ class AboutPage(QFrame):
         self.cmcl_info = Label(self.panel_cmcl)
         self.cmcl_info.setText(
             self.tr("AboutPage.Page2.CMCL_info").format(CMCL_version[0], CMCL_version[1],
-                                                        languages_map.get(current_language, current_language)))
+                                                        language_code_map.get(current_language, current_language)))
         
         self.horizontalLayout_3.addWidget(self.cmcl_info, 1)
         
@@ -3102,7 +3132,7 @@ class AboutPage(QFrame):
         self.toolBox.setItemText(self.toolBox.indexOf(self.page2), self.tr("AboutPage.Page2.Title"))
         self.cmcl_info.setText(
             self.tr("AboutPage.Page2.CMCL_info").format(CMCL_version[0], CMCL_version[1],
-                                                        languages_map.get(current_language, current_language)))
+                                                        language_code_map.get(current_language, current_language)))
         
         translationjson = QFile(":/aboutPageTranslations.json")
         translationjson.open(QIODevice.OpenModeFlag.ReadOnly)
@@ -3686,6 +3716,15 @@ class MainWindow(window_class):
         ani2.setEasingCurve(QEasingCurve.Type.OutQuad)
         ani2.start()
         self.update()
+    
+    def closeEvent(self, a0):
+        super().closeEvent(a0)
+        saveSettings()
+    #
+    # def mouseReleaseEvent(self, a0):
+    #     super().mousePressEvent(a0)
+    #     if self.SettingsPage.isVisible():
+    #         saveSettings()
 
 
 class LoggingWindow(window_class):
@@ -3814,6 +3853,31 @@ class LoggingWindow(window_class):
         self.inputtext = LineEdit(self)
         self.inputtext.returnPressed.connect(self.process_command)
         self.inputtext.setFont(fixedFont)
+        completer = QCompleter(self.inputtext)
+        model = QStandardItemModel()
+        row = 0
+        import keyword
+        for akey in keyword.kwlist:
+            if akey.startswith("__"):
+                continue
+            model.setItem(row, 0, QStandardItem(akey))
+            row += 1
+        for builtin in dir(__builtins__):
+            if builtin.startswith("__"):
+                continue
+            model.setItem(row, 0, QStandardItem(builtin))
+            row += 1
+        for name, obj in (("frame", frame), ("player", player)):
+            model.setItem(row, 0, QStandardItem(name))
+            row += 1
+            cur_obj = obj
+            for sub in dir(cur_obj):
+                if sub.startswith("__"):
+                    continue
+                model.setItem(row, 0, QStandardItem(f"{name}.{sub}"))
+                row += 1
+        completer.setModel(model)
+        self.inputtext.setCompleter(completer)
         self.inputtext.setToolTip(self.tr("LoggingWindow.inputtext.ToolTip"))
         self.canOutput = True
         app.registerRetranslateFunction(self.retranslateUI)
@@ -4148,7 +4212,10 @@ class Application(QApplication):
     
     def retranslate(self):
         for function in self.property("retranslateFunctions"):
-            function()
+            try:
+                function()
+            except RuntimeError:
+                self.removeRetranslateFunction(function)
 
 
 def saveSettings():
@@ -4206,7 +4273,8 @@ else:
                     "Animations": {
                         "Enabled": True,
                         "EnabledItems": [
-                            1
+                            1,
+                            2
                         ]
                     },
                     "DateTimeFormat": "%Y-%m-%d %H:%M:%S"
@@ -4228,10 +4296,12 @@ if not minecraft_path.exists():
 app = Application(sys.argv)
 app.setApplicationName("Common Minecraft Launcher")
 app.setApplicationVersion(CMCL_version[0])
-app.setFont(QFont("HarmonyOS Sans SC"))
+appFont = QFont("HarmonyOS Sans SC")
+appFont.setHintingPreference(QFont.HintingPreference.PreferFullHinting)
+app.setFont(appFont)
 fixedFont = QFont(["Jetbrains Mono", "Consolas", "Ubuntu", "Monospace", "HarmonyOS Sans SC"], 13)
 #                                  --- Monospace ---                      --- Chinese ---
-
+fixedFont.setHintingPreference(QFont.HintingPreference.PreferFullHinting)
 # app.setEffectEnabled(Qt.UIEffect.UI_AnimateMenu)
 # app.setEffectEnabled(Qt.UIEffect.UI_FadeMenu)
 
@@ -4250,13 +4320,15 @@ player = create_online_player(None, None, None, False)
 fallback_translator = QTranslator()
 fallback_translator.load(f":/CMCL_zh-cn.qm")
 app.installTranslator(fallback_translator)
+fallback_translator_qt = QTranslator()
+fallback_translator_qt.load(f":/qt_zh-cn.qm")
+app.installTranslator(fallback_translator_qt)
 current_language = settings["Settings"]["LauncherSettings"]["CurrentLanguage"]
 app.translator = QTranslator()
 app.translator.load(f":/CMCL_{current_language}.qm")
 app.installTranslator(app.translator)
 app.qt_translator = QTranslator()
-app.qt_translator.load(QLocale(locale.normalize(current_language.replace("-", "_")).split(".")[0]), "qtbase", "_",
-                       QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath))
+app.qt_translator.load(f":/qt_{current_language}.qm")
 app.installTranslator(app.qt_translator)
 
 match settings["Settings"]["LauncherSettings"]["Customise"]["CurrentTheme"]:
@@ -4291,4 +4363,3 @@ if datetime.datetime.now().month == 4 and datetime.datetime.now().day == 1:
     stopbutton.show()
 # End
 app.exec()
-saveSettings()
