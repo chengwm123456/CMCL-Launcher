@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import os
 import uuid
 import jwt
 import random
 import time
+from pathlib import Path
 from .CMCLDefines.Player import Player
 from typing import *
 from enum import Enum
@@ -45,9 +47,9 @@ class MicrosoftPlayer(OnlinePlayer):
 class OfflinePlayer(Player):
     @classmethod
     def create_offline_player(cls, user_name, has_mc):
-        user_uuid = str(uuid.uuid4()).replace("-", "")
+        user_uuid = str(uuid.uuid4())
         access_token = jwt.encode(
-            {
+            payload={
                 "xuid": str(random.randint(1111111111111111, 9999999999999999)),
                 "agg": "Adult",
                 "sub": str(uuid.UUID(bytes=random.randbytes(16))),
@@ -55,17 +57,26 @@ class OfflinePlayer(Player):
                 "ns": "default",
                 "roles": [],
                 "iss": "authentication",
-                "flags": ["multiplayer"],
+                "flags": [
+                    "multiplayer"
+                ],
                 "profiles": {
-                    "mc": str(uuid.UUID(user_uuid))
+                    "mc": str(user_uuid)
                 },
-                "platform": "UNKNOWN",
-                "yuid": str(uuid.UUID(bytes=random.randbytes(16))).replace("-", ""),
+                "platform": "PC_LAUNCHER",
+                "pfd": [
+                    {
+                        "type": "mc",
+                        "id": user_uuid,
+                        "name": user_name
+                    }
+                ],
                 "nbf": round(time.time()),
                 "exp": round(time.time()) + 86400,
                 "iat": round(time.time())
             },
-            key=secret_key
+            key=secret_key,
+            algorithm="RS256"
         )
         return cls(user_name, user_uuid, access_token, has_mc)
     
@@ -81,10 +92,20 @@ class OfflinePlayer(Player):
 
 class AuthlibInjectorPlayer(OnlinePlayer):
     def __init__(self, user_name: Optional[str], user_uuid: Optional[str], access_token: Optional[str],
+                 authlib_injector_path: Optional[Union[str, os.PathLike[str], Path]],
                  signature_publickey: Optional[str], auth_server: Optional[str], has_mc: bool):
         super().__init__(user_name, user_uuid, access_token, has_mc)
+        self.__player_authlibInjectorPath = Path(authlib_injector_path)
         self.__player_signaturePublickey = signature_publickey
         self.__player_authServer = auth_server
+    
+    @property
+    def player_authlibInjectorPath(self) -> Optional[Path]:
+        return Path(self.__player_authlibInjectorPath)
+    
+    @player_authlibInjectorPath.setter
+    def player_authlibInjectorPath(self, value: Optional[Union[str, os.PathLike[str], Path]]):
+        self.__player_authlibInjectorPath = Path(value)
     
     @property
     def player_signaturePublickey(self) -> Optional[str]:

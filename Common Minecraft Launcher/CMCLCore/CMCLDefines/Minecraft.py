@@ -6,13 +6,14 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ..GetOperationSystem import GetOperationSystemInMojangApi
+from ..GetOperationSystem import GetOperationSystemInMojangAPI
 
 
 @dataclass(slots=True)
 class Minecraft:
     mc_gameVersion: Union[str, LiteralString] = field(default="")
-    mc_gamePlatform: str = field(default_factory=GetOperationSystemInMojangApi)
+    mc_gamePlatformName: str = field(default_factory=lambda: GetOperationSystemInMojangAPI()[0])
+    mc_gamePlatformMachine: str = field(default_factory=lambda: GetOperationSystemInMojangAPI()[1])
     mc_gameWorkDir: Union[str, os.PathLike[str], Path] = ""
     mc_gameJarFile: Union[str, os.PathLike[str], Path] = ""
     mc_gameJsonFile: Union[str, os.PathLike[str], Path] = ""
@@ -22,7 +23,8 @@ class Minecraft:
     
     def __post_init__(self):
         self.mc_gameVersion = str(self.mc_gameVersion)
-        self.mc_gamePlatform = str(self.mc_gamePlatform)
+        self.mc_gamePlatformName = str(self.mc_gamePlatformName)
+        self.mc_gamePlatformMachine = str(self.mc_gamePlatformMachine)
         self.mc_gameWorkDir = Path(self.mc_gameWorkDir).absolute()
         self.mc_gameJarFile = Path(self.mc_gameJarFile).absolute()
         self.mc_gameJsonFile = Path(self.mc_gameJsonFile).absolute()
@@ -30,9 +32,10 @@ class Minecraft:
         self.mc_gameAssetsDir = Path(self.mc_gameAssetsDir).absolute()
         self.mc_gameLibrariesDir = Path(self.mc_gameLibrariesDir).absolute()
     
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(
             self.mc_gameVersion
+            and self.mc_gamePlatformName and self.mc_gamePlatformMachine
             and self.mc_gameWorkDir and self.mc_gameJarFile and self.mc_gameJsonFile
             and self.mc_gameNativesDir and self.mc_gameAssetsDir and self.mc_gameLibrariesDir
         )

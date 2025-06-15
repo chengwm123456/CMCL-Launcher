@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 import os
 from typing import *
-from pathlib import Path, PurePath
+from pathlib import Path
 import shlex
 
-from CMCLCore.CMCLDefines import Player, Minecraft
-from CMCLCore.Player import AuthlibInjectorPlayer
-from CMCLCore import GetOperationSystem
+from ..CMCLDefines import Player, Minecraft
+from ..Player import AuthlibInjectorPlayer
+from .. import GetOperationSystem
 
 from .TemplateFilling import Quote, MinecraftArgumentTemplateFilling, JVMArgumentTemplateFilling
 from .LibrariesGenerating import GenerateMinecraftLibrariesFiles
 
 
 def GenerateMinecraftLaunchCommand(
-        java_path: Union[str, Path, PurePath, os.PathLike, LiteralString],
+        java_path: Union[str, os.PathLike[str], Path, LiteralString],
         minecraft: Minecraft,
         player_data: Player,
         jvm_arguments: Optional[Union[str, list]],
@@ -88,11 +88,10 @@ def GenerateMinecraftLaunchCommand(
         for jvmArgument in mcJvmArguments:
             if isinstance(jvmArgument, dict):
                 rules = jvmArgument["rules"][0]
-                currentOS = GetOperationSystem.GetOperationSystemInMojangApi()
                 ruleOfOS = rules["os"]
-                if ruleOfOS.get("name") and ruleOfOS["name"] != currentOS[0]:
+                if ruleOfOS.get("name") and ruleOfOS["name"] != minecraft.mc_gamePlatformName:
                     continue
-                if ruleOfOS.get("arch") and currentOS[1] != ruleOfOS["arch"]:
+                if ruleOfOS.get("arch") and minecraft.mc_gamePlatformMachine != ruleOfOS["arch"]:
                     continue
                 value = jvmArgument["value"]
                 if isinstance(value, list):
@@ -106,8 +105,15 @@ def GenerateMinecraftLaunchCommand(
                 strArgument = jvmArgument
                 if " " in strArgument:
                     strArgument = Quote(strArgument)
-                mcJvmCommand.append(JVMArgumentTemplateFilling(strArgument, minecraft, launcher_name, launcher_version,
-                                                               mcLibrariesFiles))
+                mcJvmCommand.append(
+                    JVMArgumentTemplateFilling(
+                        strArgument,
+                        minecraft,
+                        launcher_name,
+                        launcher_version,
+                        mcLibrariesFiles
+                    )
+                )
         mcJvmCommand.append(memory_args)
         mcJvmCommand.append(
             f"-Xmixed {mcMainClass}")
@@ -124,18 +130,18 @@ def GenerateMinecraftLaunchCommand(
             mcGameCommand = shlex.split(mcGameCommand)
             mcGameCommand.append(extra_game_command.strip(" "))
             mcGameCommand = " ".join(mcGameCommand)
-        mcJvmCommand = f"{' '.join(mcJvmCommand)}{' -XstartOnFirstThread' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'osx' else ''}{' -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump' if GetOperationSystem.GetOperationSystemInMojangApi()[0] == 'windows' else ''}{' -Xss1M' if GetOperationSystem.GetOperationSystemInMojangApi() == ('windows', 'x86') else ''} -Djava.library.path=\"{str(minecraft.mc_gameNativesDir)}\" -cp \"{mcLibrariesFiles}{':' if GetOperationSystem.GetOperationSystemName()[0] != 'Windows' else ';'}{mcGameJarFile}\" {memory_args} -Xmixed {mcMainClass}"
+        mcJvmCommand = f"{' '.join(mcJvmCommand)}{' -XstartOnFirstThread' if GetOperationSystem.GetOperationSystemInMojangAPI()[0] == 'osx' else ''}{' -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump' if GetOperationSystem.GetOperationSystemInMojangAPI()[0] == 'windows' else ''}{' -Xss1M' if GetOperationSystem.GetOperationSystemInMojangAPI() == ('windows', 'x86') else ''} -Djava.library.path=\"{str(minecraft.mc_gameNativesDir)}\" -cp \"{mcLibrariesFiles}{':' if GetOperationSystem.GetOperationSystemName() != 'Windows' else ';'}{mcGameJarFile}\" {memory_args} -Xmixed {mcMainClass}"
     else:
         mcJvmCommand = mcGameCommand = ""
     if isinstance(player_data, AuthlibInjectorPlayer):
-        authlibInjectorJarPath = Path(r".\authlib-injector.jar")
+        authlibInjectorJarPath = (player_data.player_authlibInjectorPath or Path("./authlib-injector.jar")).absolute()
         authenticationServerUrl = player_data.player_authServer  # "https://littleskin.cn/api/yggdrasil"
         signaturePublickey = player_data.player_signaturePublickey.replace("\n", "")
         mcAuthlibInjectorCommand = " ".join(
             [
-                f'-javaagent:"{shlex.quote(str(authlibInjectorJarPath)[1:-1])}"="{shlex.quote(authenticationServerUrl)[1:-1]}"',
+                f'-javaagent:"{Quote(str(authlibInjectorJarPath))}"="{Quote(authenticationServerUrl)}"',
                 '-Dauthlibinjector.side="client"',
-                f'-Dauthlibinjector.yggdrasil.prefetched="{shlex.quote(signaturePublickey)[1:-1]}"'
+                f'-Dauthlibinjector.yggdrasil.prefetched="{Quote(signaturePublickey)}"'
             ]
         )
     else:

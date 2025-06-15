@@ -25,5 +25,5 @@ class Player:
         if self.player_hasMC:
             self.player_hasMC = bool(self.player_hasMC)
     
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self.player_playerName and self.player_playerUUID and self.player_accessToken)

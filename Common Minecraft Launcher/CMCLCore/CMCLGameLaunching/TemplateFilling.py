@@ -2,12 +2,12 @@
 from typing import *
 import shlex
 import os
-from pathlib import Path, PurePath
+from pathlib import Path
 
-from CMCLCore.CMCLDefines import Player, Minecraft
+from ..CMCLDefines import Player, Minecraft
 
 
-def Quote(argument: str):
+def Quote(argument: str) -> str:
     return f'"{shlex.quote(argument)[1:-1]}"'
 
 
@@ -17,7 +17,7 @@ def JVMArgumentTemplateFilling(
         launcher_name: str,
         launcher_version: str,
         libraries_list: str
-):
+) -> str:
     argument = argument.replace("${natives_directory}", f'"{minecraft.mc_gameNativesDir}"')
     argument = argument.replace("${launcher_name}", f'"{launcher_name}"')
     argument = argument.replace("${launcher_version}", f'"{launcher_version}"')
@@ -32,7 +32,7 @@ def MinecraftArgumentTemplateFilling(
         assets_index: str,
         assets_legacy: bool = False,
         version_type: str = "release"
-):
+) -> str:
     argument = argument.replace("${auth_player_name}", f'"{player_data.player_playerName}"')
     argument = argument.replace("${version_name}", f'"{minecraft.mc_gameVersion}"')
     argument = argument.replace("${game_directory}", f'"{minecraft.mc_gameWorkDir}"')

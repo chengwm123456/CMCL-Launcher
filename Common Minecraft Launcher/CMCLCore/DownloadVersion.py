@@ -116,13 +116,13 @@ def DownloadLibraryFiles(version: Union[str, None] = None,
                 rule_of_os = libraries_file_data[i]["rules"][0]["os"]["name"]
             except KeyError:
                 rule_of_os = libraries_file_data[i]["rules"][1]["os"]["name"]
-            if GetOperationSystem.GetOperationSystemInMojangApi()[0].lower() != rule_of_os:
+            if GetOperationSystem.GetOperationSystemInMojangAPI()[0].lower() != rule_of_os:
                 continue
         data = libraries_file_data[i]["downloads"]
         try:
             data_of_file = data["artifact"]
         except KeyError:
-            data_of_file = data["classifiers"][f"natives-{GetOperationSystem.GetOperationSystemInMojangApi()[0]}"]
+            data_of_file = data["classifiers"][f"natives-{GetOperationSystem.GetOperationSystemInMojangAPI()[0]}"]
         libraries_dir_path = Path(minecraft_path / "libraries")
         path = Path(libraries_dir_path / Path(data_of_file["path"]))
         url = data_of_file["url"]

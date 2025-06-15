@@ -2,8 +2,7 @@
 from typing import *
 import os
 from pathlib import Path
-from .. import GetOperationSystem
-from CMCLCore.CMCLDefines.Minecraft import Minecraft
+from ..CMCLDefines.Minecraft import Minecraft
 
 
 def GenerateFileNameByNames(names: Union[str, Iterable[str]]):
@@ -27,8 +26,8 @@ def GenerateMinecraftLibrariesFiles(minecraft: Minecraft, libraries_datas: Itera
             if mcLib.get("rules"):
                 action = "disallow"
                 for rule in mcLib.get("rules", []):
-                    ruleOfOS = rule.get("os", {}).get("name", GetOperationSystem.GetOperationSystemInMojangApi()[0])
-                    if ruleOfOS != GetOperationSystem.GetOperationSystemInMojangApi()[0]:
+                    ruleOfOS = rule.get("os", {}).get("name", minecraft.mc_gamePlatformName)
+                    if ruleOfOS != minecraft.mc_gamePlatformName:
                         continue
                     action = rule.get("action", action)
                 allow = bool(mcLib.get("downloads", {}).get("artifact", {})) and action == "allow"

@@ -26,17 +26,14 @@ class ToolBox(QToolBox, Widget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         borderColour = getBorderColour()
         backgroundColour = getBackgroundColour()
-        borderGradient = QRadialGradient(QPointF(self.mapFromGlobal(QCursor.pos())),
-                                         max(self.width(), self.height()))
+        borderGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
         borderGradient.setColorAt(0.0, borderColour)
-        borderGradient.setColorAt(1.0, Colour(
-            *borderColour,
-            (255 if self.hasFocus() and self.isEnabled() else 32)
-        ))
-        painter.setPen(QPen(QBrush(borderGradient), 1.0))
-        backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, self.height()))
+        borderGradient.setColorAt(1.0, Colour(*borderColour,
+                                              int(255 * ((max(0.6, self.property("widgetOpacity")) - 0.6) * 10) / 4)))
+        backgroundGradient = QRadialGradient(QPointF(self.rect().bottomRight()), min(self.width(), self.height()))
         backgroundGradient.setColorAt(0.0, backgroundColour)
-        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+        backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 190))
+        painter.setPen(QPen(QBrush(borderGradient), 1))
         painter.setBrush(QBrush(backgroundGradient))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
         for button in (button for button in self.children() if isinstance(button, QAbstractButton)):
@@ -59,17 +56,15 @@ class ToolBox(QToolBox, Widget):
                                                                                  button.isDown() or button.isChecked() or button.underMouse() or button.hasFocus()) and self.isEnabled()))
             backgroundColour = getBackgroundColour(is_highlight=(button.isDown() or button.isChecked()) or (
                     (button.isDown() or button.isChecked()) and button.isEnabled()))
-            borderGradient = QRadialGradient(QPointF(button.mapFromGlobal(QCursor.pos())),
-                                             max(rect.width(), rect.height()))
+            borderGradient = QLinearGradient(QPointF(rect.x(), rect.y()), QPointF(rect.x(), rect.y() + rect.height()))
             borderGradient.setColorAt(0.0, borderColour)
-            borderGradient.setColorAt(1.0, Colour(
-                *borderColour,
-                (255 if button.hasFocus() and button.isEnabled() else 32)
-            ))
-            painter.setPen(QPen(QBrush(borderGradient), 1.0))
-            backgroundGradient = QLinearGradient(QPointF(0, 0), QPointF(0, rect.height()))
+            borderGradient.setColorAt(1.0, Colour(*borderColour,
+                                                  int(255 * ((max(0.6,
+                                                                  self.property("widgetOpacity")) - 0.6) * 10) / 4)))
+            backgroundGradient = QRadialGradient(QPointF(rect.bottomRight()), min(rect.width(), rect.height()))
             backgroundGradient.setColorAt(0.0, backgroundColour)
-            backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 210))
+            backgroundGradient.setColorAt(1.0, Colour(*backgroundColour, 190))
+            painter.setPen(QPen(QBrush(borderGradient), 1))
             painter.setBrush(QBrush(backgroundGradient))
             painter.drawRoundedRect(rect, 10, 10)
             painter.setPen(getForegroundColour())

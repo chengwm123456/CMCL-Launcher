@@ -3,18 +3,25 @@ import platform
 from typing import *
 
 
-def GetOperationSystemName() -> Tuple[str, str]:
+def GetOperationSystemName() -> str:
     system = platform.system()
     if system == "Darwin":
         system = "Mac OS"
-    return system, platform.machine()
+    return system
 
 
-def GetOperationSystemInMojangApi() -> Tuple[str, str]:
-    system = platform.system()
-    if system == "Darwin":
-        system = "Mac OS"
-    current_machine = platform.machine()[-2:]
+def GetOperationSystemMachine() -> str:
+    return platform.machine()
+
+
+def GetOperationSystem() -> Tuple[str, str]:
+    return GetOperationSystemName(), GetOperationSystemMachine()
+
+
+def GetOperationSystemInMojangAPI() -> Tuple[str, str]:
+    name = GetOperationSystem()
+    system = name[0]
+    current_machine = name[1][-2:]
     current_system = "Unknown System"
     if system == "Windows":
         current_system = "windows"

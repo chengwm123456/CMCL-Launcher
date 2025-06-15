@@ -32,7 +32,7 @@ class QuickPlayMode(Enum):
 
 def GetJavaPath(version: Union[str, int]) -> Optional[Union[str, Path]]:
     where_out = subprocess.run(
-        ["which" if GetOperationSystem.GetOperationSystemName()[0].lower() != "windows" else "where", "java"],
+        ["which" if GetOperationSystem.GetOperationSystemName().lower() != "windows" else "where", "java"],
         capture_output=True,
         check=False).stdout
     java_path = where_out.decode(errors="ignore").splitlines()
@@ -109,7 +109,7 @@ def FixMinecraftFiles(minecraft_path: Union[str, Path, PurePath, os.PathLike, Li
         try:
             data_of_file = data["artifact"]
         except KeyError:
-            data_of_file = data["classifiers"][f"natives-{GetOperationSystem.GetOperationSystemInMojangApi()[0]}"]
+            data_of_file = data["classifiers"][f"natives-{GetOperationSystem.GetOperationSystemInMojangAPI()[0]}"]
         libraries_dir_path = os.path.join(minecraft_path, "libraries")
         path = os.path.join(libraries_dir_path, data_of_file["path"].replace("/", os.sep))
         if Path(path).exists():
@@ -125,7 +125,7 @@ def FixMinecraftFiles(minecraft_path: Union[str, Path, PurePath, os.PathLike, Li
                     rule_of_os = libraries_file_data[i]["rules"][0]["os"]["name"]
                 except KeyError:
                     rule_of_os = libraries_file_data[i]["rules"][1]["os"]["name"]
-                if GetOperationSystem.GetOperationSystemInMojangApi()[0].lower() != rule_of_os:
+                if GetOperationSystem.GetOperationSystemInMojangAPI()[0].lower() != rule_of_os:
                     continue
             downloader = Downloader.Downloader(data_of_file["url"], path)
             downloader.downloadFile()
@@ -148,7 +148,7 @@ def UnpackMinecraftNativeFiles(
     libraries_file_data = jsons["libraries"]
     for lib in libraries_file_data:
         unpack = bool(lib.get("downloads", {}).get("classifiers")) and \
-                 GetOperationSystem.GetOperationSystemInMojangApi()[0] in \
+                 GetOperationSystem.GetOperationSystemInMojangAPI()[0] in \
                  lib[
                      "natives"]
         data = lib.get("downloads", {})
@@ -156,11 +156,11 @@ def UnpackMinecraftNativeFiles(
         path_artifact = None
         if data.get("artifact"):
             path_artifact = Path(libraries_dir_path / data["artifact"]["path"])
-        if data.get("classifiers") and GetOperationSystem.GetOperationSystemInMojangApi()[0] in lib[
-            "natives"] and f"natives-{GetOperationSystem.GetOperationSystemInMojangApi()[0]}" in data.get(
+        if data.get("classifiers") and GetOperationSystem.GetOperationSystemInMojangAPI()[0] in lib[
+            "natives"] and f"natives-{GetOperationSystem.GetOperationSystemInMojangAPI()[0]}" in data.get(
             "classifiers").keys() and unpack:
             path_classifiers = Path(libraries_dir_path / data["classifiers"].get(
-                f"natives-{GetOperationSystem.GetOperationSystemInMojangApi()[0]}")["path"])
+                f"natives-{GetOperationSystem.GetOperationSystemInMojangAPI()[0]}")["path"])
             if not path_classifiers:
                 path_classifiers = path_artifact
             try:

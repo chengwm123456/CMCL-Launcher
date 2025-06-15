@@ -5,11 +5,14 @@
 - AlphaDev-25002
     - Added & Changes / 添加和修改
         - Updated the version number / 更新版本号
+        - Optimised the logic of generating offline player's JWT (JSON Web Tokens) / 优化了一下离线玩家的 JWT 生成逻辑
     - Fixed / 修复
         - Since some wrong code in `class Minecraft`, the launcher cannot launch the game normally,
           see [there](https://github.com/chengwm123456/CMCL-Launcher/commit/160883c8a4b4b5b702e0b3492e58864af656f1bc#diff-e88aa0f0b51b655872366faf88a62ca76aac73bb43b964318d642e8ece9d3ccfL99) /
           由于`class Minecraft`
           中一处错误代码，造成启动器无法启动游戏，详见[此处](https://github.com/chengwm123456/CMCL-Launcher/commit/160883c8a4b4b5b702e0b3492e58864af656f1bc#diff-e88aa0f0b51b655872366faf88a62ca76aac73bb43b964318d642e8ece9d3ccfL99).
+        - Downloader cannot download file normally by ignoring `Content-Encoding` / 下载器没有处理
+          `Content-Encoding`造成下载错误
 - AlphaDev-25001
     - Added & Changes / 添加和修改
         - Updated the version number / 更新版本号

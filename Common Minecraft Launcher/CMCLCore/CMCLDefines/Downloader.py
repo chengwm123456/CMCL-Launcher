@@ -6,10 +6,11 @@ import requests
 from dataclasses import dataclass
 from pathlib import Path, PurePath
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from cgi import parse_header
 
 
 class Downloader:
-    @dataclass
+    @dataclass(frozen=True)
     class ChunkData:
         startPosition: int
         responseContent: bytes
@@ -56,15 +57,9 @@ class Downloader:
         downloadChunks = []
         requestHeaders = requests.head(self.download_url).headers
         if requestHeaders.get("Content-Disposition"):
-            dispositions = requestHeaders.get("Content-Disposition").split(";")
-            for disposition in dispositions:
-                disposition = disposition.strip()
-                key, value = None, None
-                if "=" in disposition:
-                    key, value = disposition.split("=")
-                if key and value:
-                    if key == "filename":
-                        self.download_file_name = eval(value)
+            dispositions = requestHeaders.get("Content-Disposition")
+            _, params = parse_header(dispositions)
+            self.download_file_name = params["filename"]
         rangeRequestState = requestHeaders.get("Accept-Ranges", "none").lower()
         if rangeRequestState != "none":
             contentLength = int(requestHeaders.get("Content-Length", 0))
@@ -75,7 +70,7 @@ class Downloader:
                         executor.submit(
                             self.__downloadChunk,
                             startPosition,
-                            min(startPosition + self.__chunkSize, contentLength) - 1
+                            min(startPosition + self.__chunkSize, contentLength)
                         )
                     )
                     startPosition += self.__chunkSize
@@ -83,10 +78,9 @@ class Downloader:
             content = requests.get(self.download_url, stream=True).content
             downloadChunks.append(self.ChunkData(startPosition=0, responseContent=content))
         self.download_file_path.mkdir(parents=True, exist_ok=True)
-        with Path(self.download_file_path / self.download_file_name).open(mode="ab") as file:
+        with Path(self.download_file_path / self.download_file_name).open(mode="wb") as file:
             for chunk in as_completed(downloadChunks):
                 chunkData = chunk.result()
-                print(chunkData.startPosition)
                 file.seek(chunkData.startPosition)
                 file.write(chunkData.responseContent)
     
@@ -95,8 +89,13 @@ class Downloader:
             start_point: int,
             end_point: int
     ) -> 'Downloader.ChunkData':
-        response = requests.get(self.download_url, headers={"Range": f"bytes={int(start_point)}-{int(end_point)}"})
-        print(start_point)
+        response = requests.get(
+            self.download_url,
+            headers={
+                "Range": f"bytes={int(start_point)}-{int(end_point) - 1}",
+                "Accept-Encoding": "identity"
+            }
+        )
         return self.ChunkData(
             startPosition=int(start_point),
             responseContent=response.content

@@ -2453,7 +2453,7 @@ class SettingsPage(QFrame):
             
             def run(self):
                 where_out = subprocess.run(
-                    ["which" if GetOperationSystemName()[0].lower() != "windows" else "where",
+                    ["which" if GetOperationSystemName().lower() != "windows" else "where",
                      "java"],
                     capture_output=True,
                     check=False).stdout
