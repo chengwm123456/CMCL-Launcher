@@ -1,0 +1,211 @@
+# -*- coding: utf-8 -*-
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+
+from .ToolTip import ToolTip
+
+
+class Widget(QWidget):
+    def __init__(self, *__args):
+        super().__init__(*__args)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_StaticContents)
+        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
+        self.installEventFilter(self)
+        self.installEventFilter(ToolTip(self))
+    
+    def isDisabled(self):
+        return not self.isEnabled()
+    
+    def eventFilter(self, a0, a1):
+        if not (a0.property("baseOpacity") or a0.property("frameOpacity") or a0.property("frameRectAdjustment")):
+            a0.setProperty("baseOpacity", 0.6 if a0.isEnabled() else 0.3)
+            a0.setProperty("frameOpacity", 0.0)
+            a0.setProperty("frameRectAdjustment", min(32, min(a0.width() // 2, a0.height() // 2)))
+        
+        match a1.type():
+            case QEvent.Type.MouseButtonPress | QEvent.Type.MouseMove:
+                a0.setAttribute(Qt.WidgetAttribute.WA_UnderMouse)
+            case QEvent.Type.Enter:
+                if a0.isEnabled():
+                    fadeInAnimation = QPropertyAnimation(a0, b"frameOpacity", a0)
+                    fadeInAnimation.setStartValue(a0.property("frameOpacity"))
+                    fadeInAnimation.setEndValue(1.0)
+                    fadeInAnimation.setDuration(500)
+                    fadeInAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    fadeInAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    adjustmentAnimation = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                    adjustmentAnimation.setStartValue(a0.property("frameRectAdjustment"))
+                    adjustmentAnimation.setEndValue(0)
+                    adjustmentAnimation.setDuration(500)
+                    adjustmentAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    adjustmentAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                else:
+                    opacityAnimationBase = QPropertyAnimation(a0, b"baseOpacity", a0)
+                    opacityAnimationBase.setStartValue(a0.property("baseOpacity"))
+                    opacityAnimationBase.setEndValue(0.3)
+                    opacityAnimationBase.setDuration(500)
+                    opacityAnimationBase.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    opacityAnimationBase.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    fadeOutAnimationFrame = QPropertyAnimation(a0, b"frameOpacity", a0)
+                    fadeOutAnimationFrame.setStartValue(a0.property("frameOpacity"))
+                    fadeOutAnimationFrame.setEndValue(0.0)
+                    fadeOutAnimationFrame.setDuration(500)
+                    fadeOutAnimationFrame.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    fadeOutAnimationFrame.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    adjustmentAnimationFrame = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                    adjustmentAnimationFrame.setStartValue(a0.property("frameRectAdjustment"))
+                    adjustmentAnimationFrame.setEndValue(min(32, min(a0.width() // 2, a0.height() // 2)))
+                    adjustmentAnimationFrame.setDuration(500)
+                    adjustmentAnimationFrame.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    adjustmentAnimationFrame.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            case QEvent.Type.Leave:
+                if not a0.hasFocus():
+                    fadeOutAnimation = QPropertyAnimation(a0, b"frameOpacity", a0)
+                    fadeOutAnimation.setStartValue(a0.property("frameOpacity"))
+                    fadeOutAnimation.setEndValue(0.0)
+                    fadeOutAnimation.setDuration(500)
+                    fadeOutAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    fadeOutAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    adjustmentAnimation = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                    adjustmentAnimation.setStartValue(a0.property("frameRectAdjustment"))
+                    adjustmentAnimation.setEndValue(min(32, min(a0.width() // 2, a0.height() // 2)))
+                    adjustmentAnimation.setDuration(500)
+                    adjustmentAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    adjustmentAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            case QEvent.Type.FocusIn:
+                if a0.isEnabled():
+                    fadeInAnimation = QPropertyAnimation(a0, b"frameOpacity", a0)
+                    fadeInAnimation.setStartValue(a0.property("frameOpacity"))
+                    fadeInAnimation.setEndValue(1.0)
+                    fadeInAnimation.setDuration(500)
+                    fadeInAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    fadeInAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    adjustmentAnimation = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                    adjustmentAnimation.setStartValue(a0.property("frameRectAdjustment"))
+                    adjustmentAnimation.setEndValue(0)
+                    adjustmentAnimation.setDuration(500)
+                    adjustmentAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    adjustmentAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                else:
+                    opacityAnimationBase = QPropertyAnimation(a0, b"baseOpacity", a0)
+                    opacityAnimationBase.setStartValue(a0.property("baseOpacity"))
+                    opacityAnimationBase.setEndValue(0.3)
+                    opacityAnimationBase.setDuration(500)
+                    opacityAnimationBase.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    opacityAnimationBase.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    fadeOutAnimationFrame = QPropertyAnimation(a0, b"frameOpacity", a0)
+                    fadeOutAnimationFrame.setStartValue(a0.property("frameOpacity"))
+                    fadeOutAnimationFrame.setEndValue(0.0)
+                    fadeOutAnimationFrame.setDuration(500)
+                    fadeOutAnimationFrame.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    fadeOutAnimationFrame.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    adjustmentAnimationFrame = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                    adjustmentAnimationFrame.setStartValue(a0.property("frameRectAdjustment"))
+                    adjustmentAnimationFrame.setEndValue(min(32, min(a0.width() // 2, a0.height() // 2)))
+                    adjustmentAnimationFrame.setDuration(500)
+                    adjustmentAnimationFrame.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    adjustmentAnimationFrame.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            case QEvent.Type.FocusOut:
+                if not a0.underMouse():
+                    fadeOutAnimation = QPropertyAnimation(a0, b"frameOpacity", a0)
+                    fadeOutAnimation.setStartValue(a0.property("frameOpacity"))
+                    fadeOutAnimation.setEndValue(0.0)
+                    fadeOutAnimation.setDuration(500)
+                    fadeOutAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    fadeOutAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    adjustmentAnimation = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                    adjustmentAnimation.setStartValue(a0.property("frameRectAdjustment"))
+                    adjustmentAnimation.setEndValue(min(32, min(a0.width() // 2, a0.height() // 2)))
+                    adjustmentAnimation.setDuration(500)
+                    adjustmentAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                    adjustmentAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            case QEvent.Type.EnabledChange:
+                match a0.isEnabled():
+                    case True:
+                        opacityAnimationBase = QPropertyAnimation(a0, b"baseOpacity", a0)
+                        opacityAnimationBase.setStartValue(a0.property("baseOpacity"))
+                        opacityAnimationBase.setEndValue(0.6)
+                        opacityAnimationBase.setDuration(500)
+                        opacityAnimationBase.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        opacityAnimationBase.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    case False:
+                        opacityAnimationBase = QPropertyAnimation(a0, b"baseOpacity", a0)
+                        opacityAnimationBase.setStartValue(a0.property("baseOpacity"))
+                        opacityAnimationBase.setEndValue(0.3)
+                        opacityAnimationBase.setDuration(500)
+                        opacityAnimationBase.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        opacityAnimationBase.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                        fadeOutAnimationFrame = QPropertyAnimation(a0, b"frameOpacity", a0)
+                        fadeOutAnimationFrame.setStartValue(a0.property("frameOpacity"))
+                        fadeOutAnimationFrame.setEndValue(0.0)
+                        fadeOutAnimationFrame.setDuration(500)
+                        fadeOutAnimationFrame.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        fadeOutAnimationFrame.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                        adjustmentAnimationFrame = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                        adjustmentAnimationFrame.setStartValue(a0.property("frameRectAdjustment"))
+                        adjustmentAnimationFrame.setEndValue(min(32, min(a0.width() // 2, a0.height() // 2)))
+                        adjustmentAnimationFrame.setDuration(500)
+                        adjustmentAnimationFrame.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        adjustmentAnimationFrame.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            case QEvent.Type.Paint:
+                if a0.isEnabled():
+                    if a0.property("baseOpacity") != 0.6 and not bool(a0.findChildren(QPropertyAnimation)):
+                        opacityAnimationBase = QPropertyAnimation(a0, b"baseOpacity", a0)
+                        opacityAnimationBase.setStartValue(a0.property("baseOpacity"))
+                        opacityAnimationBase.setEndValue(0.6)
+                        opacityAnimationBase.setDuration(500)
+                        opacityAnimationBase.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        opacityAnimationBase.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    if a0.underMouse() or a0.hasFocus():
+                        if a0.property("frameOpacity") != 1.0 and not bool(a0.findChildren(QPropertyAnimation)):
+                            fadeInAnimation = QPropertyAnimation(a0, b"frameOpacity", a0)
+                            fadeInAnimation.setStartValue(a0.property("frameOpacity"))
+                            fadeInAnimation.setEndValue(1.0)
+                            fadeInAnimation.setDuration(500)
+                            fadeInAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                            fadeInAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                            adjustmentAnimation = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                            adjustmentAnimation.setStartValue(a0.property("frameRectAdjustment"))
+                            adjustmentAnimation.setEndValue(0)
+                            adjustmentAnimation.setDuration(500)
+                            adjustmentAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                            adjustmentAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    else:
+                        if a0.property("frameOpacity") != 0.0 and not bool(a0.findChildren(QPropertyAnimation)):
+                            fadeOutAnimation = QPropertyAnimation(a0, b"frameOpacity", a0)
+                            fadeOutAnimation.setStartValue(a0.property("frameOpacity"))
+                            fadeOutAnimation.setEndValue(0.0)
+                            fadeOutAnimation.setDuration(500)
+                            fadeOutAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                            fadeOutAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                            adjustmentAnimation = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                            adjustmentAnimation.setStartValue(a0.property("frameRectAdjustment"))
+                            adjustmentAnimation.setEndValue(min(32, min(a0.width() // 2, a0.height() // 2)))
+                            adjustmentAnimation.setDuration(500)
+                            adjustmentAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                            adjustmentAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                else:
+                    if ((a0.property("baseOpacity") != 0.3 or a0.property("frameOpacity") != 0.0)
+                            and not bool(a0.findChildren(QPropertyAnimation))):
+                        opacityAnimationBase = QPropertyAnimation(a0, b"baseOpacity", a0)
+                        opacityAnimationBase.setStartValue(a0.property("baseOpacity"))
+                        opacityAnimationBase.setEndValue(0.3)
+                        opacityAnimationBase.setDuration(500)
+                        opacityAnimationBase.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        opacityAnimationBase.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                        fadeOutAnimationFrame = QPropertyAnimation(a0, b"frameOpacity", a0)
+                        fadeOutAnimationFrame.setStartValue(a0.property("frameOpacity"))
+                        fadeOutAnimationFrame.setEndValue(0.0)
+                        fadeOutAnimationFrame.setDuration(500)
+                        fadeOutAnimationFrame.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        fadeOutAnimationFrame.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                        adjustmentAnimationFrame = QPropertyAnimation(a0, b"frameRectAdjustment", a0)
+                        adjustmentAnimationFrame.setStartValue(a0.property("frameRectAdjustment"))
+                        adjustmentAnimationFrame.setEndValue(min(32, min(a0.width() // 2, a0.height() // 2)))
+                        adjustmentAnimationFrame.setDuration(500)
+                        adjustmentAnimationFrame.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        adjustmentAnimationFrame.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+        return super().eventFilter(a0, a1)

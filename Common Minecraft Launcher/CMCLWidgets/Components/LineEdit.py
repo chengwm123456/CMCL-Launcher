@@ -1,0 +1,107 @@
+# -*- coding: utf-8 -*-
+from typing import overload
+
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
+from .Button import CloseButton
+from .ListView import ListView, ItemDelegate
+from ..Windows import RoundedMenu
+from ..ThemeController import *
+
+from .Widget import Widget
+
+
+class LineEdit(QLineEdit, Widget):
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, contents, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
+    
+    def setClearButtonEnabled(self, enable):
+        super().setClearButtonEnabled(enable)
+        if self.findChild(QToolButton):
+            old_button = self.findChild(QToolButton)
+            new_button = CloseButton(old_button.parent())
+            new_button.setFixedSize(old_button.size())
+            new_button.move(old_button.x(), old_button.y())
+            new_button.setEnabled(bool(self.text()))
+            new_button.setProperty("baseOpacity", 0.3 if not self.text() else 0.6)
+            new_button.clicked.connect(old_button.clicked.emit)
+            old_button.setVisible(False)
+        else:
+            self.findChild(CloseButton).destroy()
+    
+    def setCompleter(self, completer):
+        super().setCompleter(completer)
+        if completer:
+            completer.setWidget(self)
+            completerMenu = ListView(self)
+            completerMenu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            completerMenu.setWindowFlags(
+                Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint |
+                Qt.WindowType.Popup | Qt.WindowType.Sheet
+            )
+            completer.setPopup(completerMenu)
+            completer.popup().setItemDelegate(ItemDelegate(completerMenu))
+    
+    def paintEvent(self, a0):
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        if self.findChild(CloseButton) and self.findChild(QToolButton):
+            old_button = self.findChild(QToolButton)
+            new_button = self.findChild(CloseButton)
+            new_button.setFixedSize(QSize(old_button.height(), old_button.height()))
+            new_button.move(old_button.x(), old_button.y())
+            new_button.setEnabled(bool(self.text()))
+            old_button.setVisible(False)
+            
+            if new_button.underMouse():
+                self.setCursor(Qt.CursorShape.ArrowCursor)
+            else:
+                self.setCursor(Qt.CursorShape.IBeamCursor)
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        painter.save()
+        painter.setOpacity(self.property("baseOpacity"))
+        painter.setPen(getBorderColour(is_highlight=self.hasFocus() and self.isEnabled()))
+        painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
+        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
+        painter.restore()
+        
+        if self.property("frameOpacity"):
+            painter.save()
+            painter.setOpacity(self.property("frameOpacity"))
+            painter.setPen(getBorderColour(is_highlight=True))
+            painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
+            painter.drawRoundedRect(
+                self.rect().adjusted(
+                    1 + self.property("frameRectAdjustment"),
+                    1 + self.property("frameRectAdjustment"),
+                    -(1 + self.property("frameRectAdjustment")),
+                    -(1 + self.property("frameRectAdjustment"))
+                ), 16, 16
+            )
+            painter.restore()
+        
+        self.setStyleSheet(
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))}); background: transparent; border: none; padding: 5px;")
+        op = QStyleOptionFrame()
+        op.initFrom(self)
+        self.initStyleOption(op)
+        super().paintEvent(a0)
+    
+    def contextMenuEvent(self, e):
+        super().contextMenuEvent(e)
+        menus = self.findChildren(QMenu)
+        if menus:
+            menu = menus[-1]
+            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
+            RoundedMenu.updateQSS(menu)
+            menu.popup(QCursor.pos())

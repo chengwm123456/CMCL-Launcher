@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <path d="M 10 22 A 25 25, 0, 1, 0, 54 22" stroke="black" stroke-width="10" stroke-linecap="round"
+          fill="transparent"/>
+    <path d="M 32 7 V 35" stroke="skyblue" stroke-width="10" stroke-linecap="round"
+          fill="transparent"/>
+</svg>

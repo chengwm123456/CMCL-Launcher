@@ -1,0 +1,27 @@
+.fleet
+.idea
+.venv
+config
+__pycache__
+CMCL-zh-cn.qm
+CMCL-zh-cn.ts
+CMCL_Attributes.json
+current_user.DAT
+settings.CMCL
+user_data.DAT
+error.log
+latest.log
+initAnalysis.log
+recommand mods
+recommand mods (optimise)
+settings.json
+text_flw.py
+settings.py
+settings.dat
+Thanks_data.json
+.settings.json
+.players
+
+newdesign.py
+autoupdate.py
+OreUI
