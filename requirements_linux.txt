@@ -13,6 +13,6 @@ PyQt6-WebEngine==6.8.0
 PyQt6-WebEngine-Qt6==6.8.2
 PyQt6_sip==13.10.0
 python-dateutil==2.9.0.post0
-requests==2.32.3
+requests==2.32.4
 six==1.17.0
-urllib3==2.3.0
+urllib3==2.5.0

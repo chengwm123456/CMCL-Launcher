@@ -47,7 +47,7 @@ class MicrosoftPlayer(OnlinePlayer):
 
 class OfflinePlayer(Player):
     @classmethod
-    def create_offline_player(cls, user_name, has_mc):
+    def create_offline_player(cls, user_name, has_mc, exp=86400):
         user_uuid = str(uuid.uuid4())
         access_token = jwt.encode(
             payload={
@@ -73,7 +73,7 @@ class OfflinePlayer(Player):
                     }
                 ],
                 "nbf": round(time.time()),
-                "exp": round(time.time()) + 86400,
+                "exp": round(time.time()) + exp,
                 "iat": round(time.time())
             },
             key=secret_key,

@@ -11,22 +11,27 @@ from email.message import EmailMessage
 
 class Downloader:
     @dataclass(frozen=True)
-    class ChunkData:
-        startPosition: int
+    class Range:
+        startRange: int
+        endRange: int
+    
+    @dataclass(frozen=True)
+    class DownloadedChunk:
+        chunkRange: 'Downloader.Range'
         responseContent: bytes
     
     def __init__(
             self,
             download_url: Union[str, LiteralString],
-            download_file_name: Union[str, Path, PurePath, os.PathLike, LiteralString] = "",
+            download_file_name: Optional[Union[str, Path, PurePath, os.PathLike, LiteralString]] = "",
             download_file_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = ".",
-            maximum_threads: Union[int, str] = 64,
+            maximum_threads: Union[int, str] = 8,
             chunk_size: Union[int, str] = 1024 * 1024 * 8
     ):
         self.download_url = str(download_url)
         self.download_file_name = Path(download_file_name)
         self.download_file_path = Path(download_file_path)
-        self.__maximumThreads = int(maximum_threads)
+        self.__maximumThreads = int(maximum_threads or 8)
         self.__chunkSize = max(1024, int(chunk_size))
     
     @property
@@ -64,25 +69,24 @@ class Downloader:
                     headResponse.raise_for_status()
                     requestHeaders = headResponse.headers
         
+        contentLength = int(requestHeaders.get("Content-Length", 0))
+        
         if requestHeaders.get("Content-Disposition"):
-            dispositions = requestHeaders.get("Content-Disposition")
             msg = EmailMessage()
-            msg['Content-Disposition'] = dispositions
+            msg["Content-Disposition"] = requestHeaders.get("Content-Disposition")
             params = msg["Content-Disposition"].params
             if not self.download_file_name:
                 self.download_file_name = params["filename"]
         
         rangeRequestState = requestHeaders.get("Accept-Ranges", "none").lower()
         if rangeRequestState != "none":
-            contentLength = int(requestHeaders.get("Content-Length", 0))
             with ThreadPoolExecutor(max_workers=self.maximumThreads) as executor:
                 startPosition = 0
                 while startPosition < contentLength:
                     downloadedChunks.append(
                         executor.submit(
                             self.__downloadChunk,
-                            startPosition,
-                            min(startPosition + self.__chunkSize, contentLength)
+                            self.Range(startPosition, min(startPosition + self.__chunkSize, contentLength))
                         )
                     )
                     startPosition += self.__chunkSize
@@ -90,33 +94,37 @@ class Downloader:
         else:
             with requests.get(self.download_url, stream=True) as response:
                 response.raise_for_status()
-                downloadedChunks.append(self.ChunkData(startPosition=0, responseContent=response.content))
+                downloadedChunks.append(
+                    self.DownloadedChunk(
+                        chunkRange=self.Range(startRange=0, endRange=contentLength),
+                        responseContent=response.content
+                    )
+                )
         self.download_file_path.mkdir(parents=True, exist_ok=True)
         with Path(self.download_file_path / self.download_file_name).absolute().open(mode="wb") as file:
             for chunkData in downloadedChunks:
-                file.seek(chunkData.startPosition)
+                file.seek(chunkData.chunkRange.startRange)
                 file.write(chunkData.responseContent)
     
     def __downloadChunk(
             self,
-            start_point: int,
-            end_point: int
-    ) -> 'Downloader.ChunkData':
-        response = requests.get(
-            self.download_url,
-            headers={
-                "Range": f"bytes={int(start_point)}-{int(end_point) - 1}",
-                "Accept-Encoding": "identity"
-            }
-        )
-        response.raise_for_status()
-        return self.ChunkData(
-            startPosition=int(start_point),
-            responseContent=response.content
-        )
+            range: 'Downloader.Range'
+    ) -> 'Downloader.DownloadedChunk':
+        with requests.get(
+                self.download_url,
+                headers={
+                    "Range": f"bytes={int(range.startRange)}-{int(range.endRange) - 1}",
+                    "Accept-Encoding": "identity"
+                }
+        ) as response:
+            response.raise_for_status()
+            return self.DownloadedChunk(
+                chunkRange=range,
+                responseContent=response.content
+            )
     
     def __enter__(self) -> 'Downloader':
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.downloadFile()

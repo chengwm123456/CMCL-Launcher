@@ -6,7 +6,7 @@ from .Player import MicrosoftPlayer
 import requests
 
 
-def MicrosoftPlayerLogin(token: str = "", is_refresh_login: bool = False) -> Tuple[str, MicrosoftPlayer, Optional[str]]:
+def MicrosoftPlayerLogin(token: str = "", is_refresh_login: bool = False) -> Tuple[int, MicrosoftPlayer, Optional[str]]:
     user_name = uuid = ""
     has_mc = False
     if is_refresh_login:
@@ -31,6 +31,7 @@ def MicrosoftPlayerLogin(token: str = "", is_refresh_login: bool = False) -> Tup
         headers={"Content-Type": "application/x-www-form-urlencoded"},
         verify=True
     )
+    response.raise_for_status()
     if response.json().get('access_token'):
         access_token_1 = response.json()['access_token']
         refresh_token = response.json()['refresh_token']
@@ -49,7 +50,9 @@ def MicrosoftPlayerLogin(token: str = "", is_refresh_login: bool = False) -> Tup
         "https://user.auth.xboxlive.com/user/authenticate",
         json=json_in_step_2,
         headers={"Content-Type": "application/json", "Accept": "application/json"},
-        verify=True)
+        verify=True
+    )
+    response_2.raise_for_status()
     xbl_token = response_2.json()["Token"]
     uhs = response_2.json()["DisplayClaims"]["xui"][0]["uhs"]
     json_in_step_3 = {
@@ -68,6 +71,7 @@ def MicrosoftPlayerLogin(token: str = "", is_refresh_login: bool = False) -> Tup
         headers={"Content-Type": "application/json", "Accept": "application/json"},
         verify=True
     )
+    response_3.raise_for_status()
     xsts_token = response_3.json()["Token"]
     uhs2 = response_3.json()["DisplayClaims"]["xui"][0]["uhs"]
     if uhs != uhs2:
@@ -77,13 +81,15 @@ def MicrosoftPlayerLogin(token: str = "", is_refresh_login: bool = False) -> Tup
         json={"identityToken": f"XBL3.0 x={uhs};{xsts_token}"},
         verify=True
     )
+    response_4.raise_for_status()
     minecraft_access_token = response_4.json().get("access_token")
     response_profile = requests.get(
         "https://api.minecraftservices.com/minecraft/profile",
         headers={"Authorization": f"Bearer {minecraft_access_token}"},
         verify=True
     )
-    if response_profile.json().get("id") is not None and response_profile.json().get("name") is not None:
+    response_profile.raise_for_status()
+    if response_profile.json().get("id") and response_profile.json().get("name"):
         uuid = response_profile.json()["id"]
         user_name = response_profile.json()["name"]
     response_mc = requests.get(
@@ -91,6 +97,7 @@ def MicrosoftPlayerLogin(token: str = "", is_refresh_login: bool = False) -> Tup
         headers={"Authorization": f"Bearer {minecraft_access_token}"},
         verify=True
     )
-    if response_mc.json()["items"]:
+    response_mc.raise_for_status()
+    if response_mc.text:
         has_mc = True
     return 0, MicrosoftPlayer(user_name, uuid, minecraft_access_token, has_mc), refresh_token

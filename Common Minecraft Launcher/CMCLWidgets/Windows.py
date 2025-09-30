@@ -247,7 +247,6 @@ class Window(FramelessWindow):
         super().__init__(parent)
         self.titleBar = TitleBar(self)
         self.setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, True)
-        print(self.windowFlags() & Qt.WindowType.WindowMaximizeButtonHint)
     
     def resizeEvent(self, a0):
         if hasattr(self, "titleBar"):

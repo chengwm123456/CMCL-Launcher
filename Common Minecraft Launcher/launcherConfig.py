@@ -34,14 +34,18 @@ def createSettingsFile():
                         235
                     ]
                 },
-                "MinecraftPath": "."
+                "MinecraftPath": ".",
+                "DownloadSettings": {
+                    "DownloadThreadsCount": 8,
+                    "DownloadChunkSize": 1024
+                }
             }
         }
     }, indent=4), encoding="utf-8")
 
 
 def createVersionConfigFile(file_path, version_name, version_path):
-    Path(file_path).write_text(json.dumps({
+    Path(file_path / "version.cfg").write_text(json.dumps({
         "Version": version_name,
         "VersionAlias": version_path,
         "LaunchConfig": {

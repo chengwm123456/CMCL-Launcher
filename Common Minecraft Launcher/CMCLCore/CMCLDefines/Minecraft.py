@@ -3,58 +3,137 @@ import os
 from typing import *
 
 import json
-from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..GetOperationSystem import GetOperationSystemInMojangAPI
 
 
-@dataclass(slots=True, unsafe_hash=True)
 class Minecraft:
-    mc_gameVersion: Union[str, LiteralString] = field(default="")
-    mc_inheritsFrom: Optional[str] = None
-    mc_gamePlatformName: Union[str, LiteralString] = field(
-        default_factory=lambda: GetOperationSystemInMojangAPI()[0])
-    mc_gamePlatformMachine: Union[str, LiteralString] = field(
-        default_factory=lambda: GetOperationSystemInMojangAPI()[1])
-    mc_gameWorkDir: Union[str, os.PathLike[str], Path, LiteralString] = ""
-    mc_gamePlayDir: Union[str, os.PathLike[str], Path, LiteralString] = ""
-    mc_gameJarFile: Union[str, os.PathLike[str], Path, LiteralString] = ""
-    mc_gameJsonFile: Union[str, os.PathLike[str], Path, LiteralString] = ""
-    mc_gameNativesDir: Union[str, os.PathLike[str], Path, LiteralString] = ""
-    mc_gameAssetsDir: Union[str, os.PathLike[str], Path, LiteralString] = ""
-    mc_gameLibrariesDir: Union[str, os.PathLike[str], Path, LiteralString] = ""
-    mc_gameSeparation: bool = False
+    __slots__ = (
+        "__mc_gameVersion",
+        "__mc_gameWorkDir", "__mc_gamePlayDir",
+        "__mc_gameJarFile", "__mc_gameJsonFile",
+        "__mc_gameNativesDir", "__mc_gameAssetsDir", "__mc_gameLibrariesDir",
+        "__mc_gameSeparation"
+    )
     
-    def __post_init__(self):
-        self.mc_gameVersion = str(self.mc_gameVersion)
-        self.mc_gamePlatformName = str(self.mc_gamePlatformName)
-        self.mc_gamePlatformMachine = str(self.mc_gamePlatformMachine)
-        self.mc_gameWorkDir = Path(self.mc_gameWorkDir).absolute()
-        self.mc_gamePlayDir = self.mc_gameWorkDir
-        self.mc_gameJarFile = Path(self.mc_gameJarFile).absolute()
-        self.mc_gameJsonFile = Path(self.mc_gameJsonFile).absolute()
-        self.mc_gameNativesDir = Path(self.mc_gameNativesDir).absolute()
-        self.mc_gameAssetsDir = Path(self.mc_gameAssetsDir).absolute()
-        self.mc_gameLibrariesDir = Path(self.mc_gameLibrariesDir).absolute()
-        self.mc_gameSeparation = bool(self.mc_gameSeparation)
-        if self.mc_gameSeparation:
-            self.mc_gamePlayDir = self.mc_gameWorkDir / "versions" / self.mc_gameVersion
-        
-        jsonFile = self.mc_gameJsonFileContent
-        if jsonFile:
-            self.mc_inheritsFrom = jsonFile.get("inheritsFrom")
-            if self.mc_inheritsFrom:
-                self.mc_gameJarFile = self.mc_gameJarFile.parent.parent / self.mc_inheritsFrom / f"{self.mc_inheritsFrom}.jar"
+    def __init__(
+            self,
+            mc_gameVersion: Union[str, LiteralString] = "",
+            mc_gameWorkDir: Union[str, os.PathLike[str], Path, LiteralString] = "",
+            mc_gameJarFile: Union[str, os.PathLike[str], Path, LiteralString] = "",
+            mc_gameJsonFile: Union[str, os.PathLike[str], Path, LiteralString] = "",
+            mc_gameNativesDir: Union[str, os.PathLike[str], Path, LiteralString] = "",
+            mc_gameAssetsDir: Union[str, os.PathLike[str], Path, LiteralString] = "",
+            mc_gameLibrariesDir: Union[str, os.PathLike[str], Path, LiteralString] = "",
+            mc_gameSeparation: bool = False
+    ):
+        self.__mc_gameVersion = str(mc_gameVersion)
+        self.__mc_gameWorkDir = Path(mc_gameWorkDir).resolve()
+        self.__mc_gamePlayDir = Path(mc_gameWorkDir).resolve()
+        self.__mc_gameJarFile = Path(mc_gameJarFile).resolve()
+        self.__mc_gameJsonFile = Path(mc_gameJsonFile).resolve()
+        self.__mc_gameNativesDir = Path(mc_gameNativesDir).resolve()
+        self.__mc_gameAssetsDir = Path(mc_gameAssetsDir).resolve()
+        self.__mc_gameLibrariesDir = Path(mc_gameLibrariesDir).resolve()
+        self.__mc_gameSeparation = bool(mc_gameSeparation)
+        if self.__mc_gameSeparation:
+            self.__mc_gamePlayDir = self.__mc_gameWorkDir / "versions" / self.__mc_gameVersion
     
     def __bool__(self) -> bool:
         return bool(
-            ((self.mc_gameVersion and self.mc_inheritsFrom)
+            (((self.mc_gameVersion and self.mc_inheritsFrom) or self.mc_gameVersion)
              and self.mc_gamePlatformName and self.mc_gamePlatformMachine
              and self.mc_gameWorkDir and self.mc_gamePlayDir
              and self.mc_gameJarFile and self.mc_gameJsonFile
              and self.mc_gameNativesDir and self.mc_gameAssetsDir and self.mc_gameLibrariesDir)
         )
+    
+    @property
+    def mc_gameVersion(self) -> str:
+        return str(self.__mc_gameVersion)
+    
+    @mc_gameVersion.setter
+    def mc_gameVersion(self, value: Union[str, LiteralString]):
+        self.__mc_gameVersion = value
+    
+    @property
+    def mc_inheritsFrom(self) -> Optional[str]:
+        return json.loads(Path(self.mc_gameJsonFile).read_text(encoding="utf-8")).get("inheritsFrom")
+    
+    @property
+    def mc_gamePlatformName(self) -> str:
+        return GetOperationSystemInMojangAPI()[0]
+    
+    @property
+    def mc_gamePlatformMachine(self) -> str:
+        return GetOperationSystemInMojangAPI()[1]
+    
+    @property
+    def mc_gameWorkDir(self) -> Path:
+        return Path(self.__mc_gameWorkDir)
+    
+    @mc_gameWorkDir.setter
+    def mc_gameWorkDir(self, value: Union[str, os.PathLike[str], Path, LiteralString]):
+        self.__mc_gameWorkDir = Path(value).resolve()
+    
+    @property
+    def mc_gamePlayDir(self) -> Path:
+        return Path(self.__mc_gamePlayDir)
+    
+    @mc_gamePlayDir.setter
+    def mc_gamePlayDir(self, value: Union[str, os.PathLike[str], Path, LiteralString]):
+        self.__mc_gamePlayDir = Path(value).resolve()
+    
+    @property
+    def mc_gameJarFile(self) -> Path:
+        return Path(self.__mc_gameJarFile)
+    
+    @mc_gameJarFile.setter
+    def mc_gameJarFile(self, value: Union[str, os.PathLike[str], Path, LiteralString]):
+        self.__mc_gameJarFile = Path(value).resolve()
+    
+    @property
+    def mc_gameJsonFile(self) -> Path:
+        return Path(self.__mc_gameJsonFile)
+    
+    @mc_gameJsonFile.setter
+    def mc_gameJsonFile(self, value: Union[str, os.PathLike[str], Path, LiteralString]):
+        self.__mc_gameJsonFile = Path(value).resolve()
+    
+    @property
+    def mc_gameNativesDir(self) -> Path:
+        return Path(self.__mc_gameNativesDir)
+    
+    @mc_gameNativesDir.setter
+    def mc_gameNativesDir(self, value: Union[str, os.PathLike[str], Path, LiteralString]):
+        self.__mc_gameNativesDir = Path(value).resolve()
+    
+    @property
+    def mc_gameAssetsDir(self) -> Path:
+        return Path(self.__mc_gameAssetsDir)
+    
+    @mc_gameAssetsDir.setter
+    def mc_gameAssetsDir(self, value: Union[str, os.PathLike[str], Path, LiteralString]):
+        self.__mc_gameAssetsDir = Path(value).resolve()
+    
+    @property
+    def mc_gameLibrariesDir(self) -> Path:
+        return Path(self.__mc_gameLibrariesDir)
+    
+    @mc_gameLibrariesDir.setter
+    def mc_gameLibrariesDir(self, value: Union[str, os.PathLike[str], Path, LiteralString]):
+        self.__mc_gameLibrariesDir = Path(value).resolve()
+    
+    @property
+    def mc_gameSeparation(self) -> bool:
+        return bool(self.__mc_gameSeparation)
+    
+    @mc_gameSeparation.setter
+    def mc_gameSeparation(self, value: bool):
+        self.__mc_gameSeparation = bool(value)
+        if self.__mc_gameSeparation:
+            self.__mc_gamePlayDir = self.__mc_gameWorkDir / "versions" / self.__mc_gameVersion
     
     @property
     def mc_gameJsonFileContent(self) -> Dict[Any, Any]:

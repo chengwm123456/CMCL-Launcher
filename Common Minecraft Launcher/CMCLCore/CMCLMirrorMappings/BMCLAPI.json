@@ -1,10 +1,9 @@
-// 这是官方 API -> BMCLAPI 的映射，为以后的镜像源做准备
 {
-  // Mojang API
   "launchermeta.mojang.com": "bmclapi2.bangbang93.com",
+  "piston-meta.mojang.com": "bmclapi2.bangbang93.com",
+  "piston-data.mojang.com": "bmclapi2.bangbang93.com",
   "resources.download.minecraft.net": "bmclapi2.bangbang93.com/assets",
   "libraries.minecraft.net": "bmclapi2.bangbang93.com/maven",
-  // Fabric API
   "meta.fabricmc.net": "bmclapi2.bangbang93.com/fabric-meta",
   "maven.fabricmc.net": "bmclapi2.bangbang93.com/maven"
 }

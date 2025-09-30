@@ -4,9 +4,9 @@ from ctypes.wintypes import *
 from enum import IntEnum
 
 
-class PWINDOWPOS(ctypes.Structure):
+class WINDOWPOS(ctypes.Structure):
     _fields_ = [
-        ('hWnd', wintypes.HWND),
+        ('hwnd', wintypes.HWND),
         ('hwndInsertAfter', wintypes.HWND),
         ('x', ctypes.c_int),
         ('y', ctypes.c_int),
@@ -16,11 +16,17 @@ class PWINDOWPOS(ctypes.Structure):
     ]
 
 
+PWINDOWPOS = POINTER(WINDOWPOS)
+
+
 class NCCALCSIZE_PARAMS(ctypes.Structure):
     _fields_ = [
         ('rgrc', wintypes.RECT * 3),
-        ('lppos', ctypes.POINTER(PWINDOWPOS))
+        ('lppos', PWINDOWPOS)
     ]
+
+
+LPNCCALCSIZE_PARAMS = POINTER(NCCALCSIZE_PARAMS)
 
 
 class MARGINS(ctypes.Structure):

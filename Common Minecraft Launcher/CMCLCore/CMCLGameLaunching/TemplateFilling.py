@@ -8,8 +8,9 @@ from ..CMCLDefines import Player, Minecraft
 
 
 def Quote(string: str) -> str:
+    string = str(string)
     quotedString = shlex.quote(string)
-    if (quotedString[0], quotedString[-1]) == ("'", "'"):
+    if quotedString[0] == quotedString[-1] == "'":
         quotedString = quotedString[1:-1]
     return f'"{quotedString}"'
 
@@ -35,19 +36,48 @@ def MinecraftArgumentTemplateFilling(
         assetsIndex: str,
         versionType: str = "release"
 ) -> str:
-    argument = argument.replace("${auth_player_name}", f'"{player.player_playerName}"')
-    argument = argument.replace("${version_name}", f'"{minecraft.mc_gameVersion}"')
-    argument = argument.replace("${game_directory}", f'"{minecraft.mc_gamePlayDir}"')
     argument = argument.replace(
-        "${assets_root}", f'"{minecraft.mc_gameAssetsDir}"').replace("${game_assets}",
-                                                                     f'"{minecraft.mc_gameAssetsDir}"')
-    argument = argument.replace("${assets_index_name}", f'"{assetsIndex}"')
-    argument = argument.replace("${auth_uuid}", f'"{player.player_playerUUID}"')
-    argument = argument.replace("${auth_access_token}", f'"{player.player_accessToken}"').replace(
-        "${auth_session}", f'"{player.player_accessToken}"').replace(
-        "${auth_access_token}", f'"{player.player_accessToken}"')
+        "${auth_player_name}",
+        f"{Quote(player.player_playerName)}"
+    )
+    argument = argument.replace(
+        "${version_name}",
+        f"{Quote(minecraft.mc_gameVersion)}"
+    )
+    argument = argument.replace(
+        "${game_directory}",
+        f"{Quote(minecraft.mc_gamePlayDir)}"
+    )
+    argument = argument.replace(
+        "${assets_root}",
+        f"{Quote(minecraft.mc_gameAssetsDir)}"
+    ).replace(
+        "${game_assets}",
+        f"{Quote(minecraft.mc_gameAssetsDir)}"
+    )
+    argument = argument.replace(
+        "${assets_index_name}",
+        f"{Quote(assetsIndex)}"
+    )
+    argument = argument.replace(
+        "${auth_uuid}",
+        f"{Quote(player.player_playerUUID)}"
+    )
+    argument = argument.replace(
+        "${auth_access_token}",
+        f"{Quote(player.player_accessToken)}"
+    ).replace(
+        "${auth_session}",
+        f"{Quote(player.player_accessToken)}"
+    )
     argument = argument.replace("${clientid}", f"${{clientid}}")
     argument = argument.replace("${auth_xuid}", f"${{auth_xuid}}")
-    argument = argument.replace("${user_type}", f'"{player.player_accountType[1]}"')
-    argument = argument.replace("${version_type}", f'"{versionType}"')
+    argument = argument.replace(
+        "${user_type}",
+        f"{Quote(player.player_accountType[1])}"
+    )
+    argument = argument.replace(
+        "${version_type}",
+        f"{Quote(versionType)}"
+    )
     return argument

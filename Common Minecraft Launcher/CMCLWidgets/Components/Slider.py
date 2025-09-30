@@ -80,19 +80,24 @@ class Slider(QSlider, Widget):
             -self.property("frameRectAdjustment"),
             -self.property("frameRectAdjustment")
         )
+        painter.setOpacity(self.property("baseOpacity"))
         match self.orientation():
             case Qt.Orientation.Horizontal:
                 painter.drawLine(QLine(QPoint(2, self.height() // 2), QPoint(self.width() - 2, self.height() // 2)))
-                painter.drawLine(QLine(
-                    QPoint(2 + frameRect.x(), frameRect.height() // 2 + frameRect.y()),
-                    QPoint(frameRect.width() - 2 + frameRect.x(), frameRect.height() // 2 + frameRect.y())
-                ))
+                if self.property("frameOpacity"):
+                    painter.setOpacity(self.property("frameOpacity"))
+                    painter.drawLine(QLine(
+                        QPoint(2 + frameRect.x(), frameRect.height() // 2 + frameRect.y()),
+                        QPoint(frameRect.width() - 2 + frameRect.x(), frameRect.height() // 2 + frameRect.y())
+                    ))
             case Qt.Orientation.Vertical:
                 painter.drawLine(QLine(QPoint(self.width() // 2, 2), QPoint(self.width() // 2, self.height() - 2)))
-                painter.drawLine(QLine(
-                    QPoint(frameRect.width() // 2 + frameRect.x(), 2 + frameRect.y()),
-                    QPoint(frameRect.width() // 2 + frameRect.x(), frameRect.height() // 2 + frameRect.y())
-                ))
+                if self.property("frameOpacity"):
+                    painter.setOpacity(self.property("frameOpacity"))
+                    painter.drawLine(QLine(
+                        QPoint(frameRect.width() // 2 + frameRect.x(), 2 + frameRect.y()),
+                        QPoint(frameRect.width() // 2 + frameRect.x(), frameRect.height() // 2 + frameRect.y())
+                    ))
         painter.restore()
         
         rect = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, op, QStyle.SubControl.SC_SliderHandle,
@@ -109,7 +114,7 @@ class Slider(QSlider, Widget):
             painter.save()
             op2 = QStyleOptionSlider()
             op2.initFrom(self)
-            self.initStyleOption(op)
+            self.initStyleOption(op2)
             op2.rect = self.rect().adjusted(
                 self.property("frameRectAdjustment"),
                 self.property("frameRectAdjustment"),

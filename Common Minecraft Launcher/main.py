@@ -19,6 +19,8 @@ import os
 import subprocess
 import webbrowser
 
+import logging
+
 from CMCLWidgets import *
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 
@@ -31,6 +33,8 @@ from CMCLCore.CMCLGameDownloading import DownloadMinecraft
 from CMCLCore.GetOperationSystem import GetOperationSystemName
 
 import requests
+
+import psutil
 
 from CMCLModding.GetMods import GetMods, ListModVersions, GetOneMod
 from CMCLModding.DownloadMods import DownloadMod
@@ -845,7 +849,9 @@ class DownloadPage(QFrame):
                     self.version = version
                 
                 def run(self):
-                    DownloadMinecraft(self.minecraft_path, self.version, self.version)
+                    DownloadMinecraft(self.minecraft_path, self.version, self.version,
+                                      settings["LauncherSettings"]["DownloadSettings"]["DownloadThreadsCount"],
+                                      settings["LauncherSettings"]["DownloadSettings"]["DownloadChunkSize"])
                     createVersionConfigFile(self.minecraft_path / "versions" / self.version, self.version, self.version)
             
             class DownloadConfirmation(MaskedDialogue):
@@ -996,7 +1002,7 @@ jar 下载位置在：
                 self.form_4_Label.setText("版本文件夹名")
                 self.form_4_LineEdit.setToolTip("默认是当前下载的版本，如果遇到版本已存在可以尝试修改此项")
                 self.groupBox_3.setTitle("其他链接")
-                self.wikiVersionPage.setText(f"Minecraft Wiki 上的 {self.version}")
+                self.wikiVersionPage.setText("在 Minecraft Wiki 上查看该版本")
                 self.clientJarURL.setText("Minecraft 客户端下载链接")
                 self.serverJarURL.setText("Minecraft 服务端下载链接")
                 self.startDownloadBtn.setText("下载")
@@ -1318,11 +1324,12 @@ jar 下载位置在：
         self.page1.setText("原版游戏")
         menu = RoundedMenu(self.page1)
         action1 = QAction(menu)
-        action1.setIcon(QIcon(f":/Reload-{'black' if getTheme() == Theme.Light else 'white'}.avg"))
         action1.setText("重新加载")
         action1.triggered.connect(self.page1Frame.reloadVersions)
         menu.addAction(action1)
         self.page1.setMenu(menu)
+        
+        self.updateIcon()
     
     def setCurrentPage(self, page_id=-1):
         page_seq = (self.page1,)
@@ -1334,6 +1341,14 @@ jar 下载位置在：
             page_frame = page_frame_dict[page]
             page.setChecked(True)
             self.stackedWidget.setCurrentWidget(page_frame)
+    
+    def postToggleTheme(self):
+        self.updateIcon()
+    
+    def updateIcon(self):
+        colour = "black" if getTheme() == Theme.Light else "white"
+        page1Menu = self.page1.menu()
+        page1Menu.actions()[0].setIcon(QIcon(f":/Reload-{colour}.svg"))
     
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
@@ -1681,6 +1696,68 @@ JVM 参数就是：
             self.form_1_ComboBox.lineEdit().setMinimumHeight(
                 self.form_1_ComboBox.height() - (self.form_1_ComboBox.lineEdit().y() * 2))
     
+    class LauncherSettings(QFrame):
+        def __init__(self, parent):
+            super().__init__(parent)
+            self.mainLayout = QVBoxLayout(self)
+            self.scrollArea = ScrollArea(self)
+            self.mainLayout.addWidget(self.scrollArea)
+            
+            self.scrollAreaWidgetContents = QWidget()
+            
+            self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
+            
+            self.groupBox = GroupBox(self.scrollAreaWidgetContents)
+            self.verticalLayout.addWidget(self.groupBox)
+            
+            self.formLayout = QFormLayout(self.groupBox)
+            
+            self.form_1_Label = Label(self.groupBox)
+            self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.form_1_Label)
+            
+            self.form_1_Slider = Slider(Qt.Orientation.Horizontal, self.groupBox)
+            self.form_1_Slider.setMinimum(1)
+            self.form_1_Slider.setMaximum(max(1, psutil.cpu_count(logical=False) - 1))
+            self.form_1_Slider.setValue(min(settings["LauncherSettings"]["DownloadSettings"]["DownloadThreadsCount"],
+                                            self.form_1_Slider.maximum()))
+            self.form_1_Slider.valueChanged.connect(self.downloadThreadsCountChanged)
+            self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_1_Slider)
+            
+            self.form_2_Label = Label(self.groupBox)
+            self.formLayout.setWidget(1, QFormLayout.ItemRole.LabelRole, self.form_2_Label)
+            
+            self.form_2_Slider = Slider(Qt.Orientation.Horizontal, self.groupBox)
+            self.form_2_Slider.setMinimum(1)
+            self.form_2_Slider.setMaximum(2048)
+            self.form_2_Slider.setValue(settings["LauncherSettings"]["DownloadSettings"]["DownloadChunkSize"])
+            self.form_2_Slider.valueChanged.connect(self.downloadChunkSizeChanged)
+            self.formLayout.setWidget(1, QFormLayout.ItemRole.FieldRole, self.form_2_Slider)
+            
+            self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+            self.verticalLayout.addItem(self.verticalSpacer)
+            
+            self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+            self.scrollArea.setWidgetResizable(True)
+            
+            app.registerRetranslateFunction(self.retranslateUI)
+            self.retranslateUI()
+        
+        def retranslateUI(self):
+            self.groupBox.setTitle("下载设置")
+            self.form_1_Label.setText("下载线程数")
+            self.form_1_Slider.setToolTip(
+                f"设置下载游戏依赖库、资源以及多线程下载器下载时最多的线程数，默认为 {min(8, self.form_1_Slider.maximum())}。\n这个的取值范围为 1 ~ {self.form_1_Slider.maximum()}，其中 1 表示单线程，也就是仅一条线程。\n线程数拉的越高，理论上下载速度越快，但是线程数太高会造成**严重的卡顿**。")
+            self.form_2_Label.setText("下载区块大小（单位：KB）")
+            self.form_2_Slider.setToolTip(
+                "设置多线程下载器下载时每一个下载区块的大小，范围为 1KB ~ 2MB（2048KB）。\n区块大小越大，使用的线程会变少，同时下载单个区块的时间可能会变长，反之亦然。\n需要自行平衡，这里默认值为 1MB。")
+        
+        def downloadThreadsCountChanged(self, value):
+            settings["LauncherSettings"]["DownloadSettings"]["DownloadThreadsCount"] = min(value,
+                                                                                           self.form_1_Slider.maximum())
+        
+        def downloadChunkSizeChanged(self, value):
+            settings["LauncherSettings"]["DownloadSettings"]["DownloadChunkSize"] = value
+    
     class PersonalisationSettings(QFrame):
         def __init__(self, parent):
             super().__init__(parent)
@@ -1876,6 +1953,12 @@ JVM 参数就是：
         self.page2.setAutoExclusive(True)
         self.page2.released.connect(lambda: self.setCurrentPage(1))
         self.horizontalLayout.addWidget(self.page2)
+        self.page3 = PushButton(self.topNavigationPanel)
+        self.page3.setMinimumHeight(32)
+        self.page3.setCheckable(True)
+        self.page3.setAutoExclusive(True)
+        self.page3.released.connect(lambda: self.setCurrentPage(2))
+        self.horizontalLayout.addWidget(self.page3)
         self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.horizontalLayout.addItem(self.horizontalSpacer)
         
@@ -1884,21 +1967,26 @@ JVM 参数就是：
         self.page1Frame = self.LaunchSettings(self.stackedWidget)
         self.stackedWidget.addWidget(self.page1Frame)
         
-        self.page2Frame = self.PersonalisationSettings(self.stackedWidget)
+        self.page2Frame = self.LauncherSettings(self.stackedWidget)
         self.stackedWidget.addWidget(self.page2Frame)
+        
+        self.page3Frame = self.PersonalisationSettings(self.stackedWidget)
+        self.stackedWidget.addWidget(self.page3Frame)
         
         app.registerRetranslateFunction(self.retranslateUI)
         self.retranslateUI()
     
     def retranslateUI(self):
         self.page1.setText("启动设置")
-        self.page2.setText("个性化")
+        self.page2.setText("启动器设置")
+        self.page3.setText("个性化")
     
     def setCurrentPage(self, page_id=-1):
-        page_seq = (self.page1, self.page2)
+        page_seq = (self.page1, self.page2, self.page3)
         page_frame_dict = {
             self.page1: self.page1Frame,
-            self.page2: self.page2Frame
+            self.page2: self.page2Frame,
+            self.page3: self.page3Frame
         }
         if -1 < page_id < len(page_seq):
             page = page_seq[page_id]
@@ -2073,6 +2161,19 @@ class AboutPage(QFrame):
 我们希望发布的这款程序有用，但不确定，甚至不保证它有经济价值和适合特定用途。详情参见 GNU General Public License。""")
     
     def showEvent(self, a0):
+        class OpacityAnimation(QVariantAnimation):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.valueChanged.connect(self.__updateOpacity)
+            
+            def __updateOpacity(self, value):
+                op = QGraphicsOpacityEffect(self.parent())
+                op.setOpacity(self.currentValue() / 100)
+                if self.currentValue() == self.endValue() and self.currentValue():
+                    self.parent().setGraphicsEffect(None)
+                    return
+                self.parent().setGraphicsEffect(op)
+        
         pos1 = self.groupBox_CMCLVersion.pos()
         pos2 = self.groupBox_authors.pos()
         pos3 = self.groupBox_thanks.pos()
@@ -2093,13 +2194,19 @@ class AboutPage(QFrame):
         self.verticalLayout.removeWidget(self.groupBox_lawInfomation)
         
         ani1 = QPropertyAnimation(self.groupBox_CMCLVersion, b"pos", self)
-        ani1.setStartValue(pos1 + QPoint(self.width(), 0))
+        ani1.setStartValue(pos1 + QPoint(300, 0))
         ani1.setEndValue(pos1)
         ani1.setDuration(1000)
         ani1.setEasingCurve(QEasingCurve.Type.OutQuint)
-        QTimer.singleShot(550, lambda: self.groupBox_CMCLVersion.show())
         QTimer.singleShot(500, lambda: ani1.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
         ani1.finished.connect(lambda: self.verticalLayout.insertWidget(0, self.groupBox_CMCLVersion))
+        ani11 = OpacityAnimation(self.groupBox_CMCLVersion)
+        ani11.setStartValue(0)
+        ani11.setEndValue(100)
+        ani11.setDuration(1000)
+        ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+        QTimer.singleShot(550, lambda: self.groupBox_CMCLVersion.show())
+        QTimer.singleShot(500, lambda: ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
         
         ani2 = QPropertyAnimation(self.groupBox_authors, b"pos", self)
         ani2.setStartValue(pos2 + QPoint(self.width(), 0))
@@ -2217,6 +2324,10 @@ class PlayerPage(QFrame):
         self.middleButton = ToolButton(self.topPanel)
         self.middleButton.setMinimumWidth(128)
         
+        self.playerActions = ToolButton(self.topPanel)
+        self.playerActions.setFixedSize(QSize(32, 32))
+        self.playerActions.pressed.connect(self.showPlayerActionsMenu)
+        
         self.rightButton = ToolButton(self.topPanel)
         self.rightButton.setFixedSize(QSize(32, 32))
         
@@ -2231,6 +2342,7 @@ class PlayerPage(QFrame):
         
         app.registerRetranslateFunction(self.retranslateUI)
         self.retranslateUI()
+        self.updateIcon()
         
         self.updatePlayerList()
     
@@ -2251,21 +2363,35 @@ class PlayerPage(QFrame):
         self.leftButton.setToolTip("上一个")
         self.rightButton.setToolTip("下一个")
         
+        self.playerActions.setToolTip("当前玩家操作")
+        
+        playerTypes = {
+            "msa": "Microsoft 账户",
+            "authlib-injector": "通过 Authlib-Injector 验证",
+            "littleskin": "Littleskin 皮肤站用户",
+            "offline": "离线玩家"
+        }
+        
         if not self.isLogining and self.playerList:
             currentPlayer = self.playerList[self.currentIndex]
+            playerType = playerTypes[currentPlayer.player_accountType[1]] if currentPlayer.player_accountType[
+                                                                                 2] != "offline" else playerTypes[
+                "offline"]
             self.middleButton.setText(
-                f"{currentPlayer.player_playerName}\n类型：{'msa'}\n{'已购买 Minecraft' if currentPlayer.player_hasMC else '未购买 Minecraft'}")
+                f"{currentPlayer.player_playerName}\n{playerType}\n{'已购买 Minecraft' if currentPlayer.player_hasMC else '未购买 Minecraft'}")
         else:
             self.middleButton.setText("\n正在登录中\n")
         
         self.tableWidget.clear()
-        self.tableWidget.setHorizontalHeaderLabels(["玩家名称", "玩家类型", "是否购买 Minecraft"])
+        self.tableWidget.setHorizontalHeaderLabels(["玩家名称", "玩家账户类型", "是否购买 Minecraft"])
         self.tableWidget.setColumnCount(3)
         
         self.tableWidget.setRowCount(len(self.playerList))
         for i, player in enumerate(self.playerList):
             self.tableWidget.setItem(i, 0, QTableWidgetItem(player.player_playerName))
-            self.tableWidget.setItem(i, 1, QTableWidgetItem('msa'))
+            playerType = (playerTypes[player.player_accountType[1]] if player.player_accountType[2] != "offline" else \
+                              playerTypes["offline"])
+            self.tableWidget.setItem(i, 1, QTableWidgetItem(playerType))
             self.tableWidget.setItem(i, 2, QTableWidgetItem("是" if player.player_hasMC else "否"))
     
     def setLogining(self, state):
@@ -2332,6 +2458,22 @@ class PlayerPage(QFrame):
         dialogue = OfflinePlayerCreationDialogue(self.window())
         dialogue.show()
     
+    def showPlayerActionsMenu(self):
+        self.playerActions.setDown(False)
+        menu = RoundedMenu(self.playerActions)
+        action1 = QAction(menu)
+        action1.setText("修改玩家名称")
+        menu.addAction(action1)
+        menu.popup(QCursor.pos())
+    
+    def postToggleTheme(self):
+        self.updateIcon()
+    
+    def updateIcon(self):
+        colour = "black" if getTheme() == Theme.Light else "white"
+        self.leftButton.setIcon(QIcon(f":/LeftArrow-{colour}.svg"))
+        self.rightButton.setIcon(QIcon(f":/RightArrow-{colour}.svg"))
+    
     def mouseMoveEvent(self, a0):
         super().mouseMoveEvent(a0)
         
@@ -2383,6 +2525,12 @@ class PlayerPage(QFrame):
             self.topPanel.height() // 2 - self.middleButton.height() // 2,
             self.middleButton.width(), self.middleButton.height()
         ))
+        
+        self.playerActions.adjustSize()
+        self.playerActions.move(QPoint(
+            self.middleButton.x() + self.middleButton.width() + 10,
+            self.topPanel.height() // 2 - 16
+        ))
 
 
 class MainLauncherWindow(MainWindow):
@@ -2391,6 +2539,7 @@ class MainLauncherWindow(MainWindow):
     
     def __init__(self):
         super().__init__()
+        self.setBorderAccentColourEnabled(True)
         self.setMouseTracking(True)
         
         self.resize(800, 600)
@@ -2496,6 +2645,8 @@ class MainLauncherWindow(MainWindow):
     def postToggleTheme(self):
         self.updateIcon()
         self.homePageFrame.postToggleTheme()
+        self.downloadPageFrame.postToggleTheme()
+        self.playerPageFrame.postToggleTheme()
     
     def moveCentre(self):
         screenGeometry = QGuiApplication.primaryScreen().geometry()
@@ -2718,9 +2869,14 @@ Path("latest.log").write_text("", encoding="utf-8")
 
 
 def excepthook(*args, **kwargs):
-    exception_information = "".join(traceback.format_exception(*args, **kwargs))
+    exception_information = "".join(traceback.format_exception(*args, **kwargs, colorize=False))
     with Path("error.log").open("a", encoding="utf-8") as file:
         file.write(exception_information + "\n")
+    post_except(*args, **kwargs)
+
+
+def post_except(*args, **kwargs):
+    traceback.print_exception(*args, **kwargs, colorize=True)
 
 
 sys.excepthook = excepthook
@@ -2761,7 +2917,10 @@ def init():
 
 with Path("latest.log").open("w", encoding="utf-8") as out:
     with redirect_stdout(out), redirect_stderr(out):
+        logging.basicConfig(level=logging.DEBUG)
         cProfile.run("init()", "initAnalysis.log")
         window.show()
         QTimer.singleShot(5000, lambda: out.flush())
         app.exec()
+
+# "%appdata%\Python\Python311\Scripts\pyside6-rcc.exe" resources.qrc -o resources.py

@@ -31,7 +31,9 @@ class ItemDelegate(QItemDelegate):
         painter.drawRoundedRect(option.rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        if self.parent().viewport().property("frameOpacity"):
+        if self.parent().viewport().property("frameOpacity") and \
+                ((option.rect.contains(QCursor.pos() - (self.parent().viewport().mapToGlobal(
+                    QPoint(0, 0))))) and self.parent().underMouse()) and self.parent().isEnabled():
             painter.save()
             painter.setOpacity(self.parent().viewport().property("frameOpacity"))
             painter.setPen(getBorderColour(
@@ -57,9 +59,13 @@ class ItemDelegate(QItemDelegate):
     
     def drawDisplay(self, painter, option, rect, text):
         painter.save()
-        painter.setOpacity(self.parent().viewport().property("baseOpacity")
-                           + (self.parent().viewport().property("frameOpacity") * (
-                1.0 - self.parent().viewport().property("baseOpacity"))))
+        if ((option.rect.contains(QCursor.pos() - (self.parent().viewport().mapToGlobal(
+                QPoint(0, 0))))) and self.parent().underMouse()) and self.parent().isEnabled():
+            painter.setOpacity(self.parent().viewport().property("baseOpacity")
+                               + (self.parent().viewport().property("frameOpacity") * (
+                    1.0 - self.parent().viewport().property("baseOpacity"))))
+        else:
+            painter.setOpacity(self.parent().viewport().property("baseOpacity"))
         painter.setRenderHints(QPainter.RenderHint.Antialiasing)
         painter.setPen(getForegroundColour())
         painter.drawText(option.rect.adjusted(1, 1, -1, -1), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,

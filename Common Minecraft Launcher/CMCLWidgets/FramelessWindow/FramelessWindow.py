@@ -26,25 +26,29 @@ class FramelessWindow(QWidget):
         self.__xcffib = None
         self.__xproto = None
         self.__pywayland = None
+        self.setProperty("resizeEnabled", True)
+        self.setProperty("systemTitleBarButtonVisible", True)
+        self.setProperty("windowBorderAccentColour", QColor(0, 0, 0, 0))
+        self.setProperty("borderAccentColourEnabled", False)
         match self.__platform.system().lower():
             case "windows":
                 self.__ctypes = __import__("ctypes")
                 self.__wintypes = __import__("ctypes.wintypes", fromlist=("ctypes",))
+                self.__wintypes.WINDOWPOS = WINDOWPOS
                 self.__wintypes.PWINDOWPOS = PWINDOWPOS
                 self.__wintypes.NCCLACSIZE_PARAMS = NCCALCSIZE_PARAMS
+                self.__wintypes.LPNCCLACSIZE_PARAMS = LPNCCALCSIZE_PARAMS
                 self.__wintypes.MARGINS = MARGINS
                 self.__win32con = __import__("win32con")
                 self.__win32gui = __import__("win32gui")
                 self.__dwmapi = ctypes.WinDLL("dwmapi")
+                self.setProperty("windowBorderAccentColour", getSystemAccentColour())
             case "darwin":
                 self.__objc = __import__("objc")
                 self.__cocoa = __import__("Cocoa")
                 self.__nsWindow = self.__objc.objc_object(c_void_p=self.winId().__int__()).window()
             case "linux":
                 pass
-        self.setProperty("resizeEnabled", True)
-        self.setProperty("systemTitleBarButtonVisible", True)
-        self.setProperty("windowBorderAccentColour", getSystemAccentColour())
         self.__updateWindowFrameless()
     
     def __updateWindowFrameless(self):
@@ -78,8 +82,6 @@ class FramelessWindow(QWidget):
                 int(self.winId()),
                 self.__win32con.GWL_STYLE,
                 self.__win32gui.GetWindowLong(int(self.winId()), self.__win32con.GWL_STYLE)
-                | self.__win32con.WS_MINIMIZEBOX
-                | self.__win32con.WS_MAXIMIZEBOX
                 | self.__win32con.CS_DBLCLKS
                 | self.__win32con.WS_CAPTION
                 | self.__win32con.WS_THICKFRAME
@@ -177,7 +179,7 @@ class FramelessWindow(QWidget):
     
     def __updateLinuxWindowFrameless(self):
         super(FramelessWindow, self).setWindowFlag(Qt.WindowType.FramelessWindowHint)
-        super(FramelessWindow, self).setWindowFlag(Qt.WindowType.WindowMinMaxButtonHint)
+        super(FramelessWindow, self).setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint)
     
     def __onScreenChanged(self):
         match self.__platform.system().lower():
@@ -188,6 +190,11 @@ class FramelessWindow(QWidget):
                 pass
             case "linux":
                 pass
+    
+    def event(self, a0):
+        self.update()
+        self.updateGeometry()
+        return super(FramelessWindow, self).event(a0)
     
     def paintEvent(self, a0):
         self.__updateNSWindowFrameless()
@@ -214,24 +221,35 @@ class FramelessWindow(QWidget):
                     QTimer.singleShot(1, self.__updateNSWindowTitleBarRect)
                 case QEvent.Type.Resize:
                     self.__updateNSWindowTitleBarRect()
+        super().changeEvent(a0)
     
     def nativeEvent(self, eventType, message):
-        match eventType, self.__platform.system().lower():
-            case b"windows_generic_MSG", "windows":
+        match eventType:
+            case b"windows_generic_MSG":
                 winMsg = self.__wintypes.MSG.from_address(message.__int__())
                 if not winMsg.hWnd:
                     return False, 0
                 
                 match winMsg.message:
                     case self.__win32con.WM_SETFOCUS:
-                        colour = self.windowBorderAccentColour()
-                        colourref = DWORD(colour.red() | (colour.green() << 8) | (colour.blue() << 16))
-                        self.__dwmapi.DwmSetWindowAttribute(
-                            int(self.winId()),
-                            DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR.value,
-                            byref(colourref),
-                            4
-                        )
+                        if self.property("borderAccentColourEnabled"):
+                            colour = self.windowBorderAccentColour()
+                            colourref = DWORD(
+                                colour.red() | (colour.green() << 8) | (colour.blue() << 16) | (colour.alpha() << 32))
+                            self.__dwmapi.DwmSetWindowAttribute(
+                                int(self.winId()),
+                                DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR.value,
+                                byref(colourref),
+                                4
+                            )
+                        else:
+                            colourref = DWORD(0xFFFFFFFF)
+                            self.__dwmapi.DwmSetWindowAttribute(
+                                int(self.winId()),
+                                DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR.value,
+                                byref(colourref),
+                                4
+                            )
                         return True, 0
                     case self.__win32con.WM_KILLFOCUS:
                         colourref = DWORD(0xFFFFFFFF)
@@ -283,7 +301,7 @@ class FramelessWindow(QWidget):
                         if winMsg.wParam:
                             rect = self.__ctypes.cast(
                                 winMsg.lParam,
-                                self.__ctypes.POINTER(self.__wintypes.NCCLACSIZE_PARAMS)
+                                self.__wintypes.LPNCCLACSIZE_PARAMS
                             ).contents.rgrc[0]
                         else:
                             rect = self.__ctypes.cast(
@@ -318,7 +336,7 @@ class FramelessWindow(QWidget):
                 
                 result = super(FramelessWindow, self).nativeEvent(eventType, message)
                 return result[0], result[1] or 0
-            case b"xcb_generic_event_t", "linux":
+            case b"xcb_generic_event_t":
                 return False, 0
         return super(FramelessWindow, self).nativeEvent(eventType, message)
     
@@ -366,6 +384,12 @@ class FramelessWindow(QWidget):
     
     def setWindowBorderAccentColour(self, colour):
         self.setProperty("windowBorderAccentColour", colour)
+    
+    def borderAccentColourEnabled(self):
+        return self.property("borderAccentColourEnabled")
+    
+    def setBorderAccentColourEnabled(self, enabled):
+        self.setProperty("borderAccentColourEnabled", enabled)
 
 
 class FramelessMainWindow(QMainWindow, FramelessWindow):
