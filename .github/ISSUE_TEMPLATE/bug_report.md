@@ -1,22 +1,44 @@
 ---
-name: Make an advice
-about: Suggest an idea for this launcher / 给启动器提建议
+name: Bug report
+about: Create a report to help us improve / 反馈给我们以帮助我们改进
 title: ''
 labels: Bug / 程序错误
 assignees: ''
 
 ---
 
-**Is your advice related to a problem? Please describe. / 你的建议反馈是否和启动器的一个 bug 有关?**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
-一个清晰而简洁的对于相关问题的描述。
+**Describe the bug / Bug 描述**
+A clear and concise description of what the bug is.
+简洁明了地描述这个 Bug。
 
-**Describe the solution you'd like / 描述你的解决办法（建议）**
-A clear and concise description of what you want to happen.
-一个清晰而简洁的描述。
+**To Reproduce / 复现**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
 
-**Describe alternatives you've considered / 描述你想到的其它解决方法**
-A clear and concise description of any alternative solutions or features you've considered.
+复现操作：
+1. 前往 '...'
+2. 点击 '...'
+3. 向下滚动到 '...'
+4. 错误出现
 
-**Additional context / 其它内容**
-Add any other context or screenshots about the feature request here.
+**Expected behavior / 预期行为**
+A clear and concise description of what you expected to happen.
+简洁明了地描述你的预期行为。
+
+**Screenshots / 截图**
+If applicable, add screenshots to help explain your problem.
+如果可以，可以添加截图，以便保住你阐述你的问题。
+
+**Environment / 环境**
+ - OS: [e.g. iOS]
+ - Version [e.g. 22]
+
+- 操作系统： [如 iOS]
+- 版本 [如 22]
+
+**Additional context / 附加环境信息**
+Add any other context about the problem here.
+在这里添加关于这个问题的环境信息。
