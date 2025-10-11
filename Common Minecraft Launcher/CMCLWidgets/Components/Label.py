@@ -21,11 +21,11 @@ class LabelBase(QLabel, Widget):
     def __init__(self, *__args):
         super().__init__(*__args)
         self.setStyleSheet(
-            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))})")
+            f"border: none; background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))})")
     
     def paintEvent(self, a0):
         self.setStyleSheet(
-            f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))})")
+            f"border: none; background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))})")
         super().paintEvent(a0)
     
     def contextMenuEvent(self, e):

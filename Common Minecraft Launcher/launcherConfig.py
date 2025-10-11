@@ -18,8 +18,8 @@ def createSettingsFile():
                     }
                 },
                 "ExtraGameCommand": None,
-                "VersionSeperation": 0,
-                "VersionSeperationConfig": {
+                "VersionSeparation": 0,
+                "VersionSeparationConfig": {
                     "ShareVersionOptions": False,
                     "ShareVersionResourcePacks": False
                 }

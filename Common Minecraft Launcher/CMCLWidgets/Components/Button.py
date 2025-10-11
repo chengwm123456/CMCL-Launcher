@@ -37,11 +37,13 @@ class PushButton(QPushButton, Widget):
         painter.setOpacity(self.property("baseOpacity"))
         painter.setPen(getBorderColour(
             is_highlight=(self.isDown() or self.isChecked()) or (
-                    (self.isDown() or self.isChecked()) and self.isEnabled())
+                    (self.isDown() or self.isChecked()) and self.isEnabled()),
+            is_primary=self.objectName() == "primaryButton"
         ))
         painter.setBrush(getBackgroundColour(
             is_highlight=(self.isDown() or self.isChecked()) or (
-                    (self.isDown() or self.isChecked()) and self.isEnabled())
+                    (self.isDown() or self.isChecked()) and self.isEnabled()),
+            is_primary=self.objectName() == "primaryButton"
         ))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
@@ -49,10 +51,11 @@ class PushButton(QPushButton, Widget):
         if self.property("frameOpacity"):
             painter.save()
             painter.setOpacity(self.property("frameOpacity"))
-            painter.setPen(getBorderColour(is_highlight=True))
+            painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
             painter.setBrush(getBackgroundColour(
                 is_highlight=(self.isDown() or self.isChecked()) or (
-                        (self.isDown() or self.isChecked()) and self.isEnabled())
+                        (self.isDown() or self.isChecked()) and self.isEnabled()),
+                is_primary=self.objectName() == "primaryButton"
             ))
             painter.drawRoundedRect(
                 self.rect().adjusted(
@@ -71,7 +74,8 @@ class PushButton(QPushButton, Widget):
             painter.setOpacity(self.property("baseOpacity"))
             painter.setPen(getBorderColour(
                 is_highlight=(self.isDown() or self.isChecked()) or (
-                        (self.isDown() or self.isChecked()) and self.isEnabled())
+                        (self.isDown() or self.isChecked()) and self.isEnabled()),
+                is_primary=self.objectName() == "primaryButton"
             ))
             painter.translate(x, y)
             painter.rotate(self.property("dropdownIndicatorRotation"))
@@ -91,7 +95,7 @@ class PushButton(QPushButton, Widget):
                 x2 = (rect2.width() - 8) - 3 + 4 + rect2.x()
                 y2 = rect2.height() / 2 - 2 + 2 + rect2.y()
                 painter.setOpacity(self.property("frameOpacity"))
-                painter.setPen(getBorderColour(is_highlight=True))
+                painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
                 painter.translate(x2, y2)
                 painter.rotate(self.property("dropdownIndicatorRotation"))
                 painter.drawLines(
@@ -140,7 +144,10 @@ class PushButton(QPushButton, Widget):
                 rotationAnimation.setDuration(500)
                 rotationAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
                 rotationAnimation.start()
-                self.menu().aboutToHide.disconnect(closeFunc)
+                try:
+                    self.menu().aboutToHide.disconnect(closeFunc)
+                except TypeError:
+                    pass
             
             rotationAnimation = QPropertyAnimation(self, b"dropdownIndicatorRotation", self)
             rotationAnimation.setStartValue(self.property("dropdownIndicatorRotation"))
@@ -176,11 +183,13 @@ class ToolButton(QToolButton, Widget):
         painter.setOpacity(self.property("baseOpacity"))
         painter.setPen(getBorderColour(
             is_highlight=(self.isDown() or self.isChecked()) or (
-                    (self.isDown() or self.isChecked()) and self.isEnabled())
+                    (self.isDown() or self.isChecked()) and self.isEnabled()),
+            is_primary=self.objectName() == "primaryButton"
         ))
         painter.setBrush(getBackgroundColour(
             is_highlight=(self.isDown() or self.isChecked()) or (
-                    (self.isDown() or self.isChecked()) and self.isEnabled())
+                    (self.isDown() or self.isChecked()) and self.isEnabled()),
+            is_primary=self.objectName() == "primaryButton"
         ))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
@@ -188,10 +197,11 @@ class ToolButton(QToolButton, Widget):
         if self.property("frameOpacity"):
             painter.save()
             painter.setOpacity(self.property("frameOpacity"))
-            painter.setPen(getBorderColour(is_highlight=True))
+            painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
             painter.setBrush(getBackgroundColour(
                 is_highlight=(self.isDown() or self.isChecked()) or (
-                        (self.isDown() or self.isChecked()) and self.isEnabled())
+                        (self.isDown() or self.isChecked()) and self.isEnabled()),
+                is_primary=self.objectName() == "primaryButton"
             ))
             painter.drawRoundedRect(
                 self.rect().adjusted(
@@ -210,7 +220,8 @@ class ToolButton(QToolButton, Widget):
             painter.setOpacity(self.property("baseOpacity"))
             painter.setPen(getBorderColour(
                 is_highlight=(self.isDown() or self.isChecked()) or (
-                        (self.isDown() or self.isChecked()) and self.isEnabled())
+                        (self.isDown() or self.isChecked()) and self.isEnabled()),
+                is_primary=self.objectName() == "primaryButton"
             ))
             painter.translate(x, y)
             painter.rotate(self.property("dropdownIndicatorRotation"))
@@ -230,7 +241,7 @@ class ToolButton(QToolButton, Widget):
                 x2 = (rect2.width() - 8) - 3 + 4 + rect2.x()
                 y2 = rect2.height() / 2 - 2 + 2 + rect2.y()
                 painter.setOpacity(self.property("frameOpacity"))
-                painter.setPen(getBorderColour(is_highlight=True))
+                painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
                 painter.translate(x2, y2)
                 painter.rotate(self.property("dropdownIndicatorRotation"))
                 painter.drawLines(
@@ -279,7 +290,10 @@ class ToolButton(QToolButton, Widget):
                 rotationAnimation.setDuration(500)
                 rotationAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
                 rotationAnimation.start()
-                self.menu().aboutToHide.disconnect(closeFunc)
+                try:
+                    self.menu().aboutToHide.disconnect(closeFunc)
+                except TypeError:
+                    pass
             
             rotationAnimation = QPropertyAnimation(self, b"dropdownIndicatorRotation", self)
             rotationAnimation.setStartValue(self.property("dropdownIndicatorRotation"))

@@ -61,11 +61,12 @@ class ToolBox(QToolBox, Widget):
             if not hasattr(button, "evf"):
                 button.evf = self
                 button.installEventFilter(button.evf)
+                print(button.evf)
             
             painter.save()
             painter.translate(button.pos())
             rect = button.rect().adjusted(1, 1, -1, -1)
-            painter.setOpacity(button.property("baseOpacity"))
+            painter.setOpacity(button.property("baseOpacity") or 1)
             painter.setPen(getBorderColour(is_highlight=(button.isDown() or button.isChecked()) or (
                     (button.isDown() or button.isChecked()) and button.isEnabled())))
             painter.setBrush(getBackgroundColour(is_highlight=(button.isDown() or button.isChecked()) or (

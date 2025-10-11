@@ -303,10 +303,10 @@ def LaunchMinecraft(
         jvm_args = default_jvm_args + shlex.split(jvm_args)
     else:
         jvm_args = default_jvm_args
-    if kw.get("game_seperation"):
-        game_seperation = bool(kw["game_seperation"])
+    if kw.get("game_separation"):
+        game_separation = bool(kw["game_separation"])
     else:
-        game_seperation = False
+        game_separation = False
     minecraft = Minecraft(
         mc_gameVersion=version_launch,
         mc_gameWorkDir=minecraft_path,
@@ -315,7 +315,7 @@ def LaunchMinecraft(
         mc_gameNativesDir=minecraft_path / "versions" / version_launch / f"{version_launch}-natives",
         mc_gameLibrariesDir=minecraft_path / "libraries",
         mc_gameAssetsDir=minecraft_path / "assets",
-        mc_gameSeparation=game_seperation
+        mc_gameSeparation=game_separation
     )
     initial_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))
     max_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))

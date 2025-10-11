@@ -29,8 +29,8 @@ class Downloader:
             chunk_size: Union[int, str] = 1024 * 1024 * 8
     ):
         self.download_url = str(download_url)
-        self.download_file_name = Path(download_file_name)
-        self.download_file_path = Path(download_file_path)
+        self.download_file_name = Path(download_file_name).resolve()
+        self.download_file_path = Path(download_file_path).resolve()
         self.__maximumThreads = int(maximum_threads or 8)
         self.__chunkSize = max(1024, int(chunk_size))
     

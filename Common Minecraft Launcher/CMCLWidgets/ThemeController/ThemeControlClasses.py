@@ -49,7 +49,7 @@ class Colour(QColor):
                 setFunc = self.setBlue
             case "alpha" | 3:
                 setFunc = self.setAlpha
-        setFunc(value)
+        setFunc(max(value, 0))
 
 
 class Theme(Enum):
@@ -67,46 +67,51 @@ class ColourManager(QObject):
     def __init__(self):
         super().__init__()
         self.__animationGroup = None
-        for role in [ColourRole.Background, ColourRole.Border, ColourRole.Foreground]:
-            for theme in [Theme.Light, Theme.Dark]:
-                for highlight in [True, False]:
-                    self.setProperty(f"{role.value}_{theme.value}_{highlight}", QColor(0, 0, 0))
+        for primary in [True, False]:
+            for role in [ColourRole.Background, ColourRole.Border, ColourRole.Foreground]:
+                for theme in [Theme.Light, Theme.Dark]:
+                    for highlight in [True, False]:
+                        self.setProperty(f"{role.value}_{theme.value}_{highlight}_{primary}", QColor(0, 0, 0))
         
-        for role in [ColourRole.Background, ColourRole.Border, ColourRole.Foreground]:
-            for highlight in [True, False]:
-                self.setProperty(f"{role.value}_{highlight}", QColor(0, 0, 0))
+        for primary in [True, False]:
+            for role in [ColourRole.Background, ColourRole.Border, ColourRole.Foreground]:
+                for highlight in [True, False]:
+                    self.setProperty(f"{role.value}_{highlight}_{primary}", QColor(0, 0, 0))
     
-    def setColour(self, role, highlight, theme, colour, ani=False, curTheme=Theme.Light):
+    def setColour(self, role, is_highlight, is_primary, theme, colour, ani=False, curTheme=Theme.Light):
         colour = Colour(colour)
-        self.setProperty(f"{role.value}_{theme.value}_{highlight}", QColor(colour))
+        self.setProperty(f"{role.value}_{theme.value}_{is_highlight}_{is_primary}", QColor(colour))
         if theme != curTheme:
             return
         if ani:
-            colourAnimation = QPropertyAnimation(self, f"{role.value}_{highlight}".encode(), self)
-            colourAnimation.setStartValue(QColor(self.property(f"{role.value}_{highlight}")))
-            colourAnimation.setEndValue(QColor(self.property(f"{role.value}_{curTheme.value}_{highlight}")))
+            colourAnimation = QPropertyAnimation(self, f"{role.value}_{is_highlight}_{is_primary}".encode(), self)
+            colourAnimation.setStartValue(QColor(self.property(f"{role.value}_{is_highlight}_{is_primary}")))
+            colourAnimation.setEndValue(
+                QColor(self.property(f"{role.value}_{curTheme.value}_{is_highlight}_{is_primary}")))
             colourAnimation.setDuration(500)
             colourAnimation.setEasingCurve(QEasingCurve.Type.OutQuint)
             colourAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
         else:
-            self.setProperty(f"{role.value}_{highlight}",
-                             QColor(self.property(f"{role.value}_{curTheme.value}_{highlight}")))
+            self.setProperty(f"{role.value}_{is_highlight}_{is_primary}",
+                             QColor(self.property(f"{role.value}_{curTheme.value}_{is_highlight}_{is_primary}")))
     
-    def colour(self, role, highlight, theme=None):
+    def colour(self, role, is_highlight, is_primary, theme=None):
         if theme:
-            return Colour(self.property(f"{role.value}_{theme.value}_{highlight}"))
-        return Colour(self.property(f"{role.value}_{highlight}"))
+            return Colour(self.property(f"{role.value}_{theme.value}_{is_highlight}_{is_primary}"))
+        return Colour(self.property(f"{role.value}_{is_highlight}_{is_primary}"))
     
     def toggleTheme(self, theme, ani=False):
-        for role in [ColourRole.Background, ColourRole.Border, ColourRole.Foreground]:
-            for highlight in [True, False]:
-                if ani:
-                    colourAnimation = QPropertyAnimation(self, f"{role.value}_{highlight}".encode(), self)
-                    colourAnimation.setStartValue(QColor(self.property(f"{role.value}_{highlight}")))
-                    colourAnimation.setEndValue(QColor(self.property(f"{role.value}_{theme.value}_{highlight}")))
-                    colourAnimation.setDuration(500)
-                    colourAnimation.setEasingCurve(QEasingCurve.Type.OutQuint)
-                    colourAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
-                else:
-                    self.setProperty(f"{role.value}_{highlight}",
-                                     self.property(f"{role.value}_{theme.value}_{highlight}"))
+        for primary in [True, False]:
+            for role in [ColourRole.Background, ColourRole.Border, ColourRole.Foreground]:
+                for highlight in [True, False]:
+                    if ani:
+                        colourAnimation = QPropertyAnimation(self, f"{role.value}_{highlight}_{primary}".encode(), self)
+                        colourAnimation.setStartValue(QColor(self.property(f"{role.value}_{highlight}_{primary}")))
+                        colourAnimation.setEndValue(
+                            QColor(self.property(f"{role.value}_{theme.value}_{highlight}_{primary}")))
+                        colourAnimation.setDuration(500)
+                        colourAnimation.setEasingCurve(QEasingCurve.Type.OutQuint)
+                        colourAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    else:
+                        self.setProperty(f"{role.value}_{highlight}_{primary}",
+                                         self.property(f"{role.value}_{theme.value}_{highlight}_{primary}"))
