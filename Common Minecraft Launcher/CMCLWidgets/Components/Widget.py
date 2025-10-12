@@ -20,7 +20,7 @@ class Widget(QWidget):
         return not self.isEnabled()
     
     def eventFilter(self, a0, a1):
-        if not (a0.property("baseOpacity") or a0.property("frameOpacity") or a0.property("frameRectAdjustment")):
+        if not (a0.property("baseOpacity") or a0.property("frameOpacity")):
             a0.setProperty("baseOpacity", 0.6 if a0.isEnabled() else 0.3)
             a0.setProperty("frameOpacity", 0.0)
             a0.setProperty("frameRectAdjustment", min(32, min(a0.width() // 2, a0.height() // 2)))
