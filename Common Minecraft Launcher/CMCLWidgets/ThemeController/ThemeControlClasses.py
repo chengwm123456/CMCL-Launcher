@@ -66,6 +66,7 @@ class ColourRole(Enum):
 class ColourManager(QObject):
     def __init__(self):
         super().__init__()
+        self.__currentTheme = Theme.Light
         self.__animationGroup = None
         for primary in [True, False]:
             for role in [ColourRole.Background, ColourRole.Border, ColourRole.Foreground]:
@@ -78,40 +79,55 @@ class ColourManager(QObject):
                 for highlight in [True, False]:
                     self.setProperty(f"{role.value}_{highlight}_{primary}", QColor(0, 0, 0))
     
-    def setColour(self, role, is_highlight, is_primary, theme, colour, ani=False, curTheme=Theme.Light):
+    def setColour(self, role, is_highlight, is_primary, theme, colour, animation=False):
+        curTheme = self.currentTheme
         colour = Colour(colour)
         self.setProperty(f"{role.value}_{theme.value}_{is_highlight}_{is_primary}", QColor(colour))
         if theme != curTheme:
             return
-        if ani:
+        if animation:
             colourAnimation = QPropertyAnimation(self, f"{role.value}_{is_highlight}_{is_primary}".encode(), self)
             colourAnimation.setStartValue(QColor(self.property(f"{role.value}_{is_highlight}_{is_primary}")))
             colourAnimation.setEndValue(
                 QColor(self.property(f"{role.value}_{curTheme.value}_{is_highlight}_{is_primary}")))
             colourAnimation.setDuration(500)
-            colourAnimation.setEasingCurve(QEasingCurve.Type.OutQuint)
+            colourAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
             colourAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
         else:
             self.setProperty(f"{role.value}_{is_highlight}_{is_primary}",
                              QColor(self.property(f"{role.value}_{curTheme.value}_{is_highlight}_{is_primary}")))
     
-    def colour(self, role, is_highlight, is_primary, theme=None):
+    def getColour(self, role, is_highlight, is_primary, theme=None):
         if theme:
             return Colour(self.property(f"{role.value}_{theme.value}_{is_highlight}_{is_primary}"))
         return Colour(self.property(f"{role.value}_{is_highlight}_{is_primary}"))
     
-    def toggleTheme(self, theme, ani=False):
+    def toggleTheme(self, theme, animation=False):
+        if animation:
+            self.__animationGroup = QParallelAnimationGroup(self)
+        
         for primary in [True, False]:
             for role in [ColourRole.Background, ColourRole.Border, ColourRole.Foreground]:
                 for highlight in [True, False]:
-                    if ani:
+                    if animation:
                         colourAnimation = QPropertyAnimation(self, f"{role.value}_{highlight}_{primary}".encode(), self)
                         colourAnimation.setStartValue(QColor(self.property(f"{role.value}_{highlight}_{primary}")))
                         colourAnimation.setEndValue(
                             QColor(self.property(f"{role.value}_{theme.value}_{highlight}_{primary}")))
                         colourAnimation.setDuration(500)
-                        colourAnimation.setEasingCurve(QEasingCurve.Type.OutQuint)
-                        colourAnimation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                        colourAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+                        self.__animationGroup.addAnimation(colourAnimation)
                     else:
                         self.setProperty(f"{role.value}_{highlight}_{primary}",
                                          self.property(f"{role.value}_{theme.value}_{highlight}_{primary}"))
+        
+        if animation:
+            self.__animationGroup.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+    
+    @property
+    def currentTheme(self):
+        return self.__currentTheme
+    
+    @currentTheme.setter
+    def currentTheme(self, value):
+        self.__currentTheme = value

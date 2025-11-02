@@ -3,23 +3,22 @@ from .ThemeControlClasses import *
 
 
 def getTheme():
-    return globals().get("currentTheme", Theme.Light)
+    return globals()["currentThemeColourManager"].currentTheme
 
 
 def setTheme(theme, animation=False):
-    globals()["currentTheme"] = theme
+    globals()["currentThemeColourManager"].currentTheme = theme
     globals()["currentThemeColourManager"].toggleTheme(theme, animation)
 
 
 def getThemeColour(colour_role, is_highlight, is_primary, theme=None):
     if theme == getTheme():
         theme = None
-    return globals()["currentThemeColourManager"].colour(colour_role, is_highlight, is_primary, theme)
+    return globals()["currentThemeColourManager"].getColour(colour_role, is_highlight, is_primary, theme)
 
 
 def setThemeColour(colour_role, is_highlight, is_primary, theme, colour, animation=False):
-    globals()["currentThemeColourManager"].setColour(colour_role, is_highlight, is_primary, theme, colour,
-                                                     animation, getTheme())
+    globals()["currentThemeColourManager"].setColour(colour_role, is_highlight, is_primary, theme, colour, animation)
 
 
 def initThemeColours():
@@ -52,7 +51,6 @@ def initThemeColours():
 
 
 initThemeColours()
-setTheme(Theme.Light)
 
 
 def getBorderColour(is_primary=False, is_highlight=False, is_tuple=False):
@@ -82,7 +80,7 @@ def getBackgroundColour(is_primary=False, is_highlight=False, is_tuple=False):
 
 
 def getForegroundColour(is_primary=False, is_tuple=False):
-    colour = getThemeColour(colour_role=ColourRole.Foreground, is_primary=is_primary, is_highlight=is_primary,
+    colour = getThemeColour(colour_role=ColourRole.Foreground, is_primary=is_primary, is_highlight=False,
                             theme=getTheme())
     if is_tuple:
         return tuple(colour)

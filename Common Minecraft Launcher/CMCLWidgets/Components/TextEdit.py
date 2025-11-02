@@ -55,12 +55,39 @@ class TextEdit(QTextEdit, Widget):
             )
             painter.restore()
         
+        painter.save()
+        painter.setOpacity(self.viewport().property("baseOpacity") + (
+                self.viewport().property("frameOpacity") * (1.0 - self.viewport().property("baseOpacity"))))
+        painter.setPen(getForegroundColour())
+        painter.translate(-self.horizontalScrollBar().value(), -self.verticalScrollBar().value())
+        pp = QPainterPath()
+        rect = QRectF()
+        rect.setX(self.horizontalScrollBar().value())
+        rect.setY(self.verticalScrollBar().value())
+        rect.setWidth(self.viewport().width())
+        rect.setHeight(self.viewport().height())
+        pp.addRoundedRect(rect.adjusted(1.625, 1.625, -1.625, -1.625), 16, 16)
+        painter.setClipPath(pp)
+        textDocument = QTextDocument()
+        textDocument.setDefaultStyleSheet(f"body {{ color: rgb{getForegroundColour()}; }} a {{ color: blue; }}")
+        textDocument.setHtml(self.toHtml())
+        textDocument.setTextWidth(self.document().textWidth())
+        textDocument.drawContents(painter)
+        if not self.toPlainText() and self.placeholderText():
+            placeholderDocument = QTextDocument()
+            placeholderDocument.setDefaultStyleSheet(f"body {{ color: rgb(128, 128, 128); }}")
+            placeholderDocument.setPlainText(self.placeholderText())
+            placeholderDocument.setHtml(placeholderDocument.toHtml())
+            placeholderDocument.setTextWidth(self.document().textWidth())
+            placeholderDocument.drawContents(painter)
+        painter.restore()
+        
         self.setStyleSheet(
             f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.viewport().property('baseOpacity') + (self.viewport().property('frameOpacity') * (1.0 - self.viewport().property('baseOpacity')))}); background: transparent; selection-color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.viewport().property('baseOpacity') + (self.viewport().property('frameOpacity') * (1.0 - self.viewport().property('baseOpacity')))}); selection-background-color: rgb{getBorderColour(is_highlight=True, is_tuple=True)}; border: none; padding: 5px;")
         op = QStyleOptionFrame()
         op.initFrom(self)
         self.initStyleOption(op)
-        super().paintEvent(e)
+        # super().paintEvent(e)
     
     def contextMenuEvent(self, e):
         super().contextMenuEvent(e)

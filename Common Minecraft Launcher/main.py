@@ -1685,6 +1685,7 @@ jar 下载位置在：
                 self.modBody = TextEdit(self.modInfo)
                 self.modBody.setReadOnly(True)
                 self.modBody.setMarkdown(self.mod_body)
+                self.modBody.document().setBaseUrl(QUrl("https://cdn.modrinth.com/"))
                 self.verticalLayout_2.addWidget(self.modBody, 1)
                 
                 # self.modInfoContainer = ScrollArea(self.toolBox)
@@ -2906,17 +2907,20 @@ JVM 参数就是：
             settings["LauncherSettings"]["Personalisation"]["BackgroundColour"] = tuple(window.centreColour)
         
         def updateLanguagesList(self):
+            self.form_1_ComboBox.currentIndexChanged.disconnect(self.setLanguage)
             self.form_1_ComboBox.clear()
             
             index = 0
             languagesSequence = sorted(languagesCodeMapping)
             for idx, lang in enumerate(languagesSequence):
+                print(lang, currentLanguage)
                 if lang == currentLanguage:
                     index = idx
                     print(currentLanguage)
                 self.form_1_ComboBox.addItem(f"{languagesCodeMapping[lang]} ({lang})")
             
             self.form_1_ComboBox.setCurrentIndex(index)
+            self.form_1_ComboBox.currentIndexChanged.connect(self.setLanguage)
         
         def setLanguage(self):
             global currentLanguage
@@ -3237,6 +3241,19 @@ class AboutPage(QFrame):
         self.acks_intro2 = Label(self.acks_card_2)
         self.horizontalLayout_acks_2.addWidget(self.acks_intro2, 2)
         
+        self.acks_card_3 = Panel(self)  # 以防有人不知道 ack 取自 acknowledgement 的前三个字母
+        self.verticalLayout_3.addWidget(self.acks_card_3)
+        
+        self.horizontalLayout_acks_3 = QHBoxLayout(self.acks_card_3)
+        
+        self.acks_avatar_3 = ToolButton(self.acks_card_3)
+        self.acks_avatar_3.setFixedSize(QSize(42, 42))
+        self.acks_avatar_3.setIconSize(QSize(32, 32))
+        self.horizontalLayout_acks_3.addWidget(self.acks_avatar_3)
+        
+        self.acks_intro3 = Label(self.acks_card_3)
+        self.horizontalLayout_acks_3.addWidget(self.acks_intro3, 2)
+        
         self.groupBox_disclaimer = GroupBox(self.scrollAreaWidgetContent)
         disclaimer_font = self.groupBox_disclaimer.font()
         disclaimer_font.setWeight(1000)
@@ -3280,6 +3297,7 @@ class AboutPage(QFrame):
         self.acks_intro1.setText("Minecraft Wiki\n启动器编写时资料参考处！（仅作为参考，位于中文 MCW）")
         self.acks_intro2.setText(
             "龙腾猫跃 (LTCat)\n据野史（并非）记载，启动器作者在自主编写启动部分时，使用了某不知名启动器生成的命令作为标准命令。")
+        self.acks_intro3.setText("bangbang93\n提供 BMCLAPI！https://bmclapidoc.bangbang93.com/")
         
         self.groupBox_disclaimer.setTitle("免责声明")
         self.disclaimer.setText(
