@@ -66,9 +66,7 @@ class ScrollBar(QScrollBar, Widget):
         if self.property("frameOpacity"):
             painter.save()
             painter.setOpacity(self.property("frameOpacity"))
-            borderColour = getBorderColour(is_highlight=True) \
-                if ((self.underMouse() or self.hasFocus()) or self.isSliderDown()) and self.isEnabled() \
-                else getForegroundColour()
+            borderColour = getBorderColour(is_highlight=True)
             painter.setPen(QPen(
                 borderColour,
                 1.0,

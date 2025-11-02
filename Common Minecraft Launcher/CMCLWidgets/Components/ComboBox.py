@@ -75,7 +75,7 @@ class ComboBox(QComboBox, Widget):
             self.lineEdit().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             self.lineEdit().setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
             self.lineEdit().setStyleSheet(
-                f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))}); background: transparent; border: none; padding: 5px;")
+                f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))}); background: transparent; selection-color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))}); selection-background-color: rgb{getBorderColour(is_highlight=True, is_tuple=True)}; border: none; padding: 5px;")
             self.lineEdit().setFont(self.font())
             self.lineEdit().setFocusPolicy(Qt.FocusPolicy.StrongFocus)
             self.setFocusPolicy(Qt.FocusPolicy.WheelFocus)

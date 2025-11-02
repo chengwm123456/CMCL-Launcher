@@ -1,4 +1,6 @@
-<h1 align="center">贡献指南</h1>
+<h1 align="center">Common Minecraft Launcher</h1>
+
+<h4 align="center">贡献指南</h4>
 
 <div align="center">
 

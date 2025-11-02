@@ -1,4 +1,6 @@
-<h1 align="center">Contributing Guidelines</h1>
+<h1 align="center">Common Minecraft Launcher</h1>
+
+<h4 align="center">Contributing Guidelines</h4>
 
 <div align="center">
 

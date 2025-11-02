@@ -144,22 +144,7 @@ class Minecraft:
                     inheritsJsonFile = json.loads(Path(
                         self.mc_gameJsonFile.parent.parent / self.mc_inheritsFrom / f"{self.mc_inheritsFrom}.json"
                     ).read_text(encoding="utf-8"))
-                    if inheritsJsonFile.get("arguments"):
-                        jsonFileContent["arguments"]["game"] = (inheritsJsonFile["arguments"]["game"]
-                                                                + jsonFileContent["arguments"]["game"])
-                        jsonFileContent["arguments"]["jvm"] = (inheritsJsonFile["arguments"]["jvm"]
-                                                               + jsonFileContent["arguments"]["jvm"])
-                    elif inheritsJsonFile.get("minecraftArguments"):
-                        jsonFileContent["minecraftArguments"] = inheritsJsonFile["minecraftArguments"]
-                    if inheritsJsonFile.get("libraries"):
-                        jsonFileContent["libraries"] = inheritsJsonFile["libraries"] + jsonFileContent["libraries"]
-                    if inheritsJsonFile.get("assets"):
-                        jsonFileContent["assets"] = inheritsJsonFile["assets"]
-                    if inheritsJsonFile.get("assetIndex"):
-                        jsonFileContent["assetIndex"] = inheritsJsonFile["assetIndex"]
-                    
-                    if inheritsJsonFile.get("javaVersion"):
-                        jsonFileContent["javaVersion"] = inheritsJsonFile["javaVersion"]
+                    jsonFileContent.update(inheritsJsonFile)
                 return jsonFileContent
             except:
                 return {}

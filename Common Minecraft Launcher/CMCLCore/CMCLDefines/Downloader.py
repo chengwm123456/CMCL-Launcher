@@ -8,6 +8,10 @@ from pathlib import Path, PurePath
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from email.message import EmailMessage
 
+import gzip
+import zlib
+import brotli
+
 
 class Downloader:
     @dataclass(frozen=True)
@@ -29,7 +33,7 @@ class Downloader:
             chunk_size: Union[int, str] = 1024 * 1024 * 8
     ):
         self.download_url = str(download_url)
-        self.download_file_name = Path(download_file_name).resolve()
+        self.download_file_name = Path(download_file_name)
         self.download_file_path = Path(download_file_path).resolve()
         self.__maximumThreads = int(maximum_threads or 8)
         self.__chunkSize = max(1024, int(chunk_size))
@@ -76,7 +80,7 @@ class Downloader:
             msg["Content-Disposition"] = requestHeaders.get("Content-Disposition")
             params = msg["Content-Disposition"].params
             if not self.download_file_name:
-                self.download_file_name = params["filename"]
+                self.download_file_name = Path(params["filename"])
         
         rangeRequestState = requestHeaders.get("Accept-Ranges", "none").lower()
         if rangeRequestState != "none":
@@ -101,7 +105,7 @@ class Downloader:
                     )
                 )
         self.download_file_path.mkdir(parents=True, exist_ok=True)
-        with Path(self.download_file_path / self.download_file_name).absolute().open(mode="wb") as file:
+        with Path(self.download_file_path / self.download_file_name).resolve().open(mode="wb") as file:
             for chunkData in downloadedChunks:
                 file.seek(chunkData.chunkRange.startRange)
                 file.write(chunkData.responseContent)
@@ -114,13 +118,23 @@ class Downloader:
                 self.download_url,
                 headers={
                     "Range": f"bytes={int(range.startRange)}-{int(range.endRange) - 1}",
-                    "Accept-Encoding": "identity"
+                    "Accept-Encoding": "gzip, deflate, br, identity"
                 }
         ) as response:
             response.raise_for_status()
+            content = response.content
+            match response.headers.get("Content-Encoding"):
+                case "gzip":
+                    content = gzip.decompress(content)
+                case "deflate":
+                    content = zlib.decompress(content, -8)
+                case "br":
+                    content = brotli.decompress(content)
+                case None:
+                    pass
             return self.DownloadedChunk(
                 chunkRange=range,
-                responseContent=response.content
+                responseContent=content
             )
     
     def __enter__(self) -> 'Downloader':

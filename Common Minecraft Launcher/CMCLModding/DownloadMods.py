@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+import requests
+
 from .GetMods import ListModVersions
-from CMCLCore.CMCLDefines.Downloader import Downloader
 
 
 def DownloadMod(mod_name, mod_version, target_path):
@@ -12,8 +13,9 @@ def DownloadMod(mod_name, mod_version, target_path):
             break
     if not mod_files:
         return
-    downloaders = []
     for file in mod_files:
-        downloader = Downloader(file["url"], file["filename"], target_path)
-        downloader.downloadFile()
-        downloaders.append(downloader)
+        response = requests.get(file["url"])
+        Path(Path(target_path) / file["filename"]).write_bytes(response.content)
+        # downloader = Downloader(file["url"], file["filename"], target_path)
+        # downloader.downloadFile()
+        # downloaders.append(downloader)

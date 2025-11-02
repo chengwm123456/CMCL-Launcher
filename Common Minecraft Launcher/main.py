@@ -12,13 +12,15 @@ from contextlib import redirect_stdout, redirect_stderr
 
 import base64
 import datetime
+import os
+import re
+import subprocess
 import sys
 import traceback
-import re
-import os
-import subprocess
+import tempfile
 import webbrowser
 
+import random
 import logging
 
 from CMCLWidgets import *
@@ -31,6 +33,7 @@ from CMCLCore.GetVersion import (GetVersionsByIterDirectory, GetVersionsByMojang
                                  GetMinecraftClientDownloadUrl, GetMinecraftServerDownloadUrl)
 from CMCLCore.CMCLGameDownloading import DownloadMinecraft
 from CMCLCore.GetOperationSystem import GetOperationSystemName
+from CMCLCore.CMCLMirrorMappings import MirrorSourceName, MirrorSourceEnabled
 
 import requests
 
@@ -153,6 +156,9 @@ languagesCodeMapping = {
     "en-gb": "English (United Kingdom)",
 }
 
+if random.randint(3, 5) == 4:
+    languagesCodeMapping["en-gb"] = "English (The United Kingdom of Great Britain and Northern Ireland)"
+
 
 class AcrylicBackground(QWidget):
     def __init__(self, parent, tintColour, luminosityColour=QColor(255, 255, 255, 0), blurRadius=10, noiseOpacity=0.03):
@@ -248,7 +254,7 @@ class LoadingAnimation(QFrame):
             self.setStartValue(0)
             self.setEndValue(255)
             self.setDirection(
-                QAbstractAnimation.Direction.Forward if variant == "in" else QAbstractAnimation.Direction.Backward)
+                QPropertyAnimation.Direction.Forward if variant == "in" else QPropertyAnimation.Direction.Backward)
             self.setDuration(1000)
             self.setEasingCurve(QEasingCurve.Type.OutQuad)
             self.valueChanged.connect(self.update_opacity)
@@ -265,7 +271,7 @@ class LoadingAnimation(QFrame):
             self.setStartValue(QSize(0, 0))
             self.setEndValue(size)
             self.setDirection(
-                QAbstractAnimation.Direction.Forward if variant == "in" else QAbstractAnimation.Direction.Backward)
+                QPropertyAnimation.Direction.Forward if variant == "in" else QPropertyAnimation.Direction.Backward)
             self.setDuration(1000)
             self.setEasingCurve(QEasingCurve.Type.OutBack)
             self.valueChanged.connect(self.update_size)
@@ -558,6 +564,104 @@ class OpacityAnimation(QVariantAnimation):
 
 
 class HomePage(QFrame):
+    class VersionManagementPage(QWidget):
+        minecraft_path_changed = pyqtSignal()
+        
+        def __init__(self, parent, isVersionsShown=True):
+            super().__init__(parent)
+            self.horizontalLayout = QHBoxLayout(self)
+            self.leftPanel = Panel(self)
+            self.horizontalLayout.addWidget(self.leftPanel)
+            self.verticalLayout = QVBoxLayout(self.leftPanel)
+            
+            isCurrentPathSaved = False
+            for dire in settings["LauncherSettings"]["SavedMinecraftPaths"]:
+                if Path(dire).resolve() == Path(minecraft_path).resolve():
+                    isCurrentPathSaved = True
+                newBtn = PushButton(self.leftPanel)
+                newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 10):])
+                newBtn.pressed.connect(lambda: self.selectDir(str(Path(dire).resolve())))
+                self.verticalLayout.addWidget(newBtn)
+            
+            if not isCurrentPathSaved:
+                dire = str(minecraft_path)
+                newBtn = PushButton(self.leftPanel)
+                newBtn.setText(dire[-min(len(dire), 10):])
+                newBtn.pressed.connect(lambda: self.selectDir(str(Path(dire).resolve())))
+                self.verticalLayout.addWidget(newBtn)
+            
+            self.addNewDirectoryButton = PushButton(self.leftPanel)
+            self.addNewDirectoryButton.released.connect(self.selectNewMinecraftDir)
+            self.verticalLayout.addWidget(self.addNewDirectoryButton)
+            
+            self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+            self.verticalLayout.addItem(self.verticalSpacer)
+            
+            self.versionsPanel = Panel(self)
+            self.horizontalLayout.addWidget(self.versionsPanel, 1)
+            
+            self.verticalLayout_2 = QVBoxLayout(self.versionsPanel)
+            
+            self.currentDir = Label(self.versionsPanel)
+            self.verticalLayout_2.addWidget(self.currentDir)
+            
+            self.listWidget = ListWidget(self.versionsPanel)
+            self.verticalLayout_2.addWidget(self.listWidget)
+            
+            self.versionAliasConv = {}
+            self.updateVersionsList()
+            
+            app.registerRetranslateFunction(self.retranslateUI)
+            self.retranslateUI()
+        
+        def retranslateUI(self):
+            self.addNewDirectoryButton.setText("+ 添加文件夹")
+            self.currentDir.setText(f"当前文件夹：{str(minecraft_path)}")
+        
+        def selectNewMinecraftDir(self):
+            global minecraft_path
+            dirDialogue = QFileDialog.getExistingDirectory(self, "选择游戏文件夹", str(minecraft_path))
+            if dirDialogue:
+                minecraft_path = Path(dirDialogue).resolve()
+                settings["LauncherSettings"]["MinecraftPath"] = str(minecraft_path.absolute())
+                if str(minecraft_path) not in settings["LauncherSettings"]["SavedMinecraftPaths"]:
+                    settings["LauncherSettings"]["SavedMinecraftPaths"].append(str(minecraft_path))
+                    dire = str(minecraft_path)
+                    newBtn = PushButton(self.leftPanel)
+                    newBtn.setText(dire[-min(len(dire), 10):])
+                    newBtn.pressed.connect(lambda: self.selectDir(str(Path(dire).resolve())))
+                    self.verticalLayout.insertWidget(len(settings["LauncherSettings"]["SavedMinecraftPaths"]) - 1,
+                                                     newBtn)
+                self.minecraft_path_changed.emit()
+            self.retranslateUI()
+            self.updateVersionsList()
+        
+        def selectDir(self, dir):
+            global minecraft_path
+            minecraft_path = Path(dir).resolve()
+            self.minecraft_path_changed.emit()
+            self.retranslateUI()
+            self.updateVersionsList()
+        
+        def updateVersionsList(self):
+            # self.listWidget.itemDoubleClicked.connect(lambda x: (self.selectVersion(x.text()), menu.close()))
+            
+            self.versionAliasConv.clear()
+            
+            versionList = GetVersionsByIterDirectory(minecraft_path)
+            if versionList:
+                versionList = sorted(versionList, key=lambda x: x[1].stat().st_mtime, reverse=True)
+                for version in versionList:
+                    versionConfig = Path(version[1] / "version.cfg")
+                    versionName = version[0]
+                    if versionConfig.exists():
+                        cfg = json.loads(Path(versionConfig).read_text(encoding="utf-8"))
+                        versionName = cfg["VersionAlias"]
+                        self.versionAliasConv[versionName] = version[0]
+                    item = QListWidgetItem(versionName, self.listWidget)
+                    item.setSizeHint(QSize(0, 32))
+                    self.listWidget.addItem(item)
+    
     class LaunchThread(QThread):
         launchFinished = pyqtSignal(tuple)
         
@@ -697,10 +801,20 @@ class HomePage(QFrame):
         self.selectNewMinecraftDirButton = PushButton(self.topPanel)
         self.selectNewMinecraftDirButton.setMinimumWidth(60)
         self.selectNewMinecraftDirButton.setMinimumHeight(32)
-        self.selectNewMinecraftDirButton.pressed.connect(self.selectNewMinecraftDir)
+        self.selectNewMinecraftDirButton.released.connect(self.selectNewMinecraftDir)
         self.horizontalLayout.addWidget(self.selectNewMinecraftDirButton)
+        self.versionsManageButton = PushButton(self.topPanel)
+        self.versionsManageButton.setMinimumWidth(60)
+        self.versionsManageButton.setMinimumHeight(32)
+        self.versionsManageButton.setCheckable(True)
+        self.versionsManageButton.pressed.connect(self.toggleManagementPageVisibility)
+        self.horizontalLayout.addWidget(self.versionsManageButton)
         self.horizontalSpacer_2 = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.horizontalLayout.addItem(self.horizontalSpacer_2)
+        
+        self.versionsManagementPage = self.VersionManagementPage(self)
+        self.versionsManagementPage.hide()
+        self.versionsManagementPage.minecraft_path_changed.connect(self.updateVersionList)
         
         self.version = None
         self.versionAliasConv = {}
@@ -720,6 +834,7 @@ class HomePage(QFrame):
         self.reloadButton.setToolTip("重新加载版本列表")
         self.selectNewMinecraftDirButton.setText("选择文件夹")
         self.selectNewMinecraftDirButton.setToolTip(f"当前文件夹：{str(minecraft_path)}")
+        self.versionsManageButton.setText("版本管理")
     
     def updateVersionList(self):
         menu = QMenu(self.selectVersionButton)
@@ -791,13 +906,45 @@ class HomePage(QFrame):
         print(result)
     
     def selectNewMinecraftDir(self):
-        global minecraft_path
-        self.selectNewMinecraftDirButton.setDown(False)
-        dirDialogue = QFileDialog.getExistingDirectory(self, "选择游戏文件夹", str(minecraft_path))
-        if dirDialogue:
-            minecraft_path = Path(dirDialogue).absolute()
-            settings["LauncherSettings"]["MinecraftPath"] = str(minecraft_path.absolute())
-            self.updateVersionList()
+        if not self.versionsManagementPage.isVisible():
+            self.openManagementPage()
+            QTimer.singleShot(500, self.selectNewMinecraftDir2)
+        else:
+            self.selectNewMinecraftDir2(False)
+    
+    def selectNewMinecraftDir2(self, close=True):
+        self.versionsManagementPage.selectNewMinecraftDir()
+        self.updateVersionList()
+        if close:
+            self.closeManagementPage()
+    
+    def toggleManagementPageVisibility(self):
+        if self.versionsManagementPage.isVisible():
+            self.closeManagementPage()
+        else:
+            self.openManagementPage()
+    
+    def openManagementPage(self):
+        if self.versionsManagementPage.isVisible():
+            return
+        self.versionsManagementPage.show()
+        ani22 = OpacityAnimation(self.versionsManagementPage)
+        ani22.setStartValue(0)
+        ani22.setEndValue(100)
+        ani22.setDuration(500)
+        ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+        ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+    
+    def closeManagementPage(self):
+        if not self.versionsManagementPage.isVisible():
+            return
+        ani22 = OpacityAnimation(self.versionsManagementPage)
+        ani22.setStartValue(100)
+        ani22.setEndValue(0)
+        ani22.setDuration(500)
+        ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+        ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+        QTimer.singleShot(500, lambda: self.versionsManagementPage.hide())
     
     def changeAnimation(self, variant, function):
         if variant == "in":
@@ -821,6 +968,13 @@ class HomePage(QFrame):
         ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
         ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
         QTimer.singleShot(50, lambda: self.topPanel.show())
+        if self.versionsManagementPage.isVisible():
+            ani22 = OpacityAnimation(self.versionsManagementPage)
+            ani22.setStartValue(0)
+            ani22.setEndValue(100)
+            ani22.setDuration(500)
+            ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
     
     def changeAnimationOut(self):
         ani11 = OpacityAnimation(self.topPanel)
@@ -830,6 +984,13 @@ class HomePage(QFrame):
         ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
         ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
         ani11.finished.connect(lambda: self.topPanel.show())
+        if self.versionsManagementPage.isVisible():
+            ani22 = OpacityAnimation(self.versionsManagementPage)
+            ani22.setStartValue(100)
+            ani22.setEndValue(0)
+            ani22.setDuration(500)
+            ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
     
     def postToggleTheme(self):
         self.updateIcon()
@@ -842,6 +1003,8 @@ class HomePage(QFrame):
         super().resizeEvent(a0)
         self.topPanel.move(QPoint(15, 15))
         self.topPanel.resize(QSize(self.width() - 30, 54))
+        self.versionsManagementPage.move(QPoint(15, 79))
+        self.versionsManagementPage.resize(QSize(self.width() - 30, self.height() - 79 - 15))
 
 
 class DownloadPage(QFrame):
@@ -908,16 +1071,19 @@ class DownloadPage(QFrame):
                 self.groupBox1Btn.setCheckable(True)
                 self.groupBox1Btn.setChecked(True)
                 self.groupBox1Btn.setAutoExclusive(True)
+                self.groupBox1Btn.pressed.connect(lambda: self.indexTo(0))
                 self.horizontalLayout.addWidget(self.groupBox1Btn)
                 
                 self.groupBox2Btn = PushButton(self)
                 self.groupBox2Btn.setCheckable(True)
                 self.groupBox2Btn.setAutoExclusive(True)
+                self.groupBox1Btn.pressed.connect(lambda: self.indexTo(1))
                 self.horizontalLayout.addWidget(self.groupBox2Btn)
                 
                 self.groupBox3Btn = PushButton(self)
                 self.groupBox3Btn.setCheckable(True)
                 self.groupBox3Btn.setAutoExclusive(True)
+                self.groupBox1Btn.pressed.connect(lambda: self.indexTo(2))
                 self.horizontalLayout.addWidget(self.groupBox3Btn)
                 
                 self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -1029,12 +1195,21 @@ jar 下载位置在：
                 self.startDownloadBtn.setText("下载")
             
             def updateTopSelections(self, value):
-                if value >= self.groupBox_3.y():
+                if value + self.scrollArea.verticalScrollBar().pageStep() >= self.groupBox_3.y():
                     self.groupBox3Btn.setChecked(True)
-                elif value >= self.groupBox_2.y():
+                elif value + self.scrollArea.verticalScrollBar().pageStep() >= self.groupBox_2.y():
                     self.groupBox2Btn.setChecked(True)
                 else:
                     self.groupBox1Btn.setChecked(True)
+            
+            def indexTo(self, index):
+                widget = (self.groupBox, self.groupBox_2, self.groupBox_3)[index]
+                animation = QPropertyAnimation(self.scrollArea.verticalScrollBar(), b"value", self)
+                animation.setStartValue(self.scrollArea.verticalScrollBar().value())
+                animation.setEndValue(widget.y())
+                animation.setDuration(500)
+                animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+                animation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
             
             def downloadVersion(self):
                 thread = self.DownloadVersionThread(
@@ -1392,7 +1567,6 @@ jar 下载位置在：
                 
                 def run(self):
                     if self.mod_name and self.mod_version and self.target_path:
-                        print("started")
                         DownloadMod(self.mod_name, self.mod_version, self.target_path)
             
             class GetIconThread(QThread):
@@ -1445,7 +1619,14 @@ jar 下载位置在：
                 self.page1Btn.setCheckable(True)
                 self.page1Btn.setChecked(True)
                 self.page1Btn.setAutoExclusive(True)
-                self.horizontalLayout.addWidget(self.groupBox1Btn)
+                self.page1Btn.pressed.connect(lambda: self.indexTo(0))
+                self.horizontalLayout.addWidget(self.page1Btn)
+                
+                self.page2Btn = PushButton(self)
+                self.page2Btn.setCheckable(True)
+                self.page2Btn.setAutoExclusive(True)
+                self.page2Btn.pressed.connect(lambda: self.indexTo(1))
+                self.horizontalLayout.addWidget(self.page2Btn)
                 
                 self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 self.horizontalLayout.addItem(self.horizontalSpacer)
@@ -1453,7 +1634,11 @@ jar 下载位置在：
                 self.scrollArea = ScrollArea(self)
                 self.mainLayout.addWidget(self.scrollArea, 1)
                 
-                self.modInfo = QFrame()
+                self.scrollAreaWidgetContents = QWidget()
+                
+                self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
+                
+                self.modInfo = GroupBox(self.scrollAreaWidgetContents)
                 
                 self.verticalLayout_2 = QVBoxLayout(self.modInfo)
                 
@@ -1481,16 +1666,33 @@ jar 下载位置在：
                 
                 self.verticalLayout_2.addWidget(self.modInfoCard)
                 
+                self.modLinks = Panel(self.modInfo)
+                self.verticalLayout_2.addWidget(self.modLinks)
+                
+                self.horizontalLayout_3 = QHBoxLayout(self.modLinks)
+                
+                self.modAction_issues = None
+                
+                if self.mod_info_json.get("issues_url"):
+                    self.modAction_issues = PushButton(self.modLinks)
+                    self.modAction_issues.pressed.connect(lambda: self.openURL(self.mod_info_json.get("issues_url")))
+                    self.horizontalLayout_3.addWidget(self.modAction_issues)
+                
+                self.horizontalSpacer_2 = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+                self.horizontalLayout_3.addItem(self.horizontalSpacer_2)
+                
                 self.modBody = TextEdit(self.modInfo)
                 self.modBody.setReadOnly(True)
                 self.modBody.setMarkdown(self.mod_body)
-                self.verticalLayout_2.addWidget(self.modBody)
+                self.verticalLayout_2.addWidget(self.modBody, 1)
                 
-                self.modInfoContainer = ScrollArea(self.toolBox)
-                self.modInfoContainer.setWidget(self.modInfo)
-                self.modInfoContainer.setWidgetResizable(True)
+                # self.modInfoContainer = ScrollArea(self.toolBox)
+                # self.modInfoContainer.setWidget(self.modInfo)
+                # self.modInfoContainer.setWidgetResizable(True)
                 
-                self.modVersions = QFrame(self.toolBox)
+                self.verticalLayout.addWidget(self.modInfo)
+                
+                self.modVersions = GroupBox(self.scrollAreaWidgetContents)
                 
                 self.verticalLayout_4 = QVBoxLayout(self.modVersions)
                 
@@ -1498,17 +1700,25 @@ jar 下载位置在：
                 self.listWidget.doubleClicked.connect(self.startDownloadMod)
                 self.verticalLayout_4.addWidget(self.listWidget)
                 
-                self.toolBox.addItem(self.modVersions, self.tr("DownloadPage.DownloadMods.ModInfoPage.Page2.Title"))
+                self.verticalLayout.addWidget(self.modVersions)
                 
-                self.verticalLayout.addWidget(self.toolBox)
+                self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+                self.scrollArea.setWidgetResizable(True)
+                
+                self.scrollArea.verticalScrollBar().valueChanged.connect(self.updateTopSelections)
                 
                 self.retranslateUI()
             
             def retranslateUI(self):
                 self.modName.setText(self.mod_name)
                 self.modDescription.setText(self.mod_description)
-                self.toolBox.setItemText(self.toolBox.indexOf(self.modInfoContainer), "模组信息")
-                self.toolBox.setItemText(self.toolBox.indexOf(self.modVersions), "模组版本")
+                # self.toolBox.setItemText(self.toolBox.indexOf(self.modInfoContainer), "模组信息")
+                # self.toolBox.setItemText(self.toolBox.indexOf(self.modVersions), "模组版本")
+                self.page1Btn.setText("模组信息")
+                self.page2Btn.setText("模组版本")
+                self.modInfo.setTitle("模组信息")
+                self.modVersions.setTitle("模组版本")
+                self.modAction_issues.setText("汇报漏洞")
             
             def updateIcon(self, icon):
                 try:
@@ -1517,6 +1727,7 @@ jar 下载位置在：
                         self.icon_temp.flush()
                 except:
                     self.icon_temp = None
+                    raise
                 self.modIcon.setIcon(QIcon(self.icon_temp.name) if self.icon_temp else QIcon())
             
             def updateVersions(self, versions):
@@ -1531,6 +1742,43 @@ jar 下载位置在：
                     version_text = self.listWidget.model().itemData(version)[0]
                     thread = self.DownloadThread(self, self.mod_name, version_text, download_path)
                     thread.start()
+            
+            def openURL(self, url):
+                webbrowser.open(url)
+            
+            def closeFrame(self):
+                self.hide()
+            
+            def resizeEvent(self, a0):
+                super().resizeEvent(a0)
+                self.modBody.setMinimumHeight(
+                    (self.modBody.verticalScrollBar().maximum()
+                     - self.modBody.verticalScrollBar().minimum()
+                     + self.modBody.verticalScrollBar().pageStep()
+                     ) + 10)
+            
+            def showEvent(self, a0):
+                super().showEvent(a0)
+                self.modBody.setMinimumHeight(
+                    (self.modBody.verticalScrollBar().maximum()
+                     - self.modBody.verticalScrollBar().minimum()
+                     + self.modBody.verticalScrollBar().pageStep()
+                     ) + 10)
+            
+            def updateTopSelections(self, value):
+                if value + self.scrollArea.verticalScrollBar().pageStep() >= self.modVersions.y():
+                    self.page2Btn.setChecked(True)
+                else:
+                    self.page1Btn.setChecked(True)
+            
+            def indexTo(self, index):
+                widget = (self.modInfo, self.modVersions)[index]
+                animation = QPropertyAnimation(self.scrollArea.verticalScrollBar(), b"value", self)
+                animation.setStartValue(self.scrollArea.verticalScrollBar().value())
+                animation.setEndValue(widget.y())
+                animation.setDuration(500)
+                animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+                animation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
             
             def paintEvent(self, a0):
                 self.setTintColour(getBackgroundColour())
@@ -1605,7 +1853,6 @@ jar 下载位置在：
             self.loadingAnimation = None
             self.getModThread = None
             self.modInfoPage = None
-            self.modInfoPageY = None
             self.currentPage = 1
         
         def retranslateUI(self):
@@ -1629,10 +1876,7 @@ jar 下载位置在：
         
         def updatePage(self):
             self.currentPageLabel.setText(str(self.currentPage))
-            if self.currentPage <= 1:
-                self.previousButton.setEnabled(False)
-            else:
-                self.previousButton.setEnabled(True)
+            self.previousButton.setEnabled(self.currentPage > 1)
             if self.searchLineEdit.text():
                 self.nextButton.setEnabled(False)
             else:
@@ -1648,18 +1892,10 @@ jar 下载位置在：
                 self.loadingAnimation = LoadingAnimation(self)
                 self.startAnimation(True)
         
-        def event(self, e):
-            if hasattr(self, "modInfoPage") and self.modInfoPage:
-                rect = self.rect().adjusted(1, 1, -1, -1)
-                rect.moveTo(0, self.modInfoPageY)
-                self.modInfoPage.setGeometry(rect)
-                self.modInfoPage.raise_()
-            if hasattr(self, "modInfoPageY") and self.modInfoPageY:
-                if self.modInfoPageY > 0:
-                    self.modInfoPageY -= self.modInfoPageY // 16 + 1
-                else:
-                    self.modInfoPageY = 0
-            return super().event(e)
+        def resizeEvent(self, a0):
+            super().resizeEvent(a0)
+            if self.modInfoPage:
+                self.modInfoPage.resize(self.size())
         
         def showEvent(self, a0):
             super().showEvent(a0)
@@ -1710,7 +1946,9 @@ jar 下载位置在：
                 self.updatePage()
             else:
                 if self.mods:
-                    self.previousPage()
+                    self.currentPage -= 1
+                    self.currentPage = max(self.currentPage, 1)
+                    self.updatePage()
                     self.finishAnimation(True, True)
                 else:
                     self.finishAnimation(True, False)
@@ -1749,19 +1987,23 @@ jar 下载位置在：
                     if hit["title"] == data:
                         hit_data = hit
             if hit_data:
-                self.modInfoPageY = self.height()
                 self.modInfoPage = self.ModInfoPage(self, data, hit_data["slug"])
                 self.modInfoPage.closePage.connect(self.modInfoPageClose)
                 rect = self.rect().adjusted(1, 1, -1, -1)
                 self.modInfoPage.setGeometry(rect)
                 self.modInfoPage.grabBehind()
-                rect.moveTo(0, self.modInfoPageY)
-                self.modInfoPage.setGeometry(rect)
+                self.modInfoPage.move(QPoint(0, self.height()))
+                ani = QPropertyAnimation(self.modInfoPage, b"pos", self)
+                ani.setStartValue(QPoint(0, self.height()))
+                ani.setEndValue(QPoint(0, 0))
+                ani.setKeyValueAt(0.8, QPoint(0, 50))
+                ani.setDuration(500)
+                ani.setEasingCurve(QEasingCurve.Type.OutQuad)
+                ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                 self.modInfoPage.show()
         
         def modInfoPageClose(self):
             self.modInfoPage = None
-            self.modInfoPageY = None
         
         def changeAnimation(self, variant, function):
             if variant == "in":
@@ -1821,10 +2063,10 @@ jar 下载位置在：
             ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
             QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
             QTimer.singleShot(150, lambda: self.contentTable.show())
-            ani3 = QPropertyAnimation(self.contentTable, b"pos", self)
-            pos3 = self.contentTable.pos()
+            ani3 = QPropertyAnimation(self.paginator, b"pos", self)
+            pos3 = self.paginator.pos()
             ani3.setStartValue(pos3 + QPoint(100, 0))
-            ani3.setEndValue(pos2)
+            ani3.setEndValue(pos3)
             ani3.setDuration(500)
             ani3.setEasingCurve(QEasingCurve.Type.OutQuint)
             QTimer.singleShot(100, lambda: ani3.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
@@ -2403,6 +2645,18 @@ JVM 参数就是：
             self.form_2_Slider.valueChanged.connect(self.downloadChunkSizeChanged)
             self.formLayout.setWidget(1, QFormLayout.ItemRole.FieldRole, self.form_2_Slider)
             
+            self.groupBox_2 = GroupBox(self)
+            self.verticalLayout.addWidget(self.groupBox_2)
+            
+            self.formLayout_2 = QFormLayout(self.groupBox_2)
+            
+            self.form_3_Label = Label(self.groupBox_2)
+            self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.form_3_Label)
+            
+            self.form_3_ComboBox = ComboBox(self.groupBox_2)
+            self.form_3_ComboBox.currentIndexChanged.connect(self.selectMirrorSource)
+            self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_3_ComboBox)
+            
             self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
             self.verticalLayout.addItem(self.verticalSpacer)
             
@@ -2420,6 +2674,13 @@ JVM 参数就是：
             self.form_2_Label.setText("下载区块大小（单位：KB）")
             self.form_2_Slider.setToolTip(
                 "设置多线程下载器下载时每一个下载区块的大小，范围为 1KB ~ 2MB（2048KB）。\n区块大小越大，使用的线程会变少，同时下载单个区块的时间可能会变长，反之亦然。\n需要自行平衡，这里默认值为 1MB。")
+            self.groupBox_2.setTitle("镜像源")
+            self.form_3_Label.setText("镜像源")
+            idx = max(self.form_3_ComboBox.currentIndex(), 0)
+            self.form_3_ComboBox.clear()
+            self.form_3_ComboBox.addItem("官方源")
+            self.form_3_ComboBox.addItem("BMCLAPI")
+            self.form_3_ComboBox.setCurrentIndex(idx)
         
         def downloadThreadsCountChanged(self, value):
             settings["LauncherSettings"]["DownloadSettings"]["DownloadThreadsCount"] = min(value,
@@ -2427,6 +2688,62 @@ JVM 参数就是：
         
         def downloadChunkSizeChanged(self, value):
             settings["LauncherSettings"]["DownloadSettings"]["DownloadChunkSize"] = value
+        
+        def selectMirrorSource(self):
+            value = self.form_3_ComboBox.currentIndex()
+            if value <= 0:
+                MirrorSourceEnabled(False)
+            else:
+                MirrorSourceEnabled(True, value - 1)
+        
+        def changeAnimation(self, variant, function):
+            if variant == "in":
+                self.changeAnimationIn()
+            else:
+                self.changeAnimationOut()
+                QTimer.singleShot(300, function)
+        
+        def changeAnimationIn(self):
+            ani1 = QPropertyAnimation(self.groupBox, b"pos", self)
+            pos1 = self.groupBox.pos()
+            ani1.setStartValue(pos1 + QPoint(100, 0))
+            ani1.setEndValue(pos1)
+            ani1.setDuration(500)
+            ani1.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani1.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            ani11 = OpacityAnimation(self.groupBox)
+            ani11.setStartValue(0)
+            ani11.setEndValue(100)
+            ani11.setDuration(500)
+            ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            ani2 = QPropertyAnimation(self.groupBox_2, b"pos", self)
+            pos2 = self.groupBox_2.pos()
+            ani2.setStartValue(pos2 + QPoint(100, 0))
+            ani2.setEndValue(pos2)
+            ani2.setDuration(500)
+            ani2.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(100, lambda: ani2.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+            ani22 = OpacityAnimation(self.groupBox_2)
+            ani22.setStartValue(0)
+            ani22.setEndValue(100)
+            ani22.setDuration(500)
+            ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+        
+        def changeAnimationOut(self):
+            ani11 = OpacityAnimation(self.groupBox)
+            ani11.setStartValue(100)
+            ani11.setEndValue(0)
+            ani11.setDuration(500)
+            ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            ani22 = OpacityAnimation(self.groupBox_2)
+            ani22.setStartValue(100)
+            ani22.setEndValue(0)
+            ani22.setDuration(500)
+            ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
     
     class PersonalisationSettings(QFrame):
         def __init__(self, parent):
@@ -2524,6 +2841,7 @@ JVM 参数就是：
             
             self.form_1_ComboBox = ComboBox(self.groupBox_4)
             self.form_1_ComboBox.wheelEvent = lambda: None
+            self.form_1_ComboBox.currentIndexChanged.connect(self.setLanguage)
             self.form_1.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_1_ComboBox)
             
             self.updateLanguagesList()
@@ -2594,6 +2912,7 @@ JVM 参数就是：
             for idx, lang in enumerate(languagesSequence):
                 if lang == currentLanguage:
                     index = idx
+                    print(currentLanguage)
                 self.form_1_ComboBox.addItem(f"{languagesCodeMapping[lang]} ({lang})")
             
             self.form_1_ComboBox.setCurrentIndex(index)
@@ -2604,6 +2923,100 @@ JVM 参数就是：
             langCode = languagesSequence[self.form_1_ComboBox.currentIndex()]
             currentLanguage = langCode
             app.retranslate()
+        
+        def selectMirrorSource(self):
+            value = self.form_3_ComboBox.currentIndex()
+            if value <= 0:
+                MirrorSourceEnabled(False)
+            else:
+                MirrorSourceEnabled(True, value - 1)
+        
+        def changeAnimation(self, variant, function):
+            if variant == "in":
+                self.changeAnimationIn()
+            else:
+                self.changeAnimationOut()
+                QTimer.singleShot(300, function)
+        
+        def changeAnimationIn(self):
+            ani1 = QPropertyAnimation(self.groupBox, b"pos", self)
+            pos1 = self.groupBox.pos()
+            ani1.setStartValue(pos1 + QPoint(100, 0))
+            ani1.setEndValue(pos1)
+            ani1.setDuration(500)
+            ani1.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani1.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            ani11 = OpacityAnimation(self.groupBox)
+            ani11.setStartValue(0)
+            ani11.setEndValue(100)
+            ani11.setDuration(500)
+            ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            ani2 = QPropertyAnimation(self.groupBox_2, b"pos", self)
+            pos2 = self.groupBox_2.pos()
+            ani2.setStartValue(pos2 + QPoint(100, 0))
+            ani2.setEndValue(pos2)
+            ani2.setDuration(500)
+            ani2.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(100, lambda: ani2.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+            ani22 = OpacityAnimation(self.groupBox_2)
+            ani22.setStartValue(0)
+            ani22.setEndValue(100)
+            ani22.setDuration(500)
+            ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+            ani3 = QPropertyAnimation(self.groupBox_3, b"pos", self)
+            pos3 = self.groupBox_3.pos()
+            ani3.setStartValue(pos3 + QPoint(100, 0))
+            ani3.setEndValue(pos3)
+            ani3.setDuration(500)
+            ani3.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(200, lambda: ani3.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+            ani33 = OpacityAnimation(self.groupBox_3)
+            ani33.setStartValue(0)
+            ani33.setEndValue(100)
+            ani33.setDuration(500)
+            ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(200, lambda: ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+            ani4 = QPropertyAnimation(self.groupBox_4, b"pos", self)
+            pos4 = self.groupBox_4.pos()
+            ani4.setStartValue(pos4 + QPoint(100, 0))
+            ani4.setEndValue(pos4)
+            ani4.setDuration(500)
+            ani4.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(300, lambda: ani4.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+            ani4_ = OpacityAnimation(self.groupBox_4)
+            ani4_.setStartValue(0)
+            ani4_.setEndValue(100)
+            ani4_.setDuration(500)
+            ani4_.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(300, lambda: ani4_.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+        
+        def changeAnimationOut(self):
+            ani11 = OpacityAnimation(self.groupBox)
+            ani11.setStartValue(100)
+            ani11.setEndValue(0)
+            ani11.setDuration(500)
+            ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            ani22 = OpacityAnimation(self.groupBox_2)
+            ani22.setStartValue(100)
+            ani22.setEndValue(0)
+            ani22.setDuration(500)
+            ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+            ani33 = OpacityAnimation(self.groupBox_3)
+            ani33.setStartValue(100)
+            ani33.setEndValue(0)
+            ani33.setDuration(500)
+            ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(200, lambda: ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+            ani4_ = OpacityAnimation(self.groupBox_4)
+            ani4_.setStartValue(100)
+            ani4_.setEndValue(0)
+            ani4_.setDuration(500)
+            ani4_.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(300, lambda: ani4_.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -3093,6 +3506,7 @@ class PlayerPage(QFrame):
         self.verticalLayout.addWidget(self.topPanel)
         
         self.leftButton = ToolButton(self.topPanel)
+        self.leftButton.pressed.connect(self.selectPlayerLeft)
         self.leftButton.setFixedSize(QSize(32, 32))
         
         self.middleButton = ToolButton(self.topPanel)
@@ -3103,6 +3517,7 @@ class PlayerPage(QFrame):
         self.playerActions.pressed.connect(self.showPlayerActionsMenu)
         
         self.rightButton = ToolButton(self.topPanel)
+        self.rightButton.pressed.connect(self.selectPlayerRight)
         self.rightButton.setFixedSize(QSize(32, 32))
         
         self.tableWidget = TableWidget(self)
@@ -3201,6 +3616,12 @@ class PlayerPage(QFrame):
             self.currentIndex = self.playerList.index(player)
         self.retranslateUI()
         self.updatePlayerList()
+    
+    def selectPlayerLeft(self):
+        self.selectPlayer(self.playerList[max(self.currentIndex - 1, 0)])
+    
+    def selectPlayerRight(self):
+        self.selectPlayer(self.playerList[min(self.currentIndex + 1, len(self.playerList))])
     
     def updatePlayerList(self):
         def parseName(name):

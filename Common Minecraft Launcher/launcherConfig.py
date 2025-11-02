@@ -35,6 +35,7 @@ def createSettingsFile():
                     ]
                 },
                 "MinecraftPath": ".",
+                "SavedMinecraftPaths": [],
                 "DownloadSettings": {
                     "DownloadThreadsCount": 8,
                     "DownloadChunkSize": 1024
