@@ -10,7 +10,6 @@ from email.message import EmailMessage
 
 import gzip
 import zlib
-import brotli
 
 
 class Downloader:
@@ -118,7 +117,7 @@ class Downloader:
                 self.download_url,
                 headers={
                     "Range": f"bytes={int(range.startRange)}-{int(range.endRange) - 1}",
-                    "Accept-Encoding": "gzip, deflate, br, identity"
+                    "Accept-Encoding": "gzip, deflate, identity"
                 }
         ) as response:
             response.raise_for_status()
@@ -128,8 +127,6 @@ class Downloader:
                     content = gzip.decompress(content)
                 case "deflate":
                     content = zlib.decompress(content, -8)
-                case "br":
-                    content = brotli.decompress(content)
                 case None:
                     pass
             return self.DownloadedChunk(

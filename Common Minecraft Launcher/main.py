@@ -579,15 +579,15 @@ class HomePage(QFrame):
                 if Path(dire).resolve() == Path(minecraft_path).resolve():
                     isCurrentPathSaved = True
                 newBtn = PushButton(self.leftPanel)
-                newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 10):])
-                newBtn.pressed.connect(lambda: self.selectDir(str(Path(dire).resolve())))
+                newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 13):])
+                newBtn.pressed.connect(lambda d=dire: self.selectDir(str(Path(d).resolve())))
                 self.verticalLayout.addWidget(newBtn)
             
             if not isCurrentPathSaved:
                 dire = str(minecraft_path)
                 newBtn = PushButton(self.leftPanel)
-                newBtn.setText(dire[-min(len(dire), 10):])
-                newBtn.pressed.connect(lambda: self.selectDir(str(Path(dire).resolve())))
+                newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 13):])
+                newBtn.pressed.connect(lambda d=dire: self.selectDir(str(Path(d).resolve())))
                 self.verticalLayout.addWidget(newBtn)
             
             self.addNewDirectoryButton = PushButton(self.leftPanel)
@@ -628,8 +628,8 @@ class HomePage(QFrame):
                     settings["LauncherSettings"]["SavedMinecraftPaths"].append(str(minecraft_path))
                     dire = str(minecraft_path)
                     newBtn = PushButton(self.leftPanel)
-                    newBtn.setText(dire[-min(len(dire), 10):])
-                    newBtn.pressed.connect(lambda: self.selectDir(str(Path(dire).resolve())))
+                    newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 13):])
+                    newBtn.pressed.connect(lambda d=dire: self.selectDir(str(Path(d).resolve())))
                     self.verticalLayout.insertWidget(len(settings["LauncherSettings"]["SavedMinecraftPaths"]) - 1,
                                                      newBtn)
                 self.minecraft_path_changed.emit()
@@ -645,6 +645,7 @@ class HomePage(QFrame):
         
         def updateVersionsList(self):
             # self.listWidget.itemDoubleClicked.connect(lambda x: (self.selectVersion(x.text()), menu.close()))
+            self.listWidget.clear()
             
             self.versionAliasConv.clear()
             
