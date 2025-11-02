@@ -2,7 +2,7 @@
 name: Making advice
 about: Suggest an idea for this project / 给启动器提一个小小的意见
 title: ''
-labels: Advice / 建议
+labels: Advice / 建议, Bug / 程序错误, Security vulnerability / 安全漏洞
 assignees: ''
 
 ---
