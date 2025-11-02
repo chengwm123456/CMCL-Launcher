@@ -158,6 +158,8 @@ class Minecraft:
                         jsonFileContent["assets"] = inheritsJsonFile["assets"]
                     if inheritsJsonFile.get("assetIndex"):
                         jsonFileContent["assetIndex"] = inheritsJsonFile["assetIndex"]
+                    if inheritsJsonFile.get("mainClass"):
+                        jsonFileContent["mainClass"] = inheritsJsonFile["mainClass"]
                     
                     if inheritsJsonFile.get("javaVersion"):
                         jsonFileContent["javaVersion"] = inheritsJsonFile["javaVersion"]
