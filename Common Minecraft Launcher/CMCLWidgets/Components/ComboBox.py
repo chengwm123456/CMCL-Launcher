@@ -96,14 +96,7 @@ class ComboBox(QComboBox, Widget):
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour(is_highlight=True))
             painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
-            painter.drawRoundedRect(
-                self.rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         painter.save()
@@ -118,28 +111,13 @@ class ComboBox(QComboBox, Widget):
         
         if self.property("frameOpacity"):
             painter.save()
-            rect2 = self.rect().adjusted(
-                self.property("frameRectAdjustment"),
-                self.property("frameRectAdjustment"),
-                -self.property("frameRectAdjustment"),
-                -self.property("frameRectAdjustment")
-            )
-            adjustmentScaleRatio = 1 - (self.property("frameRectAdjustment") / min(
-                32, min(self.width() // 2, self.height() // 2)))
-            x2 = (rect2.width() - 8) - 3 + 4 + rect2.x()
-            y2 = rect2.height() / 2 - 2 + 2 + rect2.y()
+            x = (self.width() - 8) - 3 + 4
+            y = self.height() / 2 - 2 + 2
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour(is_highlight=True))
-            painter.translate(x2, y2)
+            painter.translate(x, y)
             painter.rotate(self.property("dropdownIndicatorRotation"))
-            painter.drawLines(
-                [
-                    QLineF(QPointF(-4 * adjustmentScaleRatio, -2 * adjustmentScaleRatio),
-                           QPointF(0, 2 * adjustmentScaleRatio)),
-                    QLineF(QPointF(0, 2 * adjustmentScaleRatio),
-                           QPointF(4 * adjustmentScaleRatio, -2 * adjustmentScaleRatio))
-                ]
-            )
+            painter.drawLines([QLineF(QPointF(-4, -2), QPointF(0, 2)), QLineF(QPointF(0, 2), QPointF(4, -2))])
             painter.restore()
         
         op = QStyleOptionComboBox()

@@ -42,14 +42,7 @@ class ListView(QListView, Widget):
             painter.setOpacity(self.viewport().property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.viewport().rect().adjusted(
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    -(1 + self.viewport().property("frameRectAdjustment")),
-                    -(1 + self.viewport().property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         op = QStyleOptionFrame()
@@ -92,14 +85,7 @@ class ListWidget(QListWidget, Widget):
             painter.setOpacity(self.viewport().property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.viewport().rect().adjusted(
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    -(1 + self.viewport().property("frameRectAdjustment")),
-                    -(1 + self.viewport().property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         op = QStyleOptionFrame()

@@ -22,34 +22,10 @@ class Colour(QColor):
             yield self.alpha()
     
     def __getitem__(self, item):
-        if isinstance(item, int) and item >= 4:
-            raise IndexError("Colour index our of range")
-        getFunc = lambda v: None
-        match item:
-            case "red" | 0:
-                getFunc = self.red
-            case "green" | 1:
-                getFunc = self.green
-            case "blue" | 2:
-                getFunc = self.blue
-            case "alpha" | 3:
-                getFunc = self.alpha
-        return getFunc()
+        return (self.red, self.green, self.blue, self.alpha)[item]()
     
     def __setitem__(self, key, value):
-        if isinstance(key, int) and key >= 4:
-            raise IndexError("Colour index our of range")
-        setFunc = lambda v: None
-        match key:
-            case "red" | 0:
-                setFunc = self.setRed
-            case "green" | 1:
-                setFunc = self.setGreen
-            case "blue" | 2:
-                setFunc = self.setBlue
-            case "alpha" | 3:
-                setFunc = self.setAlpha
-        setFunc(max(value, 0))
+        (self.setRed, self.setGreen, self.setBlue, self.setAlpha)[key](max(value, 0))
 
 
 class Theme(Enum):

@@ -41,14 +41,7 @@ class ItemDelegate(QItemDelegate):
                     QPoint(0, 0))))) and self.parent().underMouse()) and self.parent().isEnabled()
             ))
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                option.rect.adjusted(
-                    1 + int(self.parent().viewport().property("frameRectAdjustment") * rectAdjustmentRatio),
-                    1 + int(self.parent().viewport().property("frameRectAdjustment") * rectAdjustmentRatio),
-                    -(1 + int(self.parent().viewport().property("frameRectAdjustment") * rectAdjustmentRatio)),
-                    -(1 + int(self.parent().viewport().property("frameRectAdjustment") * rectAdjustmentRatio))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(option.rect.adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
     
     def drawFocus(self, painter, option, rect):
@@ -102,14 +95,7 @@ class ItemView(QAbstractItemView, Widget):
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.viewport().rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         op = QStyleOptionFrame()
         op.initFrom(self)

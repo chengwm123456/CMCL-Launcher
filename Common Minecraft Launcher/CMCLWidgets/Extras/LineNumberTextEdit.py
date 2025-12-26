@@ -31,13 +31,13 @@ class LineNumberTextEdit(TextEdit):
             painter.setOpacity(
                 self.property("baseOpacity") + (self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))
             painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
-            pp = QPainterPath()
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            pp.addRoundedRect(QRectF(self.rect()).adjusted(1.625, 1.625, -1.625, -1.625), 16, 16)
-            painter.setClipPath(pp)
             painter.setPen(Qt.GlobalColor.black)
             painter.setBrush(Qt.GlobalColor.transparent)
+            pp = QPainterPath()
+            pp.addRoundedRect(QRectF(self.rect()).adjusted(1.625, 1.625, -1.625, -1.625), 16, 16)
+            painter.setClipPath(pp)
             block = self.parent().document().firstBlock()
             
             current_block = self.parent().textCursor().block().blockNumber()
@@ -57,12 +57,12 @@ class LineNumberTextEdit(TextEdit):
         super().__init__(*args)
         self.__lineNumberBar = self.LineNumberBar(self)
         self.__lineNumberBar.updateLineNumberBar()
-        self.setViewportMargins(self.__lineNumberBar.width(), 0, 0, 0)
+        self.setViewportMargins(self.__lineNumberBar.width() + 2, 0, 0, 0)
     
     def event(self, e):
         try:
             self.__lineNumberBar.updateLineNumberBar()
-            self.setViewportMargins(self.__lineNumberBar.width(), 0, 0, 0)
+            self.setViewportMargins(self.__lineNumberBar.width() + 2, 0, 0, 0)
             self.__lineNumberBar.setGeometry(3,
                                              self.viewport().y(),
                                              self.__lineNumberBar.width(),

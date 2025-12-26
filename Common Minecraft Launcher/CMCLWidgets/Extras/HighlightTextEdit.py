@@ -24,6 +24,8 @@ class HighlightTextEdit(TextEdit):
                 while matchIterator.hasNext():
                     one_match = matchIterator.next()
                     self.setFormat(one_match.capturedStart(), one_match.capturedLength(), fmt)
+                    if one_match.capturedStart() + one_match.capturedLength() == len(text):
+                        pass
     
     Default_Highlighter = Highlighter
     

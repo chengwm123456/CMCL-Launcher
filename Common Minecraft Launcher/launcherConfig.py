@@ -69,7 +69,11 @@ def loadSettings():
 def saveSettings(settings):
     fileJson = loadSettingsFile()
     fileJson["Settings"] = settings
-    Path(".settings.json").write_text(json.dumps(fileJson, indent=4), encoding="utf-8")
+    saveSettingsFile(fileJson)
+
+
+def saveSettingsFile(content):
+    Path(".settings.json").write_text(json.dumps(content, indent=4), encoding="utf-8")
 
 
 def loadVersionConfig(file_path):

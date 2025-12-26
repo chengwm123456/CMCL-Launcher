@@ -198,19 +198,11 @@ class FramelessWindow(QWidget):
     
     def paintEvent(self, a0):
         self.__updateNSWindowFrameless()
-        self.update()
-        self.updateGeometry()
         super(FramelessWindow, self).paintEvent(a0)
-        self.update()
-        self.updateGeometry()
-        self.__updateNSWindowFrameless()
     
     def resizeEvent(self, a0):
         self.__updateNSWindowTitleBarRect()
-        self.update()
         super(FramelessWindow, self).resizeEvent(a0)
-        self.update()
-        self.__updateNSWindowTitleBarRect()
     
     def changeEvent(self, a0):
         if self.__platform.system().lower() == "darwin":
@@ -330,9 +322,7 @@ class FramelessWindow(QWidget):
                             elif position == TaskBar.TaskBarPosition.RIGHT:
                                 rect.right -= TaskBar.AUTO_HIDE_THICKNESS
                         
-                        if winMsg.wParam:
-                            self.update()
-                        return True, 0 if not winMsg.wParam else self.__win32con.WVR_VREDRAW
+                        return True, 0
                 
                 result = super(FramelessWindow, self).nativeEvent(eventType, message)
                 return result[0], result[1] or 0

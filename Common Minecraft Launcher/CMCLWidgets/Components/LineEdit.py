@@ -80,14 +80,7 @@ class LineEdit(QLineEdit, Widget):
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour(is_highlight=True))
             painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
-            painter.drawRoundedRect(
-                self.rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         self.setStyleSheet(

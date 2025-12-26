@@ -3,7 +3,7 @@ cffi==1.17.1
 charset-normalizer==3.4.1
 idna==3.10
 nbtlib==2.0.4
-numpy==2.2.4
+numpy==2.4.0
 psutil==7.0.0
 pycparser==2.22
 PyJWT==2.10.1

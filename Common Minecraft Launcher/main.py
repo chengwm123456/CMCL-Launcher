@@ -45,6 +45,9 @@ from CMCLModding.DownloadMods import DownloadMod
 from CMCLSaveEditing.LevelDat import LoadData
 import nbtlib
 
+from CMCLPlayerManagement.GetAttribute import *
+from CMCLPlayerManagement.SetAttribute import *
+
 import resources
 from launcherConfig import *
 
@@ -60,103 +63,170 @@ themeColourDefines = {
     "PresetBlue": {
         Theme.Light: {
             ColourRole.Background: {
-                False: (253, 253, 253),
-                True: (163, 213, 255)
+                False: {
+                    False: (253, 253, 253),
+                    True: (163, 213, 255)
+                },
+                True: {
+                    False: (181, 213, 255),
+                    True: (193, 224, 255)
+                }
             },
             ColourRole.Border: {
-                False: (215, 237, 255),
-                True: (135, 206, 255)
+                False: {
+                    False: (215, 237, 255),
+                    True: (135, 206, 255)
+                },
+                True: {
+                    False: (131, 182, 255),
+                    True: (153, 203, 255)
+                }
             }
         },
         Theme.Dark: {
             ColourRole.Background: {
-                False: (67, 67, 67),
-                True: (80, 146, 255),
+                False: {
+                    False: (67, 67, 67),
+                    True: (80, 146, 255),
+                },
+                True: {
+                    False: (76, 126, 219),
+                    True: (84, 146, 255),
+                }
             },
             ColourRole.Border: {
-                False: (93, 103, 114),
-                True: (93, 167, 255)
+                False: {
+                    False: (93, 103, 114),
+                    True: (93, 167, 255)
+                },
+                True: {
+                    False: (105, 157, 235),
+                    True: (103, 163, 255)
+                }
             },
         }
     },
     "PresetPink": {
         Theme.Light: {
             ColourRole.Background: {
-                False: (253, 253, 253),
-                True: (255, 150, 220)
+                False: {
+                    False: (253, 253, 253),
+                    True: (255, 150, 220)
+                },
+                True: {
+                    False: (253, 165, 235),
+                    True: (255, 135, 235),
+                }
             },
             ColourRole.Border: {
-                False: (215, 237, 255),
-                True: (255, 150, 209)
+                False: {
+                    False: (215, 237, 255),
+                    True: (255, 150, 209)
+                },
+                True: {
+                    False: (245, 153, 255),
+                    True: (255, 125, 245)
+                }
             }
         },
         Theme.Dark: {
             ColourRole.Background: {
-                False: (67, 67, 67),
-                True: (255, 142, 193),
+                False: {
+                    False: (67, 67, 67),
+                    True: (255, 142, 193),
+                },
+                True: {
+                    False: (193, 67, 153),
+                    True: (255, 153, 165),
+                }
             },
             ColourRole.Border: {
-                False: (93, 103, 114),
-                True: (255, 79, 200)
+                False: {
+                    False: (93, 103, 114),
+                    True: (255, 79, 200)
+                },
+                True: {
+                    False: (233, 103, 153),
+                    True: (255, 153, 185),
+                }
             }
         }
     },
     "PresetPurple": {
         Theme.Light: {
             ColourRole.Background: {
-                False: (253, 253, 253),
-                True: (190, 150, 255)
+                False: {
+                    False: (253, 253, 253),
+                    True: (190, 150, 255)
+                }
             },
             ColourRole.Border: {
-                False: (215, 237, 255),
-                True: (163, 143, 255)
+                False: {
+                    False: (215, 237, 255),
+                    True: (163, 143, 255)
+                }
             }
         },
         Theme.Dark: {
             ColourRole.Background: {
-                False: (67, 67, 67),
-                True: (151, 142, 208),
+                False: {
+                    False: (67, 67, 67),
+                    True: (143, 102, 215),
+                },
+                True: {
+                    False: (153, 105, 189),
+                    True: (165, 98, 230)
+                }
             },
             ColourRole.Border: {
-                False: (93, 103, 114),
-                True: (107, 79, 208)
+                False: {
+                    False: (93, 103, 114),
+                    True: (132, 79, 208)
+                },
+                True: {
+                    False: (183, 120, 201),
+                    True: (195, 135, 250)
+                }
             }
         }
     },
     "PresetRed": {
         Theme.Light: {
             ColourRole.Background: {
-                False: (253, 253, 253),
-                True: (250, 176, 176)
+                False: {
+                    False: (253, 253, 253),
+                    True: (250, 176, 176)
+                }
             },
             ColourRole.Border: {
-                False: (215, 237, 255),
-                True: (250, 135, 135)
+                False: {
+                    False: (215, 237, 255),
+                    True: (250, 135, 135)
+                }
             }
         },
         Theme.Dark: {
             ColourRole.Background: {
-                False: (67, 67, 67),
-                True: (252, 142, 142),
+                False: {
+                    False: (67, 67, 67),
+                    True: (252, 142, 142),
+                }
             },
             ColourRole.Border: {
-                False: (93, 103, 114),
-                True: (254, 79, 79)
+                False: {
+                    False: (93, 103, 114),
+                    True: (254, 79, 79)
+                }
             }
         }
     }
 }
 
-languagesCodeMapping = {
-    "zh-cn": "简体中文（中国大陆）",
-    "zh-hk": "繁體中文（中國香港特別行政區/中國澳門特別行政區）",
-    "zh-tw": "繁體中文（中國台灣）",
-    "lzh": "文言（華夏）",
-    "en-us": "English (United States)",
-    "en-gb": "English (United Kingdom)",
-}
+languagesCodeMapping = QFile(":/languagesCodeMapping.json")
+languagesCodeMapping.open(QIODeviceBase.OpenModeFlag.ReadOnly)
+languagesCodeMapping = json.loads(QTextStream(languagesCodeMapping).readAll())
 
-if random.randint(3, 5) == 4:
+if random.randint(3, 10) == 4:
     languagesCodeMapping["en-gb"] = "English (The United Kingdom of Great Britain and Northern Ireland)"
 
 
@@ -373,12 +443,18 @@ class LoadingAnimation(QFrame):
         self.__statusLabel = Label(self)
         self.__statusLabel.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.__reloadButton = PushButton(self)
-        self.__reloadButton.setText("重新加载")
+        self.__reloadButton.setText(self.tr("LoadingAnimation.Actions.Reload.Text"))  # 重新加载
+        self.__reloadTextChanged = False
         self.__loadingTimer = QTimer(self)
         self.__loadingTimer.timeout.connect(self.__updateText)
         self.destroyed.connect(lambda: self.__loadingTimer.stop())
         self.__counter = 0
         self.hide()
+        app.registerRetranslateFunction(self.retranslateUI)
+    
+    def retranslateUI(self):
+        if not self.__reloadTextChanged:
+            self.__reloadButton.setText(self.tr("LoadingAnimation.Actions.Reload.Text"))
     
     def __del__(self):
         try:
@@ -419,20 +495,20 @@ class LoadingAnimation(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         if not self.__centreAnimation.error:
             self.setStyleSheet(
-                f"background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});")
+                f"background: rgb{str(getBackgroundColour(is_tuple=True))};")
         else:
             self.setStyleSheet(
-                f"background: rgb({str(tuple(self.__centreAnimation.adjustRed(getBackgroundColour(), 50))).strip('()')});")
+                f"background: rgb{str(tuple(self.__centreAnimation.adjustRed(getBackgroundColour(), 50)))};")
         return super().paintEvent(a0)
     
     def __updateText(self):
         self.__counter += 1
-        self.__statusLabel.setText("加载中" + "." * (self.__counter % 7))
+        self.__statusLabel.setText(self.tr("LoadingAnimation.Status.Loading.Text") + "." * (self.__counter % 7))  # 加载中
     
     def start(self, ani=True):
         self.__centreAnimation.setFixedSize(96, 96)
         self.__centreAnimation.setError(False)
-        self.__statusLabel.setText("加载中")
+        self.__statusLabel.setText(self.tr("LoadingAnimation.Status.Loading.Text"))
         self.__reloadButton.hide()
         self.__reloadButton.setDown(False)
         if ani:
@@ -441,7 +517,7 @@ class LoadingAnimation(QFrame):
             self.SizingAnimation(self.__centreAnimation, "in").start()
         else:
             self.setStyleSheet(
-                f"background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});")
+                f"background: rgb{str(getBackgroundColour(is_tuple=True))};")
         self.__counter = 0
         self.__loadingTimer.start(1000)
         self.show()
@@ -459,11 +535,11 @@ class LoadingAnimation(QFrame):
                     hideani.start()
                 else:
                     self.hide()
-                self.__statusLabel.setText("已加载完成")
+                self.__statusLabel.setText(self.tr("LoadingAnimation.Status.LoadingSuccess.Text"))  # 已加载完成
             else:
                 self.setStyleSheet(
-                    f"background: rgb({str(tuple(self.__centreAnimation.adjustRed(getBackgroundColour(), 50))).strip('()')});")
-                self.__statusLabel.setText("加载失败，请重试")
+                    f"background: rgb{str(tuple(self.__centreAnimation.adjustRed(getBackgroundColour(), 50)))};")
+                self.__statusLabel.setText(self.tr("LoadingAnimation.Status.Failure.Text"))  # 加载失败，请重试
                 self.__reloadButton.show()
                 self.__centreAnimation.setError()
         except RuntimeError:
@@ -474,6 +550,7 @@ class LoadingAnimation(QFrame):
     
     def setReloadText(self, text):
         self.__reloadButton.setText(text)
+        self.__reloadTextChanged = True
     
     def hideEvent(self, *args, **kwargs):
         try:
@@ -500,7 +577,7 @@ class LoginWindow(MaskedDialogue):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("登录")
+        self.setWindowTitle(self.tr("LoginWindow.Title.Text"))  # 登录
         self.resize(800, 600)
         self.view = QWebEngineView(self)
         self.view.show()
@@ -579,14 +656,22 @@ class HomePage(QFrame):
                 if Path(dire).resolve() == Path(minecraft_path).resolve():
                     isCurrentPathSaved = True
                 newBtn = PushButton(self.leftPanel)
-                newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 13):])
+                newBtn.setCheckable(True)
+                newBtn.setToolTip(dire)
+                newBtn.setChecked(Path(dire) == Path(minecraft_path))
+                newBtn.setAutoExclusive(True)
+                newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 15):])
                 newBtn.pressed.connect(lambda d=dire: self.selectDir(str(Path(d).resolve())))
                 self.verticalLayout.addWidget(newBtn)
             
             if not isCurrentPathSaved:
                 dire = str(minecraft_path)
                 newBtn = PushButton(self.leftPanel)
-                newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 13):])
+                newBtn.setCheckable(True)
+                newBtn.setToolTip(dire)
+                newBtn.setChecked(True)
+                newBtn.setAutoExclusive(True)
+                newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 15):])
                 newBtn.pressed.connect(lambda d=dire: self.selectDir(str(Path(d).resolve())))
                 self.verticalLayout.addWidget(newBtn)
             
@@ -615,12 +700,15 @@ class HomePage(QFrame):
             self.retranslateUI()
         
         def retranslateUI(self):
-            self.addNewDirectoryButton.setText("+ 添加文件夹")
-            self.currentDir.setText(f"当前文件夹：{str(minecraft_path)}")
+            self.addNewDirectoryButton.setText(
+                self.tr("HomePage.VersionManagementPage.addNewDirectoryButton.Text"))  # + 添加文件夹
+            self.currentDir.setText(self.tr("HomePage.VersionManagementPage.currentDir.Text").format(
+                str(minecraft_path)))  # 当前文件夹：{str(minecraft_path)}
         
         def selectNewMinecraftDir(self):
             global minecraft_path
-            dirDialogue = QFileDialog.getExistingDirectory(self, "选择游戏文件夹", str(minecraft_path))
+            dirDialogue = QFileDialog.getExistingDirectory(self, self.tr(
+                "HomePage.VersionManagementPage.SelectFolderDialogue.Title"), str(minecraft_path))  # 选择游戏文件夹
             if dirDialogue:
                 minecraft_path = Path(dirDialogue).resolve()
                 settings["LauncherSettings"]["MinecraftPath"] = str(minecraft_path.absolute())
@@ -639,6 +727,7 @@ class HomePage(QFrame):
         def selectDir(self, dir):
             global minecraft_path
             minecraft_path = Path(dir).resolve()
+            settings["LauncherSettings"]["MinecraftPath"] = str(minecraft_path)
             self.minecraft_path_changed.emit()
             self.retranslateUI()
             self.updateVersionsList()
@@ -817,9 +906,15 @@ class HomePage(QFrame):
         self.versionsManagementPage.hide()
         self.versionsManagementPage.minecraft_path_changed.connect(self.updateVersionList)
         
+        self.stopMinecraftProcess = ToolButton(self)
+        self.stopMinecraftProcess.setFixedSize(QSize(32, 32))
+        self.stopMinecraftProcess.pressed.connect(self.showTerminationMenu)
+        
         self.version = None
         self.versionAliasConv = {}
         self.displayVersion = None
+        
+        self.versionsPopen = {}
         
         app.registerRetranslateFunction(self.retranslateUI)
         self.retranslateUI()
@@ -827,15 +922,22 @@ class HomePage(QFrame):
         self.updateIcon()
     
     def retranslateUI(self):
-        self.launchButton.setText("启动")
-        self.launchButton.setToolTip(f"启动：{self.displayVersion}" if self.displayVersion else "暂未选择版本")
-        self.selectVersionButton.setText(self.displayVersion if self.displayVersion else "选择版本")
+        self.launchButton.setText(self.tr("HomePage.launchButton.Text"))
+        self.launchButton.setToolTip(
+            self.tr("HomePage.launchButton.ToolTip.0").format(self.displayVersion) if self.displayVersion else self.tr(
+                "HomePage.launchButton.ToolTip.1"))  # 启动：{} 暂未选择版本
+        self.selectVersionButton.setText(
+            self.displayVersion if self.displayVersion else self.tr("HomePage.selectVersionButton.Text"))  # 选择版本
         self.selectVersionButton.setToolTip(
-            f"当前版本：{self.displayVersion}" if self.displayVersion else "暂未选择版本")
-        self.reloadButton.setToolTip("重新加载版本列表")
-        self.selectNewMinecraftDirButton.setText("选择文件夹")
-        self.selectNewMinecraftDirButton.setToolTip(f"当前文件夹：{str(minecraft_path)}")
-        self.versionsManageButton.setText("版本管理")
+            self.tr("HomePage.selectVersionButton.ToolTip.0").format(
+                self.displayVersion) if self.displayVersion else self.tr(
+                "HomePage.selectVersionButton.ToolTip.1"))  # 当前版本：{} 暂未选择版本
+        self.reloadButton.setToolTip(self.tr("HomePage.reloadButton.Text"))  # 重新加载版本列表
+        self.selectNewMinecraftDirButton.setText(self.tr("HomePage.selectNewMinecraftDirButton.Text"))  # 选择文件夹
+        self.selectNewMinecraftDirButton.setToolTip(
+            self.tr("HomePage.selectNewMinecraftDirButton.ToolTip").format(str(minecraft_path)))  # 当前文件夹：{}
+        self.versionsManageButton.setText(self.tr("HomePage.versionsManageButton.Text"))  # 版本管理
+        self.stopMinecraftProcess.setToolTip(self.tr("HomePage.stopMinecraftProcess.ToolTip"))  # 强制关闭游戏进程
     
     def updateVersionList(self):
         menu = QMenu(self.selectVersionButton)
@@ -881,6 +983,7 @@ class HomePage(QFrame):
         
         self.selectVersionButton.setMenu(menu)
         
+        self.launchButton.setEnabled(bool(self.displayVersion))
         self.retranslateUI()
     
     def selectVersion(self, version):
@@ -904,6 +1007,7 @@ class HomePage(QFrame):
     
     def postLaunch(self, result):
         self.launchButton.setEnabled(True)
+        self.versionsPopen[result[1]] = self.version
         print(result)
     
     def selectNewMinecraftDir(self):
@@ -919,22 +1023,44 @@ class HomePage(QFrame):
         if close:
             self.closeManagementPage()
     
+    def showTerminationMenu(self):
+        self.stopMinecraftProcess.setDown(False)
+        if not self.versionsPopen:
+            return
+        
+        menu = RoundedMenu(self.stopMinecraftProcess)
+        
+        def func(popen, action):
+            popen.terminate()
+            del self.versionsPopen[popen]
+            menu.removeAction(action)
+        
+        for popen in self.versionsPopen:
+            action = QAction(menu)
+            action.setText(self.versionsPopen[popen])
+            action.triggered.connect(lambda _=None, p=popen, a=action: func(p, a))
+            menu.addAction(action)
+        
+        menu.exec(QCursor.pos())
+    
     def toggleManagementPageVisibility(self):
         if self.versionsManagementPage.isVisible():
             self.closeManagementPage()
+            self.stopMinecraftProcess.setVisible(True)
         else:
             self.openManagementPage()
+            self.stopMinecraftProcess.setVisible(False)
     
     def openManagementPage(self):
         if self.versionsManagementPage.isVisible():
             return
-        self.versionsManagementPage.show()
         ani22 = OpacityAnimation(self.versionsManagementPage)
         ani22.setStartValue(0)
         ani22.setEndValue(100)
         ani22.setDuration(500)
         ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
         ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+        self.versionsManagementPage.show()
     
     def closeManagementPage(self):
         if not self.versionsManagementPage.isVisible():
@@ -946,6 +1072,7 @@ class HomePage(QFrame):
         ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
         ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
         QTimer.singleShot(500, lambda: self.versionsManagementPage.hide())
+        QTimer.singleShot(500, lambda: self.versionsManageButton.setChecked(False))
     
     def changeAnimation(self, variant, function):
         if variant == "in":
@@ -999,11 +1126,13 @@ class HomePage(QFrame):
     def updateIcon(self):
         colour = "black" if getTheme() == Theme.Light else "white"
         self.reloadButton.setIcon(QIcon(f":/Reload-{colour}.svg"))
+        self.stopMinecraftProcess.setIcon(QIcon(f":/StopGame-{colour}.svg"))
     
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         self.topPanel.move(QPoint(15, 15))
         self.topPanel.resize(QSize(self.width() - 30, 54))
+        self.stopMinecraftProcess.move(QPoint(self.width() - 48, self.height() - 48))
         self.versionsManagementPage.move(QPoint(15, 79))
         self.versionsManagementPage.resize(QSize(self.width() - 30, self.height() - 79 - 15))
 
@@ -1169,16 +1298,24 @@ class DownloadPage(QFrame):
                 self.retranslateUI()
             
             def retranslateUI(self):
-                self.groupBox1Btn.setText("版本")
-                self.groupBox2Btn.setText("下载设置")
-                self.groupBox3Btn.setText("其他链接")
-                self.groupBox.setTitle("版本")
-                self.form_1_Label.setText("下载版本")
-                self.form_1_PushButton.setText(f"{self.version}（单击重新选择版本）")
-                self.form_2_Label.setText("模组加载器")
-                self.form_2_PushButton.setText("点击选择模组加载器")
-                self.groupBox_2.setTitle("下载设置")
-                self.form_3_Label.setText("下载路径")
+                self.groupBox1Btn.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title"))  # 版本
+                self.groupBox2Btn.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title"))  # 下载设置
+                self.groupBox3Btn.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox3.Title"))  # 其他链接
+                self.groupBox.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title"))
+                self.form_1_Label.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.1.Label.Text"))  # 下载版本
+                self.form_1_PushButton.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.1.PushButton.Text").format(
+                        self.version))  # {}（单击重新选择版本）
+                self.form_2_Label.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.Label.Text"))  # 模组加载器
+                self.form_2_PushButton.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.PushButton.Text"))  # 点击选择模组加载器
+                self.groupBox_2.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title"))
+                self.form_3_Label.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.3.Label.Text"))  # 下载路径
                 self.form_3_LineEdit.setToolTip("""注意：这不是版本 jar 文件的下载路径。
 比如说你填的是：
 ① G:\\.minecraft
@@ -1187,13 +1324,17 @@ jar 下载位置在：
 ① G:\\.minecraft\\versions\\{当前版本}\\{当前版本}.jar
 ② /home/mc/.minecraft/versions/{当前版本}/{当前版本}.jar
 若存在与下载版本同名的文件夹，启动器会在下载前询问是否继续下载。""")
-                self.form_4_Label.setText("版本文件夹名")
+                self.form_4_Label.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.4.Label.Text"))  # 版本文件夹名
                 self.form_4_LineEdit.setToolTip("默认是当前下载的版本，如果遇到版本已存在可以尝试修改此项")
-                self.groupBox_3.setTitle("其他链接")
-                self.wikiVersionPage.setText("在 Minecraft Wiki 上查看该版本")
-                self.clientJarURL.setText("Minecraft 客户端 .jar 文件下载链接")
-                self.serverJarURL.setText("Minecraft 服务端 .jar 文件下载链接")
-                self.startDownloadBtn.setText("下载")
+                self.groupBox_3.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox3.Title"))
+                self.wikiVersionPage.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.OpenWiki"))  # 在 Minecraft Wiki 上查看该版本
+                self.clientJarURL.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.DownloadClient"))  # Minecraft 客户端 .jar 文件下载链接
+                self.serverJarURL.setText(
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.DownloadServer"))  # Minecraft 服务端 .jar 文件下载链接
+                self.startDownloadBtn.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Download"))  # 下载
             
             def updateTopSelections(self, value):
                 if value + self.scrollArea.verticalScrollBar().pageStep() >= self.groupBox_3.y():
@@ -1277,8 +1418,9 @@ jar 下载位置在：
             self.retranslateUI()
         
         def retranslateUI(self):
-            self.topSearchPanel.setTitle("搜索版本")
-            self.searchInput.setPlaceholderText("输入版本、类型、日期")
+            self.topSearchPanel.setTitle(self.tr("DownloadPage.DownloadVanilla.TopSearchPanel.Title"))  # 搜索版本
+            self.searchInput.setPlaceholderText(
+                self.tr("DownloadPage.DownloadVanilla.SearchInput.Placeholder"))  # 输入版本、类型、日期
             self.searchInput.setToolTip("""◉ 输入版本：查询版本；
 ◉ 输入类型：筛选版本类型；
   ◎ release：正式版（如 1.21.8）；
@@ -1336,23 +1478,22 @@ jar 下载位置在：
             data["versions"] = versions
             return data
         
-        @staticmethod
-        def localiseType(versionType):
+        def localiseType(self, versionType):
             match versionType:
                 case "release":
-                    versionType = "正式版"
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.Release")  # 正式版
                 case "snapshot":
-                    versionType = "快照"
-                case "old_beta":  # In Chinese, versions earier than 1.0.0 are called as "远古版"
-                    versionType = "远古版"
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.Snapshot")  # 快照
+                case "old_beta":  # In Chinese community, versions earier than 1.0.0 are called "远古版"
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.OldBeta")  # 远古版
                 case "old_alpha":  # In case of requiring this.
-                    versionType = "远古版"
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.OldAlpha")
                 case "april_fool":
-                    versionType = "愚人节版"
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.AprilFool")  # 愚人节版
                 case "classic":  # Same as above
-                    versionType = "远古版"
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.Classic")  # 远古版
                 case "pre_classic":  # Same as above
-                    versionType = "远古版"
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.PreClassic")  # 远古版
             return versionType
         
         def displayVersions(self, data):
@@ -1688,6 +1829,8 @@ jar 下载位置在：
                 self.modBody.document().setBaseUrl(QUrl("https://cdn.modrinth.com/"))
                 self.verticalLayout_2.addWidget(self.modBody, 1)
                 
+                # qDebug(self.modBody.toHtml())
+                
                 # self.modInfoContainer = ScrollArea(self.toolBox)
                 # self.modInfoContainer.setWidget(self.modInfo)
                 # self.modInfoContainer.setWidgetResizable(True)
@@ -1716,11 +1859,11 @@ jar 下载位置在：
                 self.modDescription.setText(self.mod_description)
                 # self.toolBox.setItemText(self.toolBox.indexOf(self.modInfoContainer), "模组信息")
                 # self.toolBox.setItemText(self.toolBox.indexOf(self.modVersions), "模组版本")
-                self.page1Btn.setText("模组信息")
-                self.page2Btn.setText("模组版本")
-                self.modInfo.setTitle("模组信息")
-                self.modVersions.setTitle("模组版本")
-                self.modAction_issues.setText("汇报漏洞")
+                self.page1Btn.setText(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModInfo.Title"))  # 模组信息
+                self.page2Btn.setText(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModVersions.Title"))  # 模组版本
+                self.modInfo.setTitle(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModInfo.Title"))
+                self.modVersions.setTitle(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModVersions.Title"))
+                self.modAction_issues.setText(self.tr("DownloadPage.DownloadMods.ModInfoPage.Actions.Issues"))  # 汇报漏洞
             
             def updateIcon(self, icon):
                 try:
@@ -1739,7 +1882,9 @@ jar 下载位置在：
                     self.listWidget.addItem(f"{version['name']}")
             
             def startDownloadMod(self, version):
-                download_path = QFileDialog.getExistingDirectory(self, "选择模组下载路径", str(Path(".").absolute()))
+                # 选择模组下载路径
+                download_path = QFileDialog.getExistingDirectory(self, self.tr(
+                    "DownloadPage.DownloadMods.ModInfoPage.AskDownloadPath.Title"), str(Path(".").absolute()))
                 if download_path:
                     version_text = self.listWidget.model().itemData(version)[0]
                     thread = self.DownloadThread(self, self.mod_name, version_text, download_path)
@@ -1749,7 +1894,7 @@ jar 下载位置在：
                 webbrowser.open(url)
             
             def closeFrame(self):
-                self.hide()
+                self.closePage.emit()
             
             def resizeEvent(self, a0):
                 super().resizeEvent(a0)
@@ -1828,7 +1973,7 @@ jar 下载位置在：
             self.contentTable.verticalHeader().setVisible(False)
             self.contentTable.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
             self.contentTable.setEditTriggers(TableView.EditTrigger.NoEditTriggers)
-            self.contentTable.pressed.connect(self.modInfoPageOpen)
+            self.contentTable.doubleClicked.connect(self.modInfoPageOpen)
             self.model = QStandardItemModel()
             self.contentTable.setModel(self.model)
             
@@ -1858,11 +2003,12 @@ jar 下载位置在：
             self.currentPage = 1
         
         def retranslateUI(self):
-            self.filterPanel.setTitle(self.tr("搜索"))
-            self.searchLineEdit.setPlaceholderText("搜索模组名称")
+            self.filterPanel.setTitle(self.tr("DownloadPage.DownloadMods.FilterPanel.Title"))  # 搜索
+            self.searchLineEdit.setPlaceholderText(
+                self.tr("DownloadPage.DownloadMods.SearchLineEdit.Placeholder"))  # 搜索模组名称
             # self.searchLineEdit.setToolTip("")
-            self.previousButton.setText("上一页")
-            self.nextButton.setText("下一页")
+            self.previousButton.setText(self.tr("DownloadPage.DownloadMods.Actions.PrevPage"))  # 上一页
+            self.nextButton.setText(self.tr("DownloadPage.DownloadMods.Actions.NextPage"))  # 下一页
             self.model.setHorizontalHeaderLabels(["模组名称", "模组作者", "最后修改时间"])
         
         def previousPage(self):
@@ -2005,6 +2151,18 @@ jar 下载位置在：
                 self.modInfoPage.show()
         
         def modInfoPageClose(self):
+            ani = QPropertyAnimation(self.modInfoPage, b"pos", self)
+            ani.setStartValue(QPoint(0, 0))
+            ani.setEndValue(QPoint(0, self.height()))
+            ani.setKeyValueAt(0.8, QPoint(0, self.height() - 50))
+            ani.setDuration(500)
+            ani.setEasingCurve(QEasingCurve.Type.OutQuad)
+            ani.finished.connect(self.closingFinished)
+            ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+        
+        def closingFinished(self):
+            self.modInfoPage.close()
+            self.modInfoPage.deleteLater()
             self.modInfoPage = None
         
         def changeAnimation(self, variant, function):
@@ -2071,7 +2229,7 @@ jar 下载位置在：
             ani3.setEndValue(pos3)
             ani3.setDuration(500)
             ani3.setEasingCurve(QEasingCurve.Type.OutQuint)
-            QTimer.singleShot(100, lambda: ani3.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+            QTimer.singleShot(200, lambda: ani3.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
             ani33 = OpacityAnimation(self.paginator)
             ani33.setStartValue(0)
             ani33.setEndValue(100)
@@ -2137,14 +2295,14 @@ jar 下载位置在：
         self.retranslateUI()
     
     def retranslateUI(self):
-        self.page1.setText("原版游戏")
+        self.page1.setText(self.tr("DownloadPage.Pages.1.Name"))  # 原版游戏
         menu = RoundedMenu(self.page1)
         action1 = QAction(menu)
-        action1.setText("重新加载")
+        action1.setText(self.tr("DownloadPage.Pages.1.Actions.Reload"))  # 重新加载
         action1.triggered.connect(self.page1Frame.reloadVersions)
         menu.addAction(action1)
         self.page1.setMenu(menu)
-        self.page2.setText("模组")
+        self.page2.setText(self.tr("DownloadPage.Pages.2.Name"))  # 模组
         
         self.updateIcon()
     
@@ -2354,26 +2512,27 @@ class SettingsPage(QFrame):
             
             self.form_1_VerticalLayout.addLayout(self.form_1_HorizontalLayout)
             
-            self.groupBox_2 = GroupBox(self.scrollAreaWidgetContents)
-            self.groupBox_2.setCheckable(True)
-            self.groupBox_2.setChecked(False)
-            self.verticalLayout.addWidget(self.groupBox_2)
+            self.groupBox_Advanced = GroupBox(self.scrollAreaWidgetContents)
+            self.groupBox_Advanced.setCheckable(True)
+            self.groupBox_Advanced.setChecked(False)
+            self.verticalLayout.addWidget(self.groupBox_Advanced)
             
-            self.form_2 = QFormLayout(self.groupBox_2)
+            self.form_2 = QFormLayout(self.groupBox_Advanced)
             
-            self.form_2_Label = Label(self.groupBox_2)
+            self.form_2_Label = Label(self.groupBox_Advanced)
             self.form_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.form_2_Label)
             
-            self.form_2_TextEdit = TextEdit(self.groupBox_2)
+            self.form_2_TextEdit = TextEdit(self.groupBox_Advanced)
             self.form_2_TextEdit.setFont(fixedFont)
             self.form_2_TextEdit.setText(
                 "-XX:+UseG1GC -XX:+UseAdaptiveSizePolicy -XX:MaxInlineSize=420 -XX:+TieredCompilation -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=152 -XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+Inline -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=31 -XX:+PerfDisableSharedMem -XX:ParallelGCThreads=20 -XX:ConcGCThreads=20 -XX:MaxTenuringThreshold=1 -Dfml.ignoreInvalidMinecraftCertificates=True -Dfml.ignorePatchDiscrepancies=True -Dlog4j2.formatMsgNoLookups=true -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -Dorg.lwjgl.util.DebugLoader=true -Dorg.lwjgl.util.Debug=true")
             self.form_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_2_TextEdit)
             
-            self.form_3_Label = Label(self.groupBox_2)
+            self.form_3_Label = Label(self.groupBox_Advanced)
             self.form_2.setWidget(1, QFormLayout.ItemRole.LabelRole, self.form_3_Label)
             
-            self.form_3_TextEdit = TextEdit(self.groupBox_2)
+            self.form_3_TextEdit = TextEdit(self.groupBox_Advanced)
+            self.form_3_TextEdit.setFont(fixedFont)
             self.form_2.setWidget(1, QFormLayout.ItemRole.FieldRole, self.form_3_TextEdit)
             
             self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
@@ -2390,14 +2549,15 @@ class SettingsPage(QFrame):
             self.retranslateUI()
         
         def retranslateUI(self):
-            self.groupBox_Java.setTitle("启动设置")
-            self.form_4_Label.setText("版本隔离")
+            self.groupBox_Java.setTitle(self.tr("SettingsPage.LaunchSettings.GroupBox_Java.Title"))  # 启动设置
+            self.form_4_Label.setText(self.tr("SettingsPage.LaunchSettings.Form.4.Label.Text"))  # 版本隔离
+            index = settings["LaunchSettings"]["VersionSeparation"]
             self.form_4_ComboBox.clear()
-            self.form_4_ComboBox.addItem("不隔离")
-            self.form_4_ComboBox.addItem("隔离所有版本")
-            self.form_4_ComboBox.addItem("隔离模组加载器与其他版本")
-            self.form_4_ComboBox.addItem("隔离正式版与测试版")
-            self.form_4_ComboBox.setCurrentIndex(settings["LaunchSettings"]["VersionSeparation"])
+            self.form_4_ComboBox.addItem(self.tr("SettingsPage.LaunchSettings.Form.4.ComboBox.Items.1"))  # 不隔离
+            self.form_4_ComboBox.addItem(self.tr("SettingsPage.LaunchSettings.Form.4.ComboBox.Items.2"))  # 隔离所有版本
+            self.form_4_ComboBox.addItem(self.tr("SettingsPage.LaunchSettings.Form.4.ComboBox.Items.3"))  # 隔离模组加载器与其他版本
+            self.form_4_ComboBox.addItem(self.tr("SettingsPage.LaunchSettings.Form.4.ComboBox.Items.4"))  # 隔离正式版与测试版
+            self.form_4_ComboBox.setCurrentIndex(index)
             self.form_4_ComboBox.setToolTip("""通过修改游戏的运行路径，使游戏的运行路径各不相同，从而避免模组冲突。
 ◉ 不隔离：所有版本都在同一文件夹下；
 ◉ 隔离所有版本：所有版本的文件各不互通，这可能会导致你电脑的 Ctrl、C 和 V 键的使用次数增多（人话：复制很麻烦）；
@@ -2405,26 +2565,28 @@ class SettingsPage(QFrame):
 ◉ 隔离正式版和测试版：隔离正式版和测试版（快照及远古版）。
 除了第一种，其他的均会在版本文件夹下创建内容。
 启动器处理方式根据版本有区别，请以游戏具体文件夹为准。""")
-            self.form_4_CheckBox.setText("共用设置文件")
+            self.form_4_CheckBox.setText(self.tr("SettingsPage.LaunchSettings.Form.4.CheckBox.Text"))  # 共用设置文件
             self.form_4_CheckBox.setToolTip(
-                "所有版本使用同一个设置文件\n注意：这会覆盖当前版本设置，请先行将设置文件复制到根目录，或者删除根目录的设置文件！")
-            self.form_4_CheckBox_2.setText("共用资源包")
+                "所有版本使用同一个设置文件\n注意：这会覆盖当前版本设置！请先将设置文件复制到根目录，或者删除根目录的设置文件。")
+            self.form_4_CheckBox_2.setText(self.tr("SettingsPage.LaunchSettings.Form.4.CheckBox_2.Text"))  # 共用资源包
             self.form_4_CheckBox_2.setToolTip(
                 "所有版本使用同一个资源包文件夹\n注意：当前版本的资源包会被移动到全局资源包文件夹里。")
-            self.form_1_Label.setText("Java 路径")
+            self.form_1_Label.setText(self.tr("SettingsPage.LaunchSettings.Form.1.Label.Text"))  # Java 路径
             if self.form_1_PushButton.isChecked():
-                self.form_1_ComboBox.setCurrentText("自动选择")
-            self.form_1_ComboBox.setToolTip("""手动输入 Java 路径，启动器会自行检测版本号。
+                self.form_1_ComboBox.setCurrentText(
+                    self.tr("SettingsPage.LaunchSettings.Form.1.ComboBox.AutoSelect"))  # 自动选择
+            self.form_1_ComboBox.setToolTip("""手动输入 Java 路径，启动器自动检测版本号。
 如果输入了版本号，请在路径左右打上英文半角双引号（\"...\"），以方便启动器检测路径。
 启动器会自动纠正版本号，不用担心。而且版本号是给你看的，不是给我看的，不要糊弄人！！！
 同时，启动器会自动补全相对路径，以启动器当前所在文件夹补全。""")
-            self.form_1_PushButton.setText("自动选择 Java")
+            self.form_1_PushButton.setText(self.tr("SettingsPage.LaunchSettings.Form.1.PushButton.Text"))  # 自动选择 Java
             self.form_1_PushButton.setToolTip("""让启动器自动选择 Java。
 因技术原因，有的 Java 检测不出来。
 如果无法启动，请尝试取消该选项。
 启动器暂时不会对没有 Java、Java 版本不兼容的情况作弹窗提示，请自行判断。""")
-            self.form_1_PushButton_2.setText("添加 Java")
-            self.groupBox_2.setTitle("高级启动设置")
+            self.form_1_PushButton_2.setText(self.tr("SettingsPage.LaunchSettings.Form.1.PushButton_2.Text"))  # 添加 Java
+            self.groupBox_Advanced.setTitle(
+                self.tr("SettingsPage.LaunchSettings.Form.1.GroupBox_Advanced.Text"))  # 高级启动设置
             self.form_2_Label.setText("JVM 启动参数头")
             self.form_2_TextEdit.setToolTip("""这一段参数会加在 JVM 参数的最前面，自动去除前后空格。
 比如说你设置的是：
@@ -2448,7 +2610,8 @@ JVM 参数就是：
             if self.form_1_PushButton.isChecked():
                 self.form_1_ComboBox.setDisabled(True)
                 self.form_1_ComboBox.clear()
-                self.form_1_ComboBox.setCurrentText("自动选择")
+                self.form_1_ComboBox.setCurrentText(self.tr("SettingsPage.LaunchSettings.Form.1.ComboBox.AutoSelect"))
+                self.form_1_PushButton_2.setDisabled(True)
                 if self.getJavaThread:
                     self.getJavaThread.terminate()
                     self.getJavaThread = None
@@ -2456,6 +2619,7 @@ JVM 参数就是：
                     self.javaList = None
             else:
                 self.form_1_ComboBox.setEnabled(True)
+                self.form_1_PushButton_2.setEnabled(True)
                 if not state:
                     self.form_1_ComboBox.setCurrentText("")
                 if not self.getJavaThread:
@@ -2531,7 +2695,7 @@ JVM 参数就是：
             self.form_1_PushButton_2.setDown(False)
             fileDialogue = QFileDialog.getOpenFileName(self, "选择 Java", str(Path(".").absolute()),
                                                        "java.exe javaw.exe")
-            if fileDialogue:
+            if any(fileDialogue):
                 javaPath = str(Path(fileDialogue[0]).absolute())
                 self.updateJavaPathCandidates(javaPath)
         
@@ -2576,14 +2740,14 @@ JVM 参数就是：
             ani11.setDuration(500)
             ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
             ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
-            ani2 = QPropertyAnimation(self.groupBox_2, b"pos", self)
-            pos2 = self.groupBox_2.pos()
+            ani2 = QPropertyAnimation(self.groupBox_Advanced, b"pos", self)
+            pos2 = self.groupBox_Advanced.pos()
             ani2.setStartValue(pos2 + QPoint(100, 0))
             ani2.setEndValue(pos2)
             ani2.setDuration(500)
             ani2.setEasingCurve(QEasingCurve.Type.OutQuint)
             QTimer.singleShot(100, lambda: ani2.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
-            ani22 = OpacityAnimation(self.groupBox_2)
+            ani22 = OpacityAnimation(self.groupBox_Advanced)
             ani22.setStartValue(0)
             ani22.setEndValue(100)
             ani22.setDuration(500)
@@ -2597,7 +2761,7 @@ JVM 参数就是：
             ani11.setDuration(500)
             ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
             ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
-            ani22 = OpacityAnimation(self.groupBox_2)
+            ani22 = OpacityAnimation(self.groupBox_Advanced)
             ani22.setStartValue(100)
             ani22.setEndValue(0)
             ani22.setDuration(500)
@@ -2669,11 +2833,12 @@ JVM 参数就是：
             self.retranslateUI()
         
         def retranslateUI(self):
-            self.groupBox.setTitle("下载设置")
-            self.form_1_Label.setText("下载线程数")
+            self.groupBox.setTitle(self.tr("SettingsPage.LauncherSettings.GroupBox.Title"))  # 下载设置
+            self.form_1_Label.setText(self.tr("SettingsPage.LauncherSettings.Form.1.Label.Text").format(
+                self.form_1_Slider.value()))  # 下载线程数：{:2}
             self.form_1_Slider.setToolTip(
                 f"设置下载游戏依赖库、资源以及多线程下载器下载时最多的线程数，默认为 {min(8, self.form_1_Slider.maximum())}。\n这个的取值范围为 1 ~ {self.form_1_Slider.maximum()}，其中 1 表示单线程，也就是仅一条线程。\n线程数拉的越高，理论上下载速度越快，但是线程数太高会造成**严重的卡顿**。")
-            self.form_2_Label.setText("下载区块大小（单位：KB）")
+            self.form_2_Label.setText(f"下载区块大小：{self.form_2_Slider.value():04}KB")
             self.form_2_Slider.setToolTip(
                 "设置多线程下载器下载时每一个下载区块的大小，范围为 1KB ~ 2MB（2048KB）。\n区块大小越大，使用的线程会变少，同时下载单个区块的时间可能会变长，反之亦然。\n需要自行平衡，这里默认值为 1MB。")
             self.groupBox_2.setTitle("镜像源")
@@ -2685,10 +2850,13 @@ JVM 参数就是：
             self.form_3_ComboBox.setCurrentIndex(idx)
         
         def downloadThreadsCountChanged(self, value):
+            self.form_1_Label.setText(self.tr("SettingsPage.LauncherSettings.Form.1.Label.Text").format(
+                self.form_1_Slider.value()))
             settings["LauncherSettings"]["DownloadSettings"]["DownloadThreadsCount"] = min(value,
                                                                                            self.form_1_Slider.maximum())
         
         def downloadChunkSizeChanged(self, value):
+            self.form_2_Label.setText(f"下载区块大小：{self.form_2_Slider.value():04}KB")
             settings["LauncherSettings"]["DownloadSettings"]["DownloadChunkSize"] = value
         
         def selectMirrorSource(self):
@@ -2873,9 +3041,10 @@ JVM 参数就是：
             self.groupBox_2.setTitle("背景")
             self.groupBox_2_Label.setText("背景中心颜色（RGB）")
             self.groupBox_3.setTitle("动画")
-            self.groupBox_4.setTitle("语言")
-            self.form_1_Label.setText("界面语言")
-            self.groupBox_4_Tip.setText("语言翻译未必 100% 准确")
+            self.groupBox_4.setTitle(self.tr("SettingsPage.PersonalisationSettings.GroupBox4.Title"))  # 语言
+            self.form_1_Label.setText(self.tr("SettingsPage.PersonalisationSettings.Form.1.Label.Text"))  # 界面语言
+            self.groupBox_4_Tip.setText(
+                self.tr("SettingsPage.PersonalisationSettings.GroupBox4.Tip.Text"))  # 语言翻译未必 100% 准确
         
         @staticmethod
         def setThemePreset(state, value, ani=True):
@@ -2886,15 +3055,16 @@ JVM 参数就是：
                 define = themeColourDefines[value]
                 for theme in define:
                     for role in define[theme]:
-                        for highlight in define[theme][role]:
-                            setThemeColour(
-                                role,
-                                highlight,
-                                False,
-                                theme,
-                                Colour(*themeColourDefines[value][theme][role][highlight]),
-                                ani
-                            )
+                        for primary in define[theme][role]:
+                            for highlight in define[theme][role][primary]:
+                                setThemeColour(
+                                    role,
+                                    highlight,
+                                    primary,
+                                    theme,
+                                    Colour(*themeColourDefines[value][theme][role][primary][highlight]),
+                                    ani
+                                )
         
         @staticmethod
         def setBackgroundColour(red=False, green=False, blue=False, value=0):
@@ -2913,10 +3083,8 @@ JVM 参数就是：
             index = 0
             languagesSequence = sorted(languagesCodeMapping)
             for idx, lang in enumerate(languagesSequence):
-                print(lang, currentLanguage)
                 if lang == currentLanguage:
                     index = idx
-                    print(currentLanguage)
                 self.form_1_ComboBox.addItem(f"{languagesCodeMapping[lang]} ({lang})")
             
             self.form_1_ComboBox.setCurrentIndex(index)
@@ -2927,6 +3095,8 @@ JVM 参数就是：
             languagesSequence = sorted(languagesCodeMapping)
             langCode = languagesSequence[self.form_1_ComboBox.currentIndex()]
             currentLanguage = langCode
+            app.translator.load(f":/CMCL_{currentLanguage}.qm")
+            # app.installTranslator(app.translator)
             app.retranslate()
         
         def selectMirrorSource(self):
@@ -3491,6 +3661,84 @@ class OfflinePlayerCreationDialogue(MaskedDialogue):
         self.close()
 
 
+class ChangePlayerNameDialogue(MaskedDialogue):
+    def __init__(self, parent, player):
+        super().__init__(parent)
+        self.currentPlayer = player
+        
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setContentsMargins(5, 32, 5, 5)
+        
+        self.playerNameInput = LineEdit(self)
+        self.playerNameInput.setValidator(QRegularExpressionValidator(QRegularExpression(r"\w+"), self.playerNameInput))
+        self.playerNameInput.setClearButtonEnabled(True)
+        self.playerNameInput.editingFinished.connect(self.checkIsVaild)
+        # self.playerNameInput.returnPressed.connect(self.generatePlayer)
+        self.playerNameInput.setPlaceholderText(player.player_playerName)
+        self.playerNameInput.setText(player.player_playerName)
+        self.verticalLayout.addWidget(self.playerNameInput)
+        
+        self.horizontalLayout = QHBoxLayout()
+        
+        self.OKButton = PushButton(self)
+        # self.OKButton.pressed.connect(self.generatePlayer)
+        self.OKButton.setFocus()
+        self.OKButton.setEnabled(False)
+        self.horizontalLayout.addWidget(self.OKButton)
+        
+        self.CancelButton = PushButton(self)
+        self.CancelButton.pressed.connect(self.close)
+        self.horizontalLayout.addWidget(self.CancelButton)
+        
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        
+        self.retranslateUI()
+    
+    def retranslateUI(self):
+        self.setWindowTitle("修改玩家名称")
+        self.OKButton.setText("确定")
+        self.CancelButton.setText("取消")
+    
+    def checkIsVaild(self):
+        playerName = self.playerNameInput.text()
+        if playerName == "" or not playerName:
+            self.OKButton.setDisabled(True)
+            self.OKButton.setToolTip("玩家名不能为空")
+            return
+        if playerName == self.currentPlayer.player_playerName:
+            self.OKButton.setDisabled(True)
+            self.OKButton.setToolTip("这是目前的玩家名，请换一个")
+            return
+        try:
+            is_allowed = PlayerNameChange(self.currentPlayer.player_accessToken)["nameChangeAllowed"]
+            availability = CheckPlayerNameAvailability(self.currentPlayer.player_accessToken, playerName)
+        except requests.exceptions.HTTPError:
+            self.OKButton.setDisabled(True)
+            self.OKButton.setToolTip("无法访问 Mojang API，请重试")
+            return
+        print(is_allowed, availability)
+        if is_allowed and availability == "AVAILABLE":
+            self.OKButton.setEnabled(True)
+            self.OKButton.setToolTip("该玩家名合法")
+        else:
+            self.OKButton.setDisabled(True)
+            if not is_allowed:
+                self.OKButton.setToolTip("当前玩家无法修改玩家名")
+            elif availability == "DUPLICATE":
+                self.OKButton.setToolTip("该玩家名已被占用")
+            elif availability == "NOT_ALLOWED":
+                self.OKButton.setToolTip("该玩家名不合法")
+            else:
+                self.OKButton.setToolTip("未知原因")
+    
+    def changePlayerName(self):
+        checkIsVaild()
+        if OKButton.isEnabled():
+            playerName = self.playerNameInput.text()
+            ChangePlayerName(self.currentPlayer.player_accessToken, playerName)
+            self.close()
+
+
 class PlayerPage(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -3498,7 +3746,8 @@ class PlayerPage(QFrame):
         
         self.playerList = []
         self.currentIndex = 0
-        self.isLogining = False
+        self.isLoggingIn = False
+        self.isLoggedIn = False
         
         self.actionsPanel = Panel(self)
         shadow = QGraphicsDropShadowEffect(self.actionsPanel)
@@ -3580,13 +3829,15 @@ class PlayerPage(QFrame):
             "offline": "离线玩家"
         }
         
-        if not self.isLogining and self.playerList:
-            currentPlayer = self.playerList[self.currentIndex]
-            playerType = playerTypes[currentPlayer.player_accountType[1]] if currentPlayer.player_accountType[
-                                                                                 2] != "offline" else playerTypes[
-                "offline"]
-            self.middleButton.setText(
-                f"{currentPlayer.player_playerName}\n{playerType}\n{'已购买 Minecraft' if currentPlayer.player_hasMC else '未购买 Minecraft'}")
+        if not self.isLoggingIn and self.playerList:
+            if not self.isLoggedIn:
+                self.middleButton.setText("\n未登录\n")
+            else:
+                currentPlayer = self.playerList[self.currentIndex]
+                playerType = playerTypes[currentPlayer.player_accountType[
+                    1]] if currentPlayer.player_accountType[2] != "offline" else playerTypes["offline"]
+                self.middleButton.setText(
+                    f"{currentPlayer.player_playerName}\n{playerType}\n{'已购买 Minecraft' if currentPlayer.player_hasMC else '未购买 Minecraft'}")
         else:
             self.middleButton.setText("\n正在登录中\n")
         
@@ -3602,14 +3853,23 @@ class PlayerPage(QFrame):
             self.tableWidget.setItem(i, 1, QTableWidgetItem(playerType))
             self.tableWidget.setItem(i, 2, QTableWidgetItem("是" if player.player_hasMC else "否"))
     
-    def setLogining(self, state):
-        self.isLogining = bool(state)
-        self.middleButton.setDisabled(self.isLogining)
+    def setLoggingIn(self, state):
+        self.isLoggingIn = bool(state)
+        self.middleButton.setDisabled(self.isLoggingIn)
+        self.playerActions.setDisabled(self.isLoggingIn)
         self.retranslateUI()
     
+    def setLoggedIn(self, state):
+        self.setLoggingIn(False)
+        self.isLoggedIn = state
+    
     def updatePlayer(self, player):
+        if player is None:
+            self.setLoggedIn(False)
+            return
         self.playerList.append(player)
-        self.setLogining(False)
+        self.setLoggingIn(False)
+        self.setLoggedIn(True)
         self.retranslateUI()
         self.updatePlayerList()
     
@@ -3677,8 +3937,13 @@ class PlayerPage(QFrame):
         menu = RoundedMenu(self.playerActions)
         action1 = QAction(menu)
         action1.setText("修改玩家名称")
+        action1.triggered.connect(self.changeCurrentPlayerName)
         menu.addAction(action1)
         menu.popup(QCursor.pos())
+    
+    def changeCurrentPlayerName(self):
+        dialogue = ChangePlayerNameDialogue(self.window(), self.playerList[self.currentIndex])
+        dialogue.show()
     
     def changeAnimation(self, variant, function):
         if variant == "in":
@@ -3795,6 +4060,49 @@ class PlayerPage(QFrame):
         ))
 
 
+# Dialogue that show you the update log
+class UpdateLogDialogue(MaskedDialogue):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setContentsMargins(5, 32, 5, 5)
+        self.label = Label(self)
+        self.verticalLayout.addWidget(self.label)
+        self.retranslateUI()
+    
+    def retranslateUI(self):
+        self.label.setText("""<!DOCTYPE html>
+        <html>
+        <head/>
+        <body>
+        <h1 align=\"centre\">Common Minecraft Launcher 更新日志</h1>
+        <h3 align=\"centre\">AlphaDev-25002 2026.1.1</h3>
+        <p>先庆祝大家<strong>元旦快乐</strong>！从 7 月份憋到 12 月份的更新，这次都上来了！</p>
+        <h5>更新</h5>
+        <ol>
+            <li>翻新界面；</li>
+            <li>添加下载 Minecraft 的镜像源，对于中国大陆的下载速度可以得到提升。建议<a
+                    href=\"https://bmclapidoc.bangbang93.com/\">支持 bangbang93</a>；
+            </li>
+            <li>添加更多动画；</li>
+            <li>添加其他设置。</li>
+        </ol>
+        <h5>修复</h5>
+        <ol>
+            <li>修复弹出更新日志弹窗时启动器主窗口工作区域存在问题的 bug（具体：会被克隆）；</li>
+            <li>修复启动器界面过于卡顿的问题</li>
+        </ol>
+        <h5>注</h5>
+        <ul>
+            <li>开发时间有限，有部分内容还没有做好，请见谅；</li>
+            <li>翻译未必 100% 准确，可协助我们翻译。</li>
+        </ul>
+        <h5>项目链接</h5>
+        <a href=\"https://www.github.com/chengwm123456/CMCL-Launcher\">https://www.github.com/chengwm123456/CMCL-Launcher（Github）</a>
+        </body>
+        </html>""")
+
+
 class MainLauncherWindow(MainWindow):
     class ContentPanel(AnimatedStackedWidget, Panel):
         pass
@@ -3815,7 +4123,7 @@ class MainLauncherWindow(MainWindow):
         shadow.setBlurRadius(32)
         shadow.setXOffset(0)
         shadow.setYOffset(0)
-        shadow.setColor(QColor(0, 0, 0, 32))
+        shadow.setColor(QColor(0, 0, 0, 128))
         self.topNavigationPanel.setGraphicsEffect(shadow)
         
         self.horizontalLayout = QHBoxLayout(self.topNavigationPanel)
@@ -4048,10 +4356,10 @@ def login_user(name_or_token=b"", is_refresh_login=False):
             playerUUID = data["uuid"]
             return MicrosoftPlayer(name_or_token.decode(), playerUUID, accessToken, True)
         else:
-            return MicrosoftPlayer(None, None, None, False)
+            return None
     except:
         traceback.print_exc()
-        return MicrosoftPlayer(None, None, None, False)
+        return None
 
 
 class LoginThread(QThread):
@@ -4062,22 +4370,25 @@ class LoginThread(QThread):
             data = Path("current_user.DAT").read_bytes().replace(
                 b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", b"").replace(br"\x0", b"")
             if not data:
-                self.loginFinished.emit(MicrosoftPlayer(None, None, None, False))
+                self.loginFinished.emit(None)
                 return
             data = login_user(data, True)
             self.loginFinished.emit(data)
         except FileNotFoundError:
             Path("current_user.DAT").touch(exist_ok=True)
-            self.loginFinished.emit(MicrosoftPlayer(None, None, None, False))
+            self.loginFinished.emit(None)
         except:
-            self.loginFinished.emit(MicrosoftPlayer(None, None, None, False))
+            self.loginFinished.emit(None)
 
 
 def updatePlayer(data):
     global currentPlayer
-    currentPlayer = data
-    window.playerPageFrame.setLogining(False)
-    window.playerPageFrame.updatePlayer(currentPlayer)
+    currentPlayer = MicrosoftPlayer(None, None, None, False)
+    window.playerPageFrame.setLoggingIn(False)
+    if not data:
+        window.playerPageFrame.updatePlayer(None)
+    else:
+        window.playerPageFrame.updatePlayer(currentPlayer)
 
 
 class Application(QApplication):
@@ -4123,9 +4434,18 @@ def post_except(*args, **kwargs):
 sys.excepthook = excepthook
 
 
+def saveSettingsMain(settings):
+    settingsFile = loadSettingsFile()
+    settingsFile["Settings"] = settings
+    settingsFile["Version"] = CMCLVersion[0]
+    saveSettingsFile(settingsFile)
+
+
 def init():
     global app, window, currentPlayer, settings, minecraft_path, currentLanguage
-    settings = loadSettings()
+    settingsFile = loadSettingsFile()
+    settings = settingsFile["Settings"]
+    showUpdateLog = settingsFile.get("Version") != CMCLVersion[0]
     
     match settings["LauncherSettings"]["Personalisation"]["CurrentTheme"]:
         case "Light":
@@ -4145,15 +4465,26 @@ def init():
     app = Application(sys.argv)
     font = QFont("HarmonyOS Sans SC", 10)
     font.setHintingPreference(QFont.HintingPreference.PreferFullHinting)
+    font.setStyleStrategy(QFont.StyleStrategy.PreferAntialias)
     app.setFont(font)
+    app.fallback_translator = QTranslator()
+    app.fallback_translator.load(f":/CMCL_zh-cn.qm")
+    app.installTranslator(app.fallback_translator)
+    app.translator = QTranslator()
+    app.translator.load(f":/CMCL_{currentLanguage}.qm")
+    app.installTranslator(app.translator)
     currentPlayer = create_online_player(None, None, None, False)
     thread = LoginThread()
     thread.loginFinished.connect(updatePlayer)
     thread.start()
     window = MainLauncherWindow()
-    window.playerPageFrame.setLogining(True)
+    window.playerPageFrame.setLoggingIn(True)
     
-    app.lastWindowClosed.connect(lambda: saveSettings(settings))
+    if showUpdateLog:
+        dialogue = UpdateLogDialogue(window)
+        window.updateDialogue = dialogue
+    
+    app.lastWindowClosed.connect(lambda: saveSettingsMain(settings))
 
 
 with Path("latest.log").open("w", encoding="utf-8") as out:
@@ -4161,7 +4492,17 @@ with Path("latest.log").open("w", encoding="utf-8") as out:
         logging.basicConfig(level=logging.DEBUG)
         cProfile.run("init()", "initAnalysis.log")
         window.show()
-        QTimer.singleShot(5000, lambda: out.flush())
+        if hasattr(window, "updateDialogue"):
+            window.update()
+            QTimer.singleShot(1000, window.updateDialogue.show)
+        outUpd = QTimer(window)
+        outUpd.timeout.connect(lambda: (out.flush(), saveSettingsMain(settings)))
+        outUpd.setInterval(5000)
+        outUpd.start()
         app.exec()
 
 # "%appdata%\Python\Python311\Scripts\pyside6-rcc.exe" resources.qrc -o resources.py
+
+# "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-cn.ts
+# "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-hk.ts
+# "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-tw.ts

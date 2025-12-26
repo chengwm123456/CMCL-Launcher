@@ -31,7 +31,7 @@ class PushButton(QPushButton, Widget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
         painter.save()
         painter.setOpacity(self.property("baseOpacity"))
@@ -57,14 +57,7 @@ class PushButton(QPushButton, Widget):
                         (self.isDown() or self.isChecked()) and self.isEnabled()),
                 is_primary=self.objectName() == "primaryButton"
             ))
-            painter.drawRoundedRect(
-                self.rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         if self.menu():
@@ -84,28 +77,13 @@ class PushButton(QPushButton, Widget):
             
             if self.property("frameOpacity"):
                 painter.save()
-                rect2 = self.rect().adjusted(
-                    self.property("frameRectAdjustment"),
-                    self.property("frameRectAdjustment"),
-                    -self.property("frameRectAdjustment"),
-                    -self.property("frameRectAdjustment")
-                )
-                adjustmentScaleRatio = 1 - (self.property("frameRectAdjustment") / min(
-                    32, min(self.width() // 2, self.height() // 2)))
-                x2 = (rect2.width() - 8) - 3 + 4 + rect2.x()
-                y2 = rect2.height() / 2 - 2 + 2 + rect2.y()
+                x = (self.width() - 8) - 3 + 4
+                y = self.height() / 2 - 2 + 2
                 painter.setOpacity(self.property("frameOpacity"))
                 painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
-                painter.translate(x2, y2)
+                painter.translate(x, y)
                 painter.rotate(self.property("dropdownIndicatorRotation"))
-                painter.drawLines(
-                    [
-                        QLineF(QPointF(-4 * adjustmentScaleRatio, -2 * adjustmentScaleRatio),
-                               QPointF(0, 2 * adjustmentScaleRatio)),
-                        QLineF(QPointF(0, 2 * adjustmentScaleRatio),
-                               QPointF(4 * adjustmentScaleRatio, -2 * adjustmentScaleRatio))
-                    ]
-                )
+                painter.drawLines([QLineF(QPointF(-4, -2), QPointF(0, 2)), QLineF(QPointF(0, 2), QPointF(4, -2))])
                 painter.restore()
         
         op = QStyleOptionButton()
@@ -177,7 +155,7 @@ class ToolButton(QToolButton, Widget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
         painter.save()
         painter.setOpacity(self.property("baseOpacity"))
@@ -203,14 +181,7 @@ class ToolButton(QToolButton, Widget):
                         (self.isDown() or self.isChecked()) and self.isEnabled()),
                 is_primary=self.objectName() == "primaryButton"
             ))
-            painter.drawRoundedRect(
-                self.rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         if self.menu():
@@ -230,28 +201,13 @@ class ToolButton(QToolButton, Widget):
             
             if self.property("frameOpacity"):
                 painter.save()
-                rect2 = self.rect().adjusted(
-                    self.property("frameRectAdjustment"),
-                    self.property("frameRectAdjustment"),
-                    -self.property("frameRectAdjustment"),
-                    -self.property("frameRectAdjustment")
-                )
-                adjustmentScaleRatio = 1 - (self.property("frameRectAdjustment") / min(
-                    32, min(self.width() // 2, self.height() // 2)))
-                x2 = (rect2.width() - 8) - 3 + 4 + rect2.x()
-                y2 = rect2.height() / 2 - 2 + 2 + rect2.y()
+                x = (self.width() - 8) - 3 + 4
+                y = self.height() / 2 - 2 + 2
                 painter.setOpacity(self.property("frameOpacity"))
                 painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
-                painter.translate(x2, y2)
+                painter.translate(x, y)
                 painter.rotate(self.property("dropdownIndicatorRotation"))
-                painter.drawLines(
-                    [
-                        QLineF(QPointF(-4 * adjustmentScaleRatio, -2 * adjustmentScaleRatio),
-                               QPointF(0, 2 * adjustmentScaleRatio)),
-                        QLineF(QPointF(0, 2 * adjustmentScaleRatio),
-                               QPointF(4 * adjustmentScaleRatio, -2 * adjustmentScaleRatio))
-                    ]
-                )
+                painter.drawLines([QLineF(QPointF(-4, -2), QPointF(0, 2)), QLineF(QPointF(0, 2), QPointF(4, -2))])
                 painter.restore()
         
         op = QStyleOptionToolButton()
@@ -356,7 +312,7 @@ class CloseButton(ToolButton):
     def paintEvent(self, a0):
         super().paintEvent(a0)
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         painter.save()
         painter.setOpacity(
             self.property("baseOpacity") + (self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))
@@ -388,7 +344,7 @@ class CheckBox(QCheckBox, Widget):
         self.initStyleOption(op)
         op.rect.adjust(min(5, self.width()), min(5, self.height()), -min(5, self.width()), -min(5, self.height()))
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
         painter.save()
         painter.setOpacity(self.property("baseOpacity"))
@@ -402,14 +358,7 @@ class CheckBox(QCheckBox, Widget):
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         rect = self.style().subElementRect(QStyle.SubElement.SE_CheckBoxIndicator, op).adjusted(1, 1, -1, -1)
@@ -426,33 +375,15 @@ class CheckBox(QCheckBox, Widget):
         painter.drawRoundedRect(rect, 16, 16)
         painter.restore()
         if self.property("frameOpacity"):
+            rect = self.style().subElementRect(QStyle.SubElement.SE_CheckBoxIndicator, op).adjusted(1, 1, -1, -1)
             painter.save()
-            op2 = QStyleOptionButton()
-            op2.initFrom(self)
-            self.initStyleOption(op2)
-            op2.rect = self.rect().adjusted(
-                self.property("frameRectAdjustment"),
-                self.property("frameRectAdjustment"),
-                -self.property("frameRectAdjustment"),
-                -self.property("frameRectAdjustment")
-            )
-            op2.rect.adjust(min(5, self.width()), min(5, self.height()), -min(5, self.width()), -min(5, self.height()))
-            rect2 = self.style().subElementRect(QStyle.SubElement.SE_CheckBoxIndicator, op2).adjusted(1, 1, -1, -1)
-            adjustmentScaleRatio = min(rect2.width() // 2, rect2.height() // 2) / min(
-                32, min(self.width() // 2, self.height() // 2))
-            rect2.adjust(
-                int(self.property("frameRectAdjustment") * adjustmentScaleRatio),
-                int(self.property("frameRectAdjustment") * adjustmentScaleRatio),
-                -int(self.property("frameRectAdjustment") * adjustmentScaleRatio),
-                -int(self.property("frameRectAdjustment") * adjustmentScaleRatio)
-            )
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour(is_highlight=True))
             painter.setBrush(getBackgroundColour(
                 is_highlight=(self.isDown() or self.isChecked()) or (
                         (self.isDown() or self.isChecked()) and self.isEnabled())
             ))
-            painter.drawRoundedRect(rect2, 16, 16)
+            painter.drawRoundedRect(rect, 16, 16)
             painter.restore()
         
         painter.save()
@@ -460,31 +391,21 @@ class CheckBox(QCheckBox, Widget):
         painter.setBrush(Qt.GlobalColor.transparent)
         match self.checkState():
             case Qt.CheckState.Checked:
-                painter.setOpacity(self.property("baseOpacity"))
+                painter.setOpacity(
+                    self.property("baseOpacity") + (
+                            self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))
                 painter.drawLines([
                     QLine(QPoint(4 + rect.x(), rect.y() + 8), QPoint(rect.width() // 2 + rect.x(), rect.y() + 10)),
                     QLine(QPoint(rect.width() // 2 + rect.x(), rect.y() + 10), QPoint(9 + rect.x(), rect.y() + 4))
                 ])
-                if self.property("frameOpacity"):
-                    painter.setOpacity(self.property("frameOpacity"))
-                    painter.drawLines([
-                        QLine(QPoint(4 + rect2.x(), rect2.y() + 8),
-                              QPoint(rect2.width() // 2 + rect2.x(), rect2.y() + 10)),
-                        QLine(QPoint(rect2.width() // 2 + rect2.x(), rect2.y() + 10),
-                              QPoint(9 + rect2.x(), rect2.y() + 4))
-                    ])
             case Qt.CheckState.PartiallyChecked:
-                painter.setOpacity(self.property("baseOpacity"))
+                painter.setOpacity(
+                    self.property("baseOpacity") + (
+                            self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))
                 painter.drawLine(QLine(
                     QPoint(4 + rect.x(), rect.y() + rect.height() // 2),
                     QPoint(rect.x() + rect.width() - 4, rect.y() + rect.height() // 2)
                 ))
-                if self.property("frameOpacity"):
-                    painter.setOpacity(self.property("frameOpacity"))
-                    painter.drawLine(QLine(
-                        QPoint(4 + rect2.x(), rect2.y() + rect2.height() // 2),
-                        QPoint(rect2.x() + rect2.width() - 4, rect2.y() + rect2.height() // 2)
-                    ))
         painter.restore()
         painter.save()
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
@@ -529,7 +450,7 @@ class RadioButton(QRadioButton, Widget):
         self.initStyleOption(op)
         op.rect.adjust(min(5, self.width()), min(5, self.height()), -min(5, self.width()), -min(5, self.height()))
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
         painter.save()
         painter.setOpacity(self.property("baseOpacity"))
@@ -543,14 +464,7 @@ class RadioButton(QRadioButton, Widget):
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         rect = self.style().subElementRect(QStyle.SubElement.SE_RadioButtonIndicator, op).adjusted(1, 1, -1, -1)
@@ -567,33 +481,15 @@ class RadioButton(QRadioButton, Widget):
         painter.drawRoundedRect(rect, 16, 16)
         painter.restore()
         if self.property("frameOpacity"):
+            rect = self.style().subElementRect(QStyle.SubElement.SE_RadioButtonIndicator, op).adjusted(1, 1, -1, -1)
             painter.save()
-            op2 = QStyleOptionButton()
-            op2.initFrom(self)
-            self.initStyleOption(op2)
-            op2.rect = self.rect().adjusted(
-                self.property("frameRectAdjustment"),
-                self.property("frameRectAdjustment"),
-                -self.property("frameRectAdjustment"),
-                -self.property("frameRectAdjustment")
-            )
-            op2.rect.adjust(min(5, self.width()), min(5, self.height()), -min(5, self.width()), -min(5, self.height()))
-            rect2 = self.style().subElementRect(QStyle.SubElement.SE_CheckBoxIndicator, op2).adjusted(1, 1, -1, -1)
-            adjustmentScaleRatio = min(rect2.width() // 2, rect2.height() // 2) / min(
-                32, min(self.width() // 2, self.height() // 2))
-            rect2.adjust(
-                int(self.property("frameRectAdjustment") * adjustmentScaleRatio),
-                int(self.property("frameRectAdjustment") * adjustmentScaleRatio),
-                -int(self.property("frameRectAdjustment") * adjustmentScaleRatio),
-                -int(self.property("frameRectAdjustment") * adjustmentScaleRatio)
-            )
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour(is_highlight=True))
             painter.setBrush(getBackgroundColour(
                 is_highlight=(self.isDown() or self.isChecked()) or (
                         (self.isDown() or self.isChecked()) and self.isEnabled())
             ))
-            painter.drawRoundedRect(rect2, 16, 16)
+            painter.drawRoundedRect(rect, 16, 16)
             painter.restore()
         painter.save()
         op.palette.setColor(self.foregroundRole(), getForegroundColour())
@@ -689,7 +585,7 @@ class SwitchButton(QAbstractButton, Widget):
         rectAdjustmentRatio = min(1, 10 / min(32, min(self.width() // 2, self.height() // 2)))
         outerRect = QRect(1, (self.height() - 22) // 2, 50, 21)
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
         # TODO: rewrite this thing / 重写这个鬼东西 (Note: Half-rewrote but still need rewrite / 虽说半重写过了，但是还要重写)
         painter.save()
@@ -700,18 +596,13 @@ class SwitchButton(QAbstractButton, Widget):
         painter.restore()
         
         if self.property("frameOpacity"):
-            rect2 = outerRect.adjusted(
-                int(self.property("frameRectAdjustment") * rectAdjustmentRatio),
-                int(self.property("frameRectAdjustment") * rectAdjustmentRatio),
-                -int(self.property("frameRectAdjustment") * rectAdjustmentRatio),
-                -int(self.property("frameRectAdjustment") * rectAdjustmentRatio)
-            )
             painter.save()
-            painter.setOpacity(self.property("frameOpacity"))
+            painter.setOpacity(self.property("baseOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(rect2, rect2.height() // 2 + 1, rect2.height() // 2 + 1)
+            painter.drawRoundedRect(outerRect, outerRect.height() // 2 + 1, outerRect.height() // 2 + 1)
             painter.restore()
+        
         rect = QRect(3 if not self.isChecked() else 49 - 17, (self.height() - 22) // 2 + 2, 17, 17)
         painter.save()
         painter.setOpacity(self.property("baseOpacity"))
@@ -727,19 +618,7 @@ class SwitchButton(QAbstractButton, Widget):
         painter.drawEllipse(rect)
         painter.restore()
         if self.property("frameOpacity"):
-            or2 = outerRect.adjusted(
-                int(self.property("frameRectAdjustment") * rectAdjustmentRatio),
-                int(self.property("frameRectAdjustment") * rectAdjustmentRatio),
-                -int(self.property("frameRectAdjustment") * rectAdjustmentRatio),
-                -int(self.property("frameRectAdjustment") * rectAdjustmentRatio)
-            )
-            rect2 = QRect(
-                or2.x() + 2 if not self.isChecked() else or2.x() + or2.width() - 2 - round(
-                    17 * self.property("frameOpacity")),
-                or2.y() + 2,
-                round(17 * self.property("frameOpacity")),
-                round(17 * self.property("frameOpacity"))
-            )
+            rect = QRect(3 if not self.isChecked() else 49 - 17, (self.height() - 22) // 2 + 2, 17, 17)
             painter.save()
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour(is_highlight=True))
@@ -747,7 +626,7 @@ class SwitchButton(QAbstractButton, Widget):
                 is_highlight=(self.isDown() or self.isChecked()) or (
                         (self.isDown() or self.isChecked()) and self.isEnabled())
             ))
-            painter.drawEllipse(rect2)
+            painter.drawEllipse(rect)
             painter.restore()
         painter.setPen(getForegroundColour())
         painter.setBrush(Qt.GlobalColor.transparent)

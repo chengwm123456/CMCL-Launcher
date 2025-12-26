@@ -52,14 +52,7 @@ class GroupBox(QGroupBox, Widget):
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         op = QStyleOptionGroupBox()
@@ -77,25 +70,15 @@ class GroupBox(QGroupBox, Widget):
             painter.restore()
             
             if self.property("frameOpacity"):
-                op2 = QStyleOptionGroupBox()
-                op2.initFrom(self)
-                self.initStyleOption(op2)
-                op2.rect = self.rect().adjusted(
-                    self.property("frameRectAdjustment"),
-                    self.property("frameRectAdjustment"),
-                    -self.property("frameRectAdjustment"),
-                    -self.property("frameRectAdjustment")
-                )
-                rect2 = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op2,
-                                                    QStyle.SubControl.SC_GroupBoxLabel).united(
-                    self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op2,
+                rect = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
+                                                   QStyle.SubControl.SC_GroupBoxLabel).united(
+                    self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op,
                                                 QStyle.SubControl.SC_GroupBoxCheckBox))
                 painter.save()
                 painter.setOpacity(self.property("frameOpacity"))
                 painter.setPen(getBorderColour())
                 painter.drawLine(
-                    QLine(QPoint(op2.rect.x() + 2, rect2.y() + max(rect2.height(), 16)),
-                          QPoint(op2.rect.x() + op2.rect.width() - 2, rect2.y() + max(rect2.height(), 16))))
+                    QLine(QPoint(2, max(rect.height(), 16)), QPoint(self.width() - 2, max(rect.height(), 16))))
                 painter.restore()
         if self.title():
             painter.save()
@@ -124,41 +107,23 @@ class GroupBox(QGroupBox, Widget):
             painter.restore()
             if self.property("frameOpacity"):
                 painter.save()
-                op2 = QStyleOptionGroupBox()
-                op2.initFrom(self)
-                self.initStyleOption(op)
-                op2.rect = self.rect().adjusted(
-                    self.property("frameRectAdjustment"),
-                    self.property("frameRectAdjustment"),
-                    -self.property("frameRectAdjustment"),
-                    -self.property("frameRectAdjustment")
-                )
-                rect2 = self.style().subControlRect(QStyle.ComplexControl.CC_GroupBox, op2,
-                                                    QStyle.SubControl.SC_GroupBoxCheckBox).adjusted(1, 1, -1, -1)
-                rect2.adjust(2, 0, 2, 0)
                 painter.setOpacity(self.property("frameOpacity"))
                 painter.setPen(getBorderColour(is_highlight=True))
                 painter.setBrush(getBackgroundColour(
                     is_highlight=self.isChecked() or (self.isChecked() and self.isEnabled())
                 ))
-                painter.drawRoundedRect(rect2, 16, 16)
+                painter.drawRoundedRect(rect, 16, 16)
                 painter.restore()
             
             painter.save()
             painter.setPen(getForegroundColour())
             painter.setBrush(Qt.GlobalColor.transparent)
             if self.isChecked():
-                painter.setOpacity(self.property("baseOpacity"))
+                painter.setOpacity(
+                    self.property("baseOpacity") + (
+                            self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))
                 painter.drawLines([
                     QLine(QPoint(4 + rect.x(), rect.y() + 8), QPoint(rect.width() // 2 + rect.x(), rect.y() + 10)),
                     QLine(QPoint(rect.width() // 2 + rect.x(), rect.y() + 10), QPoint(9 + rect.x(), rect.y() + 4))
                 ])
-                if self.property("frameOpacity"):
-                    painter.setOpacity(self.property("frameOpacity"))
-                    painter.drawLines([
-                        QLine(QPoint(4 + rect2.x(), rect2.y() + 8),
-                              QPoint(rect2.width() // 2 + rect2.x(), rect2.y() + 10)),
-                        QLine(QPoint(rect2.width() // 2 + rect2.x(), rect2.y() + 10),
-                              QPoint(9 + rect2.x(), rect2.y() + 4))
-                    ])
             painter.restore()

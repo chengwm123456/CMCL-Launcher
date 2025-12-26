@@ -46,18 +46,11 @@ class HeaderView(QHeaderView, Widget):
             painter.setOpacity(self.viewport().property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.viewport().rect().adjusted(
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    -(1 + self.viewport().property("frameRectAdjustment")),
-                    -(1 + self.viewport().property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         pp = QPainterPath()
-        pp.addRoundedRect(QRectF(self.viewport().rect()).adjusted(.625, .625, -.625, -.625), 16, 16)
+        pp.addRoundedRect(self.viewport().rect().toRectF().adjusted(1.625, 1.625, -1.625, -1.625), 16, 16)
         painter.setClipPath(pp)
         for section in range(self.count()):
             op = QStyleOptionHeader()
@@ -92,7 +85,6 @@ class HeaderView(QHeaderView, Widget):
                     op.textAlignment = op.textAlignment | Qt.AlignmentFlag.AlignCenter
             op.rect = QRect(x, y, width, height).adjusted(1, 1, -1, -1)
             
-            op.palette.setColor(op.palette.ColorRole.Text, getForegroundColour())
             painter.save()
             painter.setOpacity(self.viewport().property("baseOpacity") + (
                     self.viewport().property("frameOpacity") * (1.0 - self.viewport().property("baseOpacity"))))
@@ -136,14 +128,7 @@ class TableView(QTableView, Widget):
             painter.setOpacity(self.viewport().property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.viewport().rect().adjusted(
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    -(1 + self.viewport().property("frameRectAdjustment")),
-                    -(1 + self.viewport().property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         self.setShowGrid(False)
@@ -190,14 +175,7 @@ class TableWidget(QTableWidget, Widget):
             painter.setOpacity(self.viewport().property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.viewport().rect().adjusted(
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    1 + self.viewport().property("frameRectAdjustment"),
-                    -(1 + self.viewport().property("frameRectAdjustment")),
-                    -(1 + self.viewport().property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         self.setShowGrid(False)

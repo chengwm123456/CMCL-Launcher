@@ -36,14 +36,7 @@ class ToolBox(QToolBox, Widget):
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour())
             painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
+            painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
         for button in (button for button in self.children() if isinstance(button, QAbstractButton)):
@@ -78,13 +71,6 @@ class ToolBox(QToolBox, Widget):
                 painter.setPen(getBorderColour(is_highlight=True))
                 painter.setBrush(getBackgroundColour(is_highlight=(button.isDown() or button.isChecked()) or (
                         (button.isDown() or button.isChecked()) and button.isEnabled())))
-                painter.drawRoundedRect(
-                    rect.adjusted(
-                        button.property("frameRectAdjustment"),
-                        button.property("frameRectAdjustment"),
-                        -button.property("frameRectAdjustment"),
-                        -button.property("frameRectAdjustment")
-                    ), 16, 16
-                )
+                painter.drawRoundedRect(rect, 16, 16)
             
             painter.restore()

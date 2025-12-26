@@ -11,7 +11,7 @@ def GetPlayerProfile(accessToken):
     return response.json()
 
 
-def CheckPlayerNameAvailable(accessToken, name):
+def CheckPlayerNameAvailability(accessToken, name):
     response = requests.get(
         f"https://api.minecraftservices.com/minecraft/profile/name/{name}/available",
         headers={"Authorization": f"Bearer {accessToken}"}
@@ -25,3 +25,5 @@ def PlayerNameChange(accessToken):
         "https://api.minecraftservices.com/minecraft/profile/namechange",
         headers={"Authorization": f"Bearer {accessToken}"}
     )
+    response.raise_for_status()
+    return response.json()
