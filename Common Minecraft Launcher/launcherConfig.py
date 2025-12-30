@@ -39,7 +39,8 @@ def createSettingsFile():
                 "DownloadSettings": {
                     "DownloadThreadsCount": 8,
                     "DownloadChunkSize": 1024
-                }
+                },
+                "Language": None
             }
         }
     }, indent=4), encoding="utf-8")

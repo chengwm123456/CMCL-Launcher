@@ -53,8 +53,9 @@
 <h5>运行启动器</h5>
 
 1. 你可以从右侧的 "Releases"（版本）下载启动器。
-    * Windows 系统文件名：`Common Minecraft Launcher.exe` (` `会被替换成`.`)
-    * Linux 系统文件名：`Common Minecraft Launcher` (没有后缀名，` `会被替换成`.`。如果你无法启动，记得把文件名改一下)
+    * 两个平台的可运行文件在一个叫做“CMCL.zip”的压缩文件里面。
+        * Windows 系统文件名：`Common Minecraft Launcher.exe`
+        * Linux 系统文件名：`Common Minecraft Launcher`
 
 2. 下载源代码。
     * 点击 "Code" -> "Download ZIP"，下载源代码的 .zip 压缩包。
@@ -67,13 +68,13 @@
     * 进入解压的文件夹，进到根目录（有`requirements.txt`的那个）
 
     * 运行：
-        * `python -m pip install -r requirements_windows.txt`：Windows
-        * `python3 -m pip install -r requirements_linux.txt`：Linux
-            * 确保你创建了 venv，Linux 通过 apt（或者其他我不晓得的）下载的`python3-pip`不能这么干。
+        * `python -m pip install -r requirements_windows.txt`（Windows）
+        * `python3 -m pip install -r requirements_linux.txt`（Linux）
+            * 确保你创建了 venv，Linux 通过包管理器下载的 `python3-pip` 不能这么干。
 
     * 运行：
-        * `python "Common Minecraft Launcher\main.py"`：Windows
-        * `python3 Common\ Minecraft\ Launcher/main.py`：Linux
+        * `python "Common Minecraft Launcher\main.py"`（Windows）
+        * `python3 Common\ Minecraft\ Launcher/main.py`（Linux）
 
 <h5><span style="color: red">重要内容</span></h5>
 

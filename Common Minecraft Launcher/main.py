@@ -308,16 +308,6 @@ class AnimatedStackedWidget(QStackedWidget):
 
 
 class LoadingAnimation(QFrame):
-    class HideAnimation(QThread):
-        def __init__(self, parent, time=1):
-            super().__init__(parent)
-            self.time = time
-        
-        def run(self):
-            import time
-            time.sleep(self.time)
-            self.parent().hide()
-    
     class TransparencyAnimation(QVariantAnimation):
         def __init__(self, parent=None, variant="in"):
             super().__init__(parent)
@@ -530,9 +520,7 @@ class LoadingAnimation(QFrame):
                 if ani:
                     self.TransparencyAnimation(self, "out").start()
                     self.SizingAnimation(self.__centreAnimation, "out").start()
-                    hideani = self.HideAnimation(self)
-                    self.destroyed.connect(hideani.terminate)
-                    hideani.start()
+                    QTimer.singleShot(1000, lambda: self.hide())
                 else:
                     self.hide()
                 self.__statusLabel.setText(self.tr("LoadingAnimation.Status.LoadingSuccess.Text"))  # 已加载完成
@@ -569,10 +557,12 @@ class LoginWindow(MaskedDialogue):
         
         def run(self):
             try:
+                window.playerPageFrame.setLoggingIn(True)
                 datas = login_user(bytes(self.token, encoding="utf-8"))
                 updatePlayer(datas)
             except:
                 traceback.print_exc()
+            window.playerPageFrame.setLoggingIn(False)
             self.loginFinished.emit()
     
     def __init__(self, parent=None):
@@ -607,7 +597,8 @@ class LoginWindow(MaskedDialogue):
                 token = token.split(".")[-1].split("&")[0]
                 thread = self.LoginThread(token)
                 thread.start()
-                self.hide()
+                self.progress.finish(ani=False)
+                self.close()
     
     def loadStarted(self):
         self.progress.start(ani=self.isFirstShow)
@@ -1046,14 +1037,22 @@ class HomePage(QFrame):
     def toggleManagementPageVisibility(self):
         if self.versionsManagementPage.isVisible():
             self.closeManagementPage()
-            self.stopMinecraftProcess.setVisible(True)
         else:
             self.openManagementPage()
-            self.stopMinecraftProcess.setVisible(False)
     
     def openManagementPage(self):
         if self.versionsManagementPage.isVisible():
             return
+        
+        if self.stopMinecraftProcess.isVisible():
+            ani33 = OpacityAnimation(self.stopMinecraftProcess)
+            ani33.setStartValue(100)
+            ani33.setEndValue(0)
+            ani33.setDuration(500)
+            ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            ani33.finished.connect(lambda: self.stopMinecraftProcess.hide())
+        
         ani22 = OpacityAnimation(self.versionsManagementPage)
         ani22.setStartValue(0)
         ani22.setEndValue(100)
@@ -1065,6 +1064,16 @@ class HomePage(QFrame):
     def closeManagementPage(self):
         if not self.versionsManagementPage.isVisible():
             return
+        
+        if not self.stopMinecraftProcess.isVisible():
+            ani33 = OpacityAnimation(self.stopMinecraftProcess)
+            ani33.setStartValue(0)
+            ani33.setEndValue(100)
+            ani33.setDuration(500)
+            ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            QTimer.singleShot(50, lambda: self.stopMinecraftProcess.show())
+        
         ani22 = OpacityAnimation(self.versionsManagementPage)
         ani22.setStartValue(100)
         ani22.setEndValue(0)
@@ -1103,6 +1112,14 @@ class HomePage(QFrame):
             ani22.setDuration(500)
             ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
             QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+        
+        if self.stopMinecraftProcess.isVisible():
+            ani33 = OpacityAnimation(self.stopMinecraftProcess)
+            ani33.setStartValue(0)
+            ani33.setEndValue(100)
+            ani33.setDuration(500)
+            ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(200, lambda: ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
     
     def changeAnimationOut(self):
         ani11 = OpacityAnimation(self.topPanel)
@@ -1119,6 +1136,14 @@ class HomePage(QFrame):
             ani22.setDuration(500)
             ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
             QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+        
+        if self.stopMinecraftProcess.isVisible():
+            ani33 = OpacityAnimation(self.stopMinecraftProcess)
+            ani33.setStartValue(100)
+            ani33.setEndValue(0)
+            ani33.setDuration(500)
+            ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+            QTimer.singleShot(200, lambda: ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
     
     def postToggleTheme(self):
         self.updateIcon()
@@ -3014,6 +3039,7 @@ JVM 参数就是：
             self.form_1_ComboBox.currentIndexChanged.connect(self.setLanguage)
             self.form_1.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_1_ComboBox)
             
+            self.updatingLanguage = True
             self.updateLanguagesList()
             
             self.groupBox_4_Tip = Label(self.groupBox_4)
@@ -3077,7 +3103,7 @@ JVM 参数就是：
             settings["LauncherSettings"]["Personalisation"]["BackgroundColour"] = tuple(window.centreColour)
         
         def updateLanguagesList(self):
-            self.form_1_ComboBox.currentIndexChanged.disconnect(self.setLanguage)
+            self.updatingLanguage = True
             self.form_1_ComboBox.clear()
             
             index = 0
@@ -3089,12 +3115,16 @@ JVM 参数就是：
             
             self.form_1_ComboBox.setCurrentIndex(index)
             self.form_1_ComboBox.currentIndexChanged.connect(self.setLanguage)
+            self.updatingLanguage = False
         
         def setLanguage(self):
             global currentLanguage
+            if self.updatingLanguage:
+                return
             languagesSequence = sorted(languagesCodeMapping)
             langCode = languagesSequence[self.form_1_ComboBox.currentIndex()]
             currentLanguage = langCode
+            settings["LauncherSettings"]["Language"] = currentLanguage
             app.translator.load(f":/CMCL_{currentLanguage}.qm")
             # app.installTranslator(app.translator)
             app.retranslate()
@@ -4455,11 +4485,13 @@ def init():
     
     minecraft_path = Path(settings["LauncherSettings"]["MinecraftPath"]).absolute()
     
-    if os.environ.get("LANG"):
-        currentLanguage = os.environ.get("LANG").split(".")[0]
-    else:
-        currentLanguage = subprocess.check_output(["powershell.exe", "(Get-WinSystemLocale).Name"]).decode().strip()
-    currentLanguage = currentLanguage.lower().replace("_", "-")
+    currentLanguage = settings["LauncherSettings"].get("Language")
+    if currentLanguage is None:
+        if os.environ.get("LANG"):
+            currentLanguage = os.environ.get("LANG").split(".")[0]
+        else:
+            currentLanguage = subprocess.check_output(["powershell.exe", "(Get-WinSystemLocale).Name"]).decode().strip()
+        currentLanguage = currentLanguage.lower().replace("_", "-")
     
     # QApplication.setDesktopSettingsAware(False)
     app = Application(sys.argv)
