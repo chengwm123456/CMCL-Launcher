@@ -29,31 +29,33 @@ def GetJavaPath(version: Union[str, int]) -> Optional[Union[str, Path]]:
     where_out = subprocess.run(
         ["which" if GetOperationSystem.GetOperationSystemName().lower() != "windows" else "where", "java"],
         capture_output=True,
-        check=False).stdout
+        check=False,
+        creationflags=subprocess.CREATE_NO_WINDOW if hasattr(
+            subprocess, "CREATE_NO_WINDOW") else 0).stdout
     java_path = where_out.decode(errors="ignore").splitlines()
     if len(java_path) >= 2 and not java_path[-1]:
         del java_path[-1]
     if not java_path:
         return None
     if Path(java_path[0]).exists():
-        for i in java_path:
-            if Path(i).is_file():
+        for curJava in java_path:
+            if Path(curJava).is_file():
                 try:
                     version_data = \
-                        subprocess.check_output([i, "--version"], stderr=subprocess.STDOUT,
+                        subprocess.check_output([curJava, "--version"], stderr=subprocess.STDOUT,
                                                 creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess,
                                                                                                      "CREATE_NO_WINDOW") else 0).decode().splitlines()[
                             0].split(
                             " ")[1].split(".")[0].lstrip('"')
                 except subprocess.CalledProcessError:
                     version_data = \
-                        subprocess.check_output([i, "-version"], stderr=subprocess.STDOUT,
+                        subprocess.check_output([curJava, "-version"], stderr=subprocess.STDOUT,
                                                 creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess,
                                                                                                      "CREATE_NO_WINDOW") else 0).decode().splitlines()[
                             0].split(
                             " ")[2].split(".")[1].lstrip('"')
                 if str(version) == version_data:
-                    return i
+                    return curJava
     java_home = os.getenv('JAVA_HOME')
     if java_home:
         java_path = Path(Path(java_home) / 'bin' / 'java.exe')

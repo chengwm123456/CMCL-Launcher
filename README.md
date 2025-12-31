@@ -59,7 +59,7 @@ chengwm).
 1. You can download the executable files from the "Releases" on the right side.
     * The executable files for both platforms are in a .zip compressed file called "CMCL.zip".
         * Windows file name: `Common Minecraft Launcher.exe`
-        * Linux file name: `Common Minecraft Launcher`
+        * Linux file name: `Common Minecraft Launcher.bin`
 
 2. You can download the source code.
     * Click "Code" -> "Download ZIP" to download the .zip file of all the source code.
@@ -86,7 +86,7 @@ chengwm).
 Copyright (C) 2025 chengwm123456
 
 Licensed under the GNU General Public License version 3, for further details please refer [
-`LICENSE.md`](https://github.com/chengwm123456/CMCL-Launcher/blob/CMCLMain/LICENSE.md)。
+`LICENSE.md`](https://github.com/chengwm123456/CMCL-Launcher/blob/CMCLMain/LICENSE.md).
 
 <h5><span style="color: red">DISCLAIMER</span></h5>
 
