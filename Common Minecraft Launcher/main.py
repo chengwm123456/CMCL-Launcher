@@ -1082,6 +1082,8 @@ class HomePage(QFrame):
         ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
         QTimer.singleShot(500, lambda: self.versionsManagementPage.hide())
         QTimer.singleShot(500, lambda: self.versionsManageButton.setChecked(False))
+        QTimer.singleShot(500,
+                          lambda: (self.stopMinecraftProcess.show(), self.stopMinecraftProcess.setGraphicsEffect(None)))
     
     def changeAnimation(self, variant, function):
         if variant == "in":
@@ -2428,7 +2430,8 @@ class SettingsPage(QFrame):
                 java_list = []
                 where_out = subprocess.run(
                     ["which" if GetOperationSystemName().lower() != "windows" else "where", "java"],
-                    capture_output=True, check=False).stdout
+                    capture_output=True, check=False, creationflags=subprocess.CREATE_NO_WINDOW if hasattr(
+                        subprocess, "CREATE_NO_WINDOW") else 0).stdout
                 java_path = where_out.decode(errors="ignore").splitlines()
                 if len(java_path) >= 2 and not java_path[-1]:
                     del java_path[-1]
@@ -3859,15 +3862,14 @@ class PlayerPage(QFrame):
             "offline": "离线玩家"
         }
         
-        if not self.isLoggingIn and self.playerList:
-            if not self.isLoggedIn:
-                self.middleButton.setText("\n未登录\n")
-            else:
-                currentPlayer = self.playerList[self.currentIndex]
-                playerType = playerTypes[currentPlayer.player_accountType[
-                    1]] if currentPlayer.player_accountType[2] != "offline" else playerTypes["offline"]
-                self.middleButton.setText(
-                    f"{currentPlayer.player_playerName}\n{playerType}\n{'已购买 Minecraft' if currentPlayer.player_hasMC else '未购买 Minecraft'}")
+        if not self.isLoggedIn and not self.isLoggingIn:
+            self.middleButton.setText("\n未登录\n")
+        elif not self.isLoggingIn and self.playerList:
+            currentPlayer = self.playerList[self.currentIndex]
+            playerType = playerTypes[currentPlayer.player_accountType[
+                1]] if currentPlayer.player_accountType[2] != "offline" else playerTypes["offline"]
+            self.middleButton.setText(
+                f"{currentPlayer.player_playerName}\n{playerType}\n{'已购买 Minecraft' if currentPlayer.player_hasMC else '未购买 Minecraft'}")
         else:
             self.middleButton.setText("\n正在登录中\n")
         
@@ -3885,13 +3887,14 @@ class PlayerPage(QFrame):
     
     def setLoggingIn(self, state):
         self.isLoggingIn = bool(state)
-        self.middleButton.setDisabled(self.isLoggingIn)
-        self.playerActions.setDisabled(self.isLoggingIn)
+        self.middleButton.setDisabled(self.isLoggingIn or not self.isLoggedIn)
+        self.playerActions.setDisabled(self.isLoggingIn or not self.isLoggedIn)
         self.retranslateUI()
     
     def setLoggedIn(self, state):
-        self.setLoggingIn(False)
         self.isLoggedIn = state
+        self.setLoggingIn(False)
+        self.retranslateUI()
     
     def updatePlayer(self, player):
         if player is None:
@@ -4105,8 +4108,8 @@ class UpdateLogDialogue(MaskedDialogue):
         <html>
         <head/>
         <body>
-        <h1 align=\"centre\">Common Minecraft Launcher 更新日志</h1>
-        <h3 align=\"centre\">AlphaDev-25002 2026.1.1</h3>
+        <h1 align=\"center\">Common Minecraft Launcher 更新日志</h1>
+        <h3 align=\"center\">AlphaDev-25002 2026.1.1</h3>
         <p>先庆祝大家<strong>元旦快乐</strong>！从 7 月份憋到 12 月份的更新，这次都上来了！</p>
         <h5>更新</h5>
         <ol>
@@ -4386,10 +4389,10 @@ def login_user(name_or_token=b"", is_refresh_login=False):
             playerUUID = data["uuid"]
             return MicrosoftPlayer(name_or_token.decode(), playerUUID, accessToken, True)
         else:
-            return None
+            return MicrosoftPlayer(None, None, None, False)
     except:
         traceback.print_exc()
-        return None
+        return MicrosoftPlayer(None, None, None, False)
 
 
 class LoginThread(QThread):
@@ -4400,20 +4403,23 @@ class LoginThread(QThread):
             data = Path("current_user.DAT").read_bytes().replace(
                 b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", b"").replace(br"\x0", b"")
             if not data:
-                self.loginFinished.emit(None)
+                self.loginFinished.emit(MicrosoftPlayer(None, None, None, False))
                 return
             data = login_user(data, True)
             self.loginFinished.emit(data)
         except FileNotFoundError:
             Path("current_user.DAT").touch(exist_ok=True)
-            self.loginFinished.emit(None)
+            self.loginFinished.emit(MicrosoftPlayer(None, None, None, False))
         except:
-            self.loginFinished.emit(None)
+            self.loginFinished.emit(MicrosoftPlayer(None, None, None, False))
 
 
 def updatePlayer(data):
     global currentPlayer
-    currentPlayer = MicrosoftPlayer(None, None, None, False)
+    if not data:
+        currentPlayer = MicrosoftPlayer(None, None, None, False)
+    else:
+        currentPlayer = data
     window.playerPageFrame.setLoggingIn(False)
     if not data:
         window.playerPageFrame.updatePlayer(None)
@@ -4490,7 +4496,10 @@ def init():
         if os.environ.get("LANG"):
             currentLanguage = os.environ.get("LANG").split(".")[0]
         else:
-            currentLanguage = subprocess.check_output(["powershell.exe", "(Get-WinSystemLocale).Name"]).decode().strip()
+            currentLanguage = subprocess.run(["powershell.exe", "(Get-WinSystemLocale).Name"],
+                                             creationflags=subprocess.CREATE_NO_WINDOW if hasattr(
+                                                 subprocess, "CREATE_NO_WINDOW") else 0,
+                                             capture_output=True).stdout.decode().strip()
         currentLanguage = currentLanguage.lower().replace("_", "-")
     
     # QApplication.setDesktopSettingsAware(False)

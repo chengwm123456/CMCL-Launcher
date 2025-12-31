@@ -55,7 +55,7 @@
 1. 你可以从右侧的 "Releases"（版本）下载启动器。
     * 两个平台的可运行文件在一个叫做“CMCL.zip”的压缩文件里面。
         * Windows 系统文件名：`Common Minecraft Launcher.exe`
-        * Linux 系统文件名：`Common Minecraft Launcher`
+        * Linux 系统文件名：`Common Minecraft Launcher.bin`
 
 2. 下载源代码。
     * 点击 "Code" -> "Download ZIP"，下载源代码的 .zip 压缩包。
