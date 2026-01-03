@@ -51,12 +51,13 @@ class ComboBox(QComboBox, Widget):
         )
         self.view().window().update()
         
-        rotationAnimation = QPropertyAnimation(self, b"dropdownIndicatorRotation", self)
-        rotationAnimation.setStartValue(self.property("dropdownIndicatorRotation"))
-        rotationAnimation.setEndValue(180.0)
-        rotationAnimation.setDuration(500)
-        rotationAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
-        rotationAnimation.start()
+        if self.count():
+            rotationAnimation = QPropertyAnimation(self, b"dropdownIndicatorRotation", self)
+            rotationAnimation.setStartValue(self.property("dropdownIndicatorRotation"))
+            rotationAnimation.setEndValue(180.0)
+            rotationAnimation.setDuration(500)
+            rotationAnimation.setEasingCurve(QEasingCurve.Type.OutExpo)
+            rotationAnimation.start()
     
     def hidePopup(self):
         super().hidePopup()

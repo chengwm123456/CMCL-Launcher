@@ -40,6 +40,7 @@ import requests
 import psutil
 
 from CMCLModding.GetMods import GetMods, ListModVersions, GetOneMod
+from CMCLModding.GetFabric import GetFabricLoaderVersions, GetFabricApiVersions
 from CMCLModding.DownloadMods import DownloadMod
 
 from CMCLSaveEditing.LevelDat import LoadData
@@ -595,7 +596,7 @@ class LoginWindow(MaskedDialogue):
                 code = pos.string
                 token = code.split("=")[1]
                 token = token.split(".")[-1].split("&")[0]
-                thread = self.LoginThread(token)
+                thread = self.LoginThread(token, self.window())
                 thread.start()
                 self.progress.finish(ani=False)
                 self.close()
@@ -707,10 +708,17 @@ class HomePage(QFrame):
                     settings["LauncherSettings"]["SavedMinecraftPaths"].append(str(minecraft_path))
                     dire = str(minecraft_path)
                     newBtn = PushButton(self.leftPanel)
+                    newBtn.setCheckable(True)
+                    newBtn.setToolTip(dire)
+                    newBtn.setAutoExclusive(True)
+                    newBtn.setChecked(True)
                     newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 13):])
                     newBtn.pressed.connect(lambda d=dire: self.selectDir(str(Path(d).resolve())))
-                    self.verticalLayout.insertWidget(len(settings["LauncherSettings"]["SavedMinecraftPaths"]) - 1,
-                                                     newBtn)
+                    newBtn.setCheckable(True)
+                    self.verticalLayout.insertWidget(
+                        max(len(settings["LauncherSettings"]["SavedMinecraftPaths"]) - 1, 1),
+                        newBtn
+                    )
                 self.minecraft_path_changed.emit()
             self.retranslateUI()
             self.updateVersionsList()
@@ -869,7 +877,7 @@ class HomePage(QFrame):
         self.launchButton.setMinimumWidth(60)
         self.launchButton.setMinimumHeight(32)
         self.launchButton.pressed.connect(self.launch)
-        self.launchButton.setObjectName("primaryButton")
+        self.launchButton.setWidgetAttribute("primaryButton")
         self.horizontalLayout.addWidget(self.launchButton)
         self.selectVersionButton = PushButton(self.topPanel)
         self.selectVersionButton.setMinimumWidth(60)
@@ -998,8 +1006,20 @@ class HomePage(QFrame):
     
     def postLaunch(self, result):
         self.launchButton.setEnabled(True)
-        self.versionsPopen[result[1]] = self.version
         print(result)
+        if not result[0]:
+            self.versionsPopen[result[1]] = self.version
+            tip = PopupTip(window)
+            label = Label(tip)
+            label.setText("启动成功，请等待游戏窗口显示")
+            tip.setCentralWidget(label)
+            tip.tip(duration=1000, topMargin=32)
+        else:
+            tip = PopupTip(window)
+            label = Label(tip)
+            label.setText("启动失败")
+            tip.setCentralWidget(label)
+            tip.tip(duration=1000, topMargin=32)
     
     def selectNewMinecraftDir(self):
         if not self.versionsManagementPage.isVisible():
@@ -1166,7 +1186,7 @@ class HomePage(QFrame):
 
 class DownloadPage(QFrame):
     class DownloadVanilla(QFrame):
-        class GetVersionThread(QThread):
+        class FetchVersionThread(QThread):
             gettingFinished = pyqtSignal(dict)
             
             def run(self):
@@ -1181,6 +1201,15 @@ class DownloadPage(QFrame):
         
         class DownloadOptions(AcrylicBackground):
             frameClosed = pyqtSignal()
+            
+            class FetchModLoadersThread(QThread):
+                fetched = pyqtSignal(dict)
+                
+                def run(self):
+                    result = {}
+                    result["Fabric"] = GetFabricLoaderVersions()
+                    result["FabricAPI"] = GetFabricApiVersions()
+                    self.fetched.emit(result)
             
             class DownloadVersionThread(QThread):
                 def __init__(self, parent, minecraft_pth=minecraft_path, version=None):
@@ -1231,16 +1260,22 @@ class DownloadPage(QFrame):
                 self.groupBox1Btn.pressed.connect(lambda: self.indexTo(0))
                 self.horizontalLayout.addWidget(self.groupBox1Btn)
                 
+                self.groupBox4Btn = PushButton(self)
+                self.groupBox4Btn.setCheckable(True)
+                self.groupBox4Btn.setAutoExclusive(True)
+                self.groupBox4Btn.pressed.connect(lambda: self.indexTo(1))
+                self.horizontalLayout.addWidget(self.groupBox4Btn)
+                
                 self.groupBox2Btn = PushButton(self)
                 self.groupBox2Btn.setCheckable(True)
                 self.groupBox2Btn.setAutoExclusive(True)
-                self.groupBox1Btn.pressed.connect(lambda: self.indexTo(1))
+                self.groupBox2Btn.pressed.connect(lambda: self.indexTo(2))
                 self.horizontalLayout.addWidget(self.groupBox2Btn)
                 
                 self.groupBox3Btn = PushButton(self)
                 self.groupBox3Btn.setCheckable(True)
                 self.groupBox3Btn.setAutoExclusive(True)
-                self.groupBox1Btn.pressed.connect(lambda: self.indexTo(2))
+                self.groupBox3Btn.pressed.connect(lambda: self.indexTo(3))
                 self.horizontalLayout.addWidget(self.groupBox3Btn)
                 
                 self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -1263,11 +1298,36 @@ class DownloadPage(QFrame):
                 self.form_1_PushButton = PushButton(self.groupBox)
                 self.form_1.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_1_PushButton)
                 
-                self.form_2_Label = Label(self.groupBox)
-                self.form_1.setWidget(1, QFormLayout.ItemRole.LabelRole, self.form_2_Label)
+                # self.form_2_Label = Label(self.groupBox)
+                # self.form_1.setWidget(1, QFormLayout.ItemRole.LabelRole, self.form_2_Label)
+                #
+                # self.form_2_PushButton = PushButton(self.groupBox)
+                # self.form_1.setWidget(1, QFormLayout.ItemRole.FieldRole, self.form_2_PushButton)
                 
-                self.form_2_PushButton = PushButton(self.groupBox)
-                self.form_1.setWidget(1, QFormLayout.ItemRole.FieldRole, self.form_2_PushButton)
+                self.groupBox_4 = GroupBox(self)
+                self.verticalLayout.addWidget(self.groupBox_4)
+                
+                self.form_3 = QFormLayout(self.groupBox_4)
+                
+                # (Neo)Forge
+                self.form_5_Label = Label(self.groupBox_4)
+                self.form_3.setWidget(0, QFormLayout.ItemRole.LabelRole, self.form_5_Label)
+                
+                self.form_5_ComboBox = ComboBox(self.groupBox_4)
+                self.form_3.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_5_ComboBox)
+                
+                # Fabric & Fabric API
+                self.form_6_Label = Label(self.groupBox_4)
+                self.form_3.setWidget(1, QFormLayout.ItemRole.LabelRole, self.form_6_Label)
+                
+                self.form_6_ComboBox = ComboBox(self.groupBox_4)
+                self.form_3.setWidget(1, QFormLayout.ItemRole.FieldRole, self.form_6_ComboBox)
+                
+                self.form_7_Label = Label(self.groupBox_4)
+                self.form_3.setWidget(2, QFormLayout.ItemRole.LabelRole, self.form_7_Label)
+                
+                self.form_7_ComboBox = ComboBox(self.groupBox_4)
+                self.form_3.setWidget(2, QFormLayout.ItemRole.FieldRole, self.form_7_ComboBox)
                 
                 self.groupBox_2 = GroupBox(self.scrollAreaWidgetContents)
                 self.verticalLayout.addWidget(self.groupBox_2)
@@ -1318,14 +1378,19 @@ class DownloadPage(QFrame):
                 self.startDownloadBtn = PushButton(self.scrollAreaWidgetContents)
                 self.startDownloadBtn.pressed.connect(self.downloadVersion)
                 self.startDownloadBtn.pressed.connect(self.closeFrame)
-                self.startDownloadBtn.setObjectName("primaryButton")
+                self.startDownloadBtn.setWidgetAttribute("primaryButton")
                 self.mainLayout.addWidget(self.startDownloadBtn)
+                
+                self.fetchModLoadersThread = self.FetchModLoadersThread(self)
+                self.fetchModLoadersThread.fetched.connect(self.displayModLoaders)
+                self.fetchModLoadersThread.start()
                 
                 app.registerRetranslateFunction(self.retranslateUI)
                 self.retranslateUI()
             
             def retranslateUI(self):
                 self.groupBox1Btn.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title"))  # 版本
+                self.groupBox4Btn.setText("模组加载器")
                 self.groupBox2Btn.setText(
                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title"))  # 下载设置
                 self.groupBox3Btn.setText(
@@ -1336,10 +1401,14 @@ class DownloadPage(QFrame):
                 self.form_1_PushButton.setText(
                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.1.PushButton.Text").format(
                         self.version))  # {}（单击重新选择版本）
-                self.form_2_Label.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.Label.Text"))  # 模组加载器
-                self.form_2_PushButton.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.PushButton.Text"))  # 点击选择模组加载器
+                # self.form_2_Label.setText(
+                #     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.Label.Text"))  # 模组加载器
+                # self.form_2_PushButton.setText(
+                #     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.PushButton.Text"))  # 点击选择模组加载器
+                self.groupBox_4.setTitle("模组加载器")
+                self.form_5_Label.setText("NeoForge")
+                self.form_6_Label.setText("Fabric")
+                self.form_7_Label.setText("Fabric API")
                 self.groupBox_2.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title"))
                 self.form_3_Label.setText(
                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.3.Label.Text"))  # 下载路径
@@ -1372,7 +1441,7 @@ jar 下载位置在：
                     self.groupBox1Btn.setChecked(True)
             
             def indexTo(self, index):
-                widget = (self.groupBox, self.groupBox_2, self.groupBox_3)[index]
+                widget = (self.groupBox, self.groupBox_4, self.groupBox_2, self.groupBox_3)[index]
                 animation = QPropertyAnimation(self.scrollArea.verticalScrollBar(), b"value", self)
                 animation.setStartValue(self.scrollArea.verticalScrollBar().value())
                 animation.setEndValue(widget.y())
@@ -1388,8 +1457,18 @@ jar 下载位置在：
                 )
                 thread.start()
             
+            def displayModLoaders(self, loaders):
+                print(loaders)
+                for loader in loaders["Fabric"]:
+                    self.form_6_ComboBox.addItem(f"{loader['version']}（{'稳定版' if loader['stable'] else '测试版'}）")
+            
             def openWiki(self):
-                webbrowser.open(f"https://zh.minecraft.wiki/w/{self.version}")
+                wikiUrls = {
+                    "zh-cn": "https://zh.minecraft.wiki/w/{}",
+                    "en-gb": "https://minecraft.wiki/w/{}",
+                }
+                webbrowser.open(
+                    wikiUrls.get(currentLanguage, "https://minecraft.wiki/w/{}").format(self.version))
             
             def openClientURL(self):
                 webbrowser.open(GetMinecraftClientDownloadUrl(self.version))
@@ -1476,7 +1555,7 @@ jar 下载位置在：
                 self.startLoad()
         
         def startLoad(self, ani=False):
-            self.getThread = self.GetVersionThread(self)
+            self.getThread = self.FetchVersionThread(self)
             self.getThread.gettingFinished.connect(self.displayVersions)
             self.getThread.start()
             self.loader.start(ani)
@@ -2298,6 +2377,7 @@ jar 下载位置在：
         self.page1.setCheckable(True)
         self.page1.setChecked(True)
         self.page1.setAutoExclusive(True)
+        self.page1.setWidgetAttribute("outlinedButton")
         self.page1.pressed.connect(lambda: self.setCurrentPage(0))
         self.horizontalLayout.addWidget(self.page1)
         self.page2 = PushButton(self.topNavigationPanel)
@@ -2305,6 +2385,7 @@ jar 下载位置在：
         self.page2.setMinimumWidth(64)
         self.page2.setCheckable(True)
         self.page2.setAutoExclusive(True)
+        self.page2.setWidgetAttribute("outlinedButton")
         self.page2.released.connect(lambda: self.setCurrentPage(1))
         self.horizontalLayout.addWidget(self.page2)
         self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -2638,6 +2719,7 @@ JVM 参数就是：
             if self.form_1_PushButton.isChecked():
                 self.form_1_ComboBox.setDisabled(True)
                 self.form_1_ComboBox.clear()
+                self.form_1_ComboBox.setFont(app.font())
                 self.form_1_ComboBox.setCurrentText(self.tr("SettingsPage.LaunchSettings.Form.1.ComboBox.AutoSelect"))
                 self.form_1_PushButton_2.setDisabled(True)
                 if self.getJavaThread:
@@ -2647,6 +2729,7 @@ JVM 参数就是：
                     self.javaList = None
             else:
                 self.form_1_ComboBox.setEnabled(True)
+                self.form_1_ComboBox.setFont(fixedFont)
                 self.form_1_PushButton_2.setEnabled(True)
                 if not state:
                     self.form_1_ComboBox.setCurrentText("")
@@ -3236,18 +3319,21 @@ JVM 参数就是：
         self.page1.setCheckable(True)
         self.page1.setChecked(True)
         self.page1.setAutoExclusive(True)
+        self.page1.setWidgetAttribute("outlinedButton")
         self.page1.released.connect(lambda: self.setCurrentPage(0))
         self.horizontalLayout.addWidget(self.page1)
         self.page2 = PushButton(self.topNavigationPanel)
         self.page2.setMinimumHeight(32)
         self.page2.setCheckable(True)
         self.page2.setAutoExclusive(True)
+        self.page2.setWidgetAttribute("outlinedButton")
         self.page2.released.connect(lambda: self.setCurrentPage(1))
         self.horizontalLayout.addWidget(self.page2)
         self.page3 = PushButton(self.topNavigationPanel)
         self.page3.setMinimumHeight(32)
         self.page3.setCheckable(True)
         self.page3.setAutoExclusive(True)
+        self.page3.setWidgetAttribute("outlinedButton")
         self.page3.released.connect(lambda: self.setCurrentPage(2))
         self.horizontalLayout.addWidget(self.page3)
         self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -3489,8 +3575,10 @@ class AboutPage(QFrame):
     
     def retranslateUI(self):
         self.groupBox_CMCLVersion.setTitle("Common Minecraft Launcher")
+        # Common Minecraft Launcher\n版本：{} ({})\n语言：{} ({})
         self.CMCLVersionLabel.setText(
-            f"Common Minecraft Launcher\n版本：{CMCLVersion[0]} ({CMCLVersion[1]})\n语言：{languagesCodeMapping[currentLanguage]} ({currentLanguage})")
+            self.tr("AboutPage.CMCLVersionLabel.Text").format(CMCLVersion[0], CMCLVersion[1],
+                                                              languagesCodeMapping[currentLanguage], currentLanguage))
         self.groupBox_authors.setTitle("关于开发组")
         self.intro1.setText("chengwm (chengwm123456)\n启动器的作者！也是造成启动器彩蛋非常多的罪魁祸首。")
         self.intro2.setText("mcdaotian / Minecraft_稻田\n启动器的策划！可谓是为启动器一起提供了许多改进！")
@@ -3507,7 +3595,7 @@ class AboutPage(QFrame):
             "本产品非 Minecraft 官方产品。\n未经 Mojang Studios 或 Microsoft 批准，亦与 Mojang Studios 或 Microsoft 无任何从属关系。\nMinecraft 官方网站请见：https://www.minecraft.net/")
         
         self.groupBox_lawInformation.setTitle("法律信息")
-        self.lawInformation.setText("""Copyright (C) 2023-2025 chengwm123456
+        self.lawInformation.setText("""Copyright (C) 2023-2026 chengwm123456
 本程序为自由软件，在 Free Software Foundation 发布的 GNU General Public License 的约束下，你可以对其进行再发布及修改。协议版本为第三版。
 我们希望发布的这款程序有用，但不确定，甚至不保证它有经济价值和适合特定用途。详情参见 GNU General Public License。""")
     
@@ -3705,7 +3793,7 @@ class ChangePlayerNameDialogue(MaskedDialogue):
         self.playerNameInput = LineEdit(self)
         self.playerNameInput.setValidator(QRegularExpressionValidator(QRegularExpression(r"\w+"), self.playerNameInput))
         self.playerNameInput.setClearButtonEnabled(True)
-        self.playerNameInput.editingFinished.connect(self.checkIsVaild)
+        self.playerNameInput.editingFinished.connect(self.checkIsValid)
         # self.playerNameInput.returnPressed.connect(self.generatePlayer)
         self.playerNameInput.setPlaceholderText(player.player_playerName)
         self.playerNameInput.setText(player.player_playerName)
@@ -3732,7 +3820,7 @@ class ChangePlayerNameDialogue(MaskedDialogue):
         self.OKButton.setText("确定")
         self.CancelButton.setText("取消")
     
-    def checkIsVaild(self):
+    def checkIsValid(self):
         playerName = self.playerNameInput.text()
         if playerName == "" or not playerName:
             self.OKButton.setDisabled(True)
@@ -3765,8 +3853,8 @@ class ChangePlayerNameDialogue(MaskedDialogue):
                 self.OKButton.setToolTip("未知原因")
     
     def changePlayerName(self):
-        checkIsVaild()
-        if OKButton.isEnabled():
+        self.checkIsValid()
+        if self.OKButton.isEnabled():
             playerName = self.playerNameInput.text()
             ChangePlayerName(self.currentPlayer.player_accessToken, playerName)
             self.close()
@@ -3807,6 +3895,7 @@ class PlayerPage(QFrame):
         self.verticalLayout.addWidget(self.topPanel)
         
         self.leftButton = ToolButton(self.topPanel)
+        # self.leftButton.setWidgetAttribute("outlinedButton")
         self.leftButton.pressed.connect(self.selectPlayerLeft)
         self.leftButton.setFixedSize(QSize(32, 32))
         
@@ -3818,6 +3907,7 @@ class PlayerPage(QFrame):
         self.playerActions.pressed.connect(self.showPlayerActionsMenu)
         
         self.rightButton = ToolButton(self.topPanel)
+        # self.rightButton.setWidgetAttribute("outlinedButton")
         self.rightButton.pressed.connect(self.selectPlayerRight)
         self.rightButton.setFixedSize(QSize(32, 32))
         
@@ -3933,7 +4023,7 @@ class PlayerPage(QFrame):
         self.selectPlayer(self.playerList[max(self.currentIndex - 1, 0)])
     
     def selectPlayerRight(self):
-        self.selectPlayer(self.playerList[min(self.currentIndex + 1, len(self.playerList))])
+        self.selectPlayer(self.playerList[min(self.currentIndex + 1, len(self.playerList) - 1)])
     
     def updatePlayerList(self):
         def parseName(name):
@@ -4418,6 +4508,12 @@ def updatePlayer(data):
     global currentPlayer
     if not data:
         currentPlayer = MicrosoftPlayer(None, None, None, False)
+        # login failed
+        tip = PopupTip(window)
+        label = Label(tip)
+        label.setText("登录失败，请手动登录")
+        tip.setCentralWidget(label)
+        tip.tip(duration=1000, topMargin=32)
     else:
         currentPlayer = data
     window.playerPageFrame.setLoggingIn(False)
@@ -4464,7 +4560,10 @@ def excepthook(*args, **kwargs):
 
 
 def post_except(*args, **kwargs):
+    _context_message = traceback._context_message
+    traceback._context_message = "\n\033[3mDuring handling of the above exception, another exception occurred:\033[0m\n\n"
     traceback.print_exception(*args, **kwargs, colorize=True)
+    traceback._context_message = _context_message
 
 
 sys.excepthook = excepthook
@@ -4511,6 +4610,9 @@ def init():
     app.fallback_translator = QTranslator()
     app.fallback_translator.load(f":/CMCL_zh-cn.qm")
     app.installTranslator(app.fallback_translator)
+    app.qtranslator = QTranslator()
+    app.qtranslator.load(f":/qt_{currentLanguage}.qm")
+    app.installTranslator(app.qtranslator)
     app.translator = QTranslator()
     app.translator.load(f":/CMCL_{currentLanguage}.qm")
     app.installTranslator(app.translator)
@@ -4530,12 +4632,12 @@ def init():
 
 with Path("latest.log").open("w", encoding="utf-8") as out:
     with redirect_stdout(out):
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, format="[%(levelname)s] \033[3m%(name)s\033[0m: %(message)s")
         cProfile.run("init()", "initAnalysis.log")
         window.show()
         if hasattr(window, "updateDialogue"):
             window.update()
-            QTimer.singleShot(1000, window.updateDialogue.show)
+            window.updateDialogue.show()
         outUpd = QTimer(window)
         outUpd.timeout.connect(lambda: (out.flush(), saveSettingsMain(settings)))
         outUpd.setInterval(5000)

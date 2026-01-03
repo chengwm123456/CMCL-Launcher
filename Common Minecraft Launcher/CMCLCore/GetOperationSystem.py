@@ -2,16 +2,27 @@
 import platform
 from typing import *
 
+from .CMCLCache import getCache, setCache
+
 
 def GetOperationSystemName(lower=False) -> str:
-    system = platform.system()
+    if getCache("OperationSystemName"):
+        system = getCache("OperationSystemName")
+    else:
+        system = platform.system()
+        setCache("OperationSystemName", system, 180)
     if lower:
         return system.lower()
     return system
 
 
 def GetOperationSystemMachine() -> str:
-    return platform.machine()
+    if getCache("OperationSystemMachine"):
+        machine = getCache("OperationSystemMachine")
+    else:
+        machine = platform.machine()
+        setCache("OperationSystemMachine", machine, 180)
+    return machine
 
 
 def GetOperationSystem(lower=False) -> Tuple[str, str]:

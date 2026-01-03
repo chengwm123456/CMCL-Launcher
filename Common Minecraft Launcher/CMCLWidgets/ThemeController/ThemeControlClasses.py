@@ -6,6 +6,13 @@ from PyQt6.QtGui import *
 
 
 class Colour(QColor):
+    def mix(self, colour, percent=50):
+        percent /= 100
+        r, g, b, a = self.red(), self.green(), self.blue(), self.alpha()
+        r2, g2, b2, a2 = colour.red(), colour.green(), colour.blue(), colour.alpha()
+        return Colour(r2 * percent + r * (1 - percent), g2 * percent + g * (1 - percent),
+                      b2 * percent + b * (1 - percent), a2 * percent + a * (1 - percent))
+    
     def __bool__(self) -> bool:
         return self.isValid()
     
@@ -56,6 +63,8 @@ class ColourManager(QObject):
                     self.setProperty(f"{role.value}_{highlight}_{primary}", QColor(0, 0, 0))
     
     def setColour(self, role, is_highlight, is_primary, theme, colour, animation=False):
+        is_highlight = bool(is_highlight)
+        is_primary = bool(is_primary)
         curTheme = self.currentTheme
         colour = Colour(colour)
         self.setProperty(f"{role.value}_{theme.value}_{is_highlight}_{is_primary}", QColor(colour))
@@ -74,6 +83,8 @@ class ColourManager(QObject):
                              QColor(self.property(f"{role.value}_{curTheme.value}_{is_highlight}_{is_primary}")))
     
     def getColour(self, role, is_highlight, is_primary, theme=None):
+        is_highlight = bool(is_highlight)
+        is_primary = bool(is_primary)
         if theme:
             return Colour(self.property(f"{role.value}_{theme.value}_{is_highlight}_{is_primary}"))
         return Colour(self.property(f"{role.value}_{is_highlight}_{is_primary}"))

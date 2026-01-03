@@ -35,28 +35,42 @@ class PushButton(QPushButton, Widget):
         
         painter.save()
         painter.setOpacity(self.property("baseOpacity"))
-        painter.setPen(getBorderColour(
-            is_highlight=(self.isDown() or self.isChecked()) or (
-                    (self.isDown() or self.isChecked()) and self.isEnabled()),
-            is_primary=self.objectName() == "primaryButton"
-        ))
-        painter.setBrush(getBackgroundColour(
-            is_highlight=(self.isDown() or self.isChecked()) or (
-                    (self.isDown() or self.isChecked()) and self.isEnabled()),
-            is_primary=self.objectName() == "primaryButton"
-        ))
+        if not self.widgetAttribute("outlinedButton"):
+            painter.setPen(getBorderColour(
+                is_highlight=(self.isDown() or self.isChecked()) or (
+                        (self.isDown() or self.isChecked()) and self.isEnabled()),
+                is_primary=self.widgetAttribute("primaryButton")
+            ))
+            painter.setBrush(getBackgroundColour(
+                is_highlight=(self.isDown() or self.isChecked()) or (
+                        (self.isDown() or self.isChecked()) and self.isEnabled()),
+                is_primary=self.widgetAttribute("primaryButton")
+            ))
+        else:
+            if (self.isDown() or self.isChecked()) or (
+                    (self.isDown() or self.isChecked()) and self.isEnabled()):
+                painter.setPen(getBorderColour(
+                    is_highlight=True,
+                    is_primary=self.widgetAttribute("primaryButton")
+                ))
+            else:
+                painter.setPen(Qt.GlobalColor.transparent)
+            painter.setBrush(Qt.GlobalColor.transparent)
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
         if self.property("frameOpacity"):
             painter.save()
             painter.setOpacity(self.property("frameOpacity"))
-            painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
-            painter.setBrush(getBackgroundColour(
-                is_highlight=(self.isDown() or self.isChecked()) or (
-                        (self.isDown() or self.isChecked()) and self.isEnabled()),
-                is_primary=self.objectName() == "primaryButton"
-            ))
+            painter.setPen(getBorderColour(is_highlight=True, is_primary=self.widgetAttribute("primaryButton")))
+            if not self.widgetAttribute("outlinedButton"):
+                painter.setBrush(getBackgroundColour(
+                    is_highlight=(self.isDown() or self.isChecked()) or (
+                            (self.isDown() or self.isChecked()) and self.isEnabled()),
+                    is_primary=self.widgetAttribute("primaryButton")
+                ))
+            else:
+                painter.setBrush(Qt.GlobalColor.transparent)
             painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
@@ -68,7 +82,7 @@ class PushButton(QPushButton, Widget):
             painter.setPen(getBorderColour(
                 is_highlight=(self.isDown() or self.isChecked()) or (
                         (self.isDown() or self.isChecked()) and self.isEnabled()),
-                is_primary=self.objectName() == "primaryButton"
+                is_primary=self.widgetAttribute("primaryButton")
             ))
             painter.translate(x, y)
             painter.rotate(self.property("dropdownIndicatorRotation"))
@@ -80,7 +94,7 @@ class PushButton(QPushButton, Widget):
                 x = (self.width() - 8) - 3 + 4
                 y = self.height() / 2 - 2 + 2
                 painter.setOpacity(self.property("frameOpacity"))
-                painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
+                painter.setPen(getBorderColour(is_highlight=True, is_primary=self.widgetAttribute("primaryButton")))
                 painter.translate(x, y)
                 painter.rotate(self.property("dropdownIndicatorRotation"))
                 painter.drawLines([QLineF(QPointF(-4, -2), QPointF(0, 2)), QLineF(QPointF(0, 2), QPointF(4, -2))])
@@ -89,7 +103,17 @@ class PushButton(QPushButton, Widget):
         op = QStyleOptionButton()
         op.initFrom(self)
         self.initStyleOption(op)
-        op.palette.setColor(self.foregroundRole(), getForegroundColour())
+        if self.widgetAttribute("outlinedButton"):
+            if (self.isDown() or self.isChecked()) or (
+                    (self.isDown() or self.isChecked()) and self.isEnabled()):
+                op.palette.setColor(self.foregroundRole(), getBackgroundColour(
+                    is_highlight=True,
+                    is_primary=self.widgetAttribute("primaryButton")
+                ))
+            else:
+                op.palette.setColor(self.foregroundRole(), getForegroundColour())
+        else:
+            op.palette.setColor(self.foregroundRole(), getForegroundColour())
         painter.save()
         painter.setOpacity(
             self.property("baseOpacity") + (self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))
@@ -159,28 +183,42 @@ class ToolButton(QToolButton, Widget):
         
         painter.save()
         painter.setOpacity(self.property("baseOpacity"))
-        painter.setPen(getBorderColour(
-            is_highlight=(self.isDown() or self.isChecked()) or (
-                    (self.isDown() or self.isChecked()) and self.isEnabled()),
-            is_primary=self.objectName() == "primaryButton"
-        ))
-        painter.setBrush(getBackgroundColour(
-            is_highlight=(self.isDown() or self.isChecked()) or (
-                    (self.isDown() or self.isChecked()) and self.isEnabled()),
-            is_primary=self.objectName() == "primaryButton"
-        ))
+        if not self.widgetAttribute("outlinedButton"):
+            painter.setPen(getBorderColour(
+                is_highlight=(self.isDown() or self.isChecked()) or (
+                        (self.isDown() or self.isChecked()) and self.isEnabled()),
+                is_primary=self.widgetAttribute("primaryButton")
+            ))
+            painter.setBrush(getBackgroundColour(
+                is_highlight=(self.isDown() or self.isChecked()) or (
+                        (self.isDown() or self.isChecked()) and self.isEnabled()),
+                is_primary=self.widgetAttribute("primaryButton")
+            ))
+        else:
+            if (self.isDown() or self.isChecked()) or (
+                    (self.isDown() or self.isChecked()) and self.isEnabled()):
+                painter.setPen(getBorderColour(
+                    is_highlight=True,
+                    is_primary=self.widgetAttribute("primaryButton")
+                ))
+            else:
+                painter.setPen(Qt.GlobalColor.transparent)
+            painter.setBrush(Qt.GlobalColor.transparent)
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
         if self.property("frameOpacity"):
             painter.save()
             painter.setOpacity(self.property("frameOpacity"))
-            painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
-            painter.setBrush(getBackgroundColour(
-                is_highlight=(self.isDown() or self.isChecked()) or (
-                        (self.isDown() or self.isChecked()) and self.isEnabled()),
-                is_primary=self.objectName() == "primaryButton"
-            ))
+            painter.setPen(getBorderColour(is_highlight=True, is_primary=self.widgetAttribute("primaryButton")))
+            if not self.widgetAttribute("outlinedButton"):
+                painter.setBrush(getBackgroundColour(
+                    is_highlight=(self.isDown() or self.isChecked()) or (
+                            (self.isDown() or self.isChecked()) and self.isEnabled()),
+                    is_primary=self.widgetAttribute("primaryButton")
+                ))
+            else:
+                painter.setBrush(Qt.GlobalColor.transparent)
             painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
@@ -192,7 +230,7 @@ class ToolButton(QToolButton, Widget):
             painter.setPen(getBorderColour(
                 is_highlight=(self.isDown() or self.isChecked()) or (
                         (self.isDown() or self.isChecked()) and self.isEnabled()),
-                is_primary=self.objectName() == "primaryButton"
+                is_primary=self.widgetAttribute("primaryButton")
             ))
             painter.translate(x, y)
             painter.rotate(self.property("dropdownIndicatorRotation"))
@@ -204,7 +242,7 @@ class ToolButton(QToolButton, Widget):
                 x = (self.width() - 8) - 3 + 4
                 y = self.height() / 2 - 2 + 2
                 painter.setOpacity(self.property("frameOpacity"))
-                painter.setPen(getBorderColour(is_highlight=True, is_primary=self.objectName() == "primaryButton"))
+                painter.setPen(getBorderColour(is_highlight=True, is_primary=self.widgetAttribute("primaryButton")))
                 painter.translate(x, y)
                 painter.rotate(self.property("dropdownIndicatorRotation"))
                 painter.drawLines([QLineF(QPointF(-4, -2), QPointF(0, 2)), QLineF(QPointF(0, 2), QPointF(4, -2))])
@@ -213,7 +251,17 @@ class ToolButton(QToolButton, Widget):
         op = QStyleOptionToolButton()
         op.initFrom(self)
         self.initStyleOption(op)
-        op.palette.setColor(self.foregroundRole(), getForegroundColour())
+        if self.widgetAttribute("outlinedButton"):
+            if (self.isDown() or self.isChecked()) or (
+                    (self.isDown() or self.isChecked()) and self.isEnabled()):
+                op.palette.setColor(self.foregroundRole(), getBackgroundColour(
+                    is_highlight=True,
+                    is_primary=self.widgetAttribute("primaryButton")
+                ))
+            else:
+                op.palette.setColor(self.foregroundRole(), getForegroundColour())
+        else:
+            op.palette.setColor(self.foregroundRole(), getForegroundColour())
         painter.save()
         painter.setOpacity(
             self.property("baseOpacity") + (self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))

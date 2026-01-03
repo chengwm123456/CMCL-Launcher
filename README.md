@@ -37,8 +37,8 @@ chengwm).
   crashes, click a button may cause the launcher crashes, the launcher's windows is very slow, etc.)
 
 * I'm weak in English so these files may have a lot of incorrect spelling, spelling mistake, spelling by pinyin or
-  spelling which is very confusing. (for example, "recommend"[correct] -> "recommand"[incorrect], "
-  a"[in CMCLCore/CMCLGameLaunching/CommandGenerating.py] -> "argument"[its meaning], etc.)
+  spelling which is very confusing. (for example, "recommend"[correct] → "recommand"[incorrect], "
+  a"[in CMCLCore/CMCLGameLaunching/CommandGenerating.py] → "argument"[its meaning], etc.)
 
 <h5>Tip</h5>
 
@@ -62,7 +62,7 @@ chengwm).
         * Linux file name: `Common Minecraft Launcher.bin`
 
 2. You can download the source code.
-    * Click "Code" -> "Download ZIP" to download the .zip file of all the source code.
+    * Click "Code" → "Download ZIP" to download the .zip file of all the source code.
 
     * Extract the .zip file.
 
@@ -83,7 +83,7 @@ chengwm).
 
 <h5><span style="color: red">IMPORTANT MESSAGES</span></h5>
 
-Copyright (C) 2025 chengwm123456
+Copyright (C) 2023-2026 chengwm123456
 
 Licensed under the GNU General Public License version 3, for further details please refer [
 `LICENSE.md`](https://github.com/chengwm123456/CMCL-Launcher/blob/CMCLMain/LICENSE.md).

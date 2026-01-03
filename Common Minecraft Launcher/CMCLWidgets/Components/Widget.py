@@ -16,9 +16,18 @@ class Widget(QWidget):
         self.installEventFilter(ToolTip(self))
         
         self.setStyleSheet("border: none; background: transparent; padding: 3px;")
+        self.setProperty("widgetAttributes", {})
     
     def isDisabled(self):
         return not self.isEnabled()
+    
+    def widgetAttribute(self, attr, default=None):
+        return self.property("widgetAttributes").get(attr, default)
+    
+    def setWidgetAttribute(self, attr, val=True):
+        widgetAttributes = self.property("widgetAttributes")
+        widgetAttributes[attr] = val
+        self.setProperty("widgetAttributes", widgetAttributes)
     
     def eventFilter(self, a0, a1):
         if not (a0.property("baseOpacity") or a0.property("frameOpacity")):

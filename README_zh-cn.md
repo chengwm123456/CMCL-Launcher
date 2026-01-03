@@ -33,8 +33,8 @@
 
 * 启动器的这些文件除了 bug 就是 bug …… （比如，关闭一个窗口就能整出 RuntimeError 或者直接崩掉，按一个按钮就能把启动器崩掉，窗口非常卡顿等等）
 
-* 我英语很弱所以这里面会有大量的错误拼写、拼音起名以及离谱的名字。（比如，"recommend"[正确拼写] -> "recommand"[错误的]、"
-  a"[在 CMCLCore/CMCLGameLaunching/CommandGenerating.py 里面] -> "argument"[其代表的意思]等等）
+* 我英语很弱所以这里面会有大量的错误拼写、拼音起名以及离谱的名字。（比如，"recommend"[正确拼写] → "recommand"[错误的]、"
+  a"[在 CMCLCore/CMCLGameLaunching/CommandGenerating.py 里面] → "argument"[其代表的意思]等等）
 
 <h5>提示</h5>
 
@@ -58,7 +58,7 @@
         * Linux 系统文件名：`Common Minecraft Launcher.bin`
 
 2. 下载源代码。
-    * 点击 "Code" -> "Download ZIP"，下载源代码的 .zip 压缩包。
+    * 点击 "Code" → "Download ZIP"，下载源代码的 .zip 压缩包。
 
     * 解压 .zip 压缩包。
 
@@ -78,7 +78,7 @@
 
 <h5><span style="color: red">重要内容</span></h5>
 
-Copyright (C) 2025 chengwm123456
+Copyright (C) 2023-2026 chengwm123456
 
 本启动器使用 GNU General Public License 第三版授权，详见 [
 `LICENSE.md`](https://github.com/chengwm123456/CMCL-Launcher/blob/CMCLMain/LICENSE.md)。

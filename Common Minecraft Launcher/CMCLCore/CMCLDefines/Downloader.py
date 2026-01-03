@@ -15,12 +15,13 @@ import zlib
 class Downloader:
     @dataclass(frozen=True)
     class Range:
-        startRange: int
-        endRange: int
+        startRange: int = 0
+        endRange: int = 0
     
     @dataclass(frozen=True)
     class DownloadedChunk:
         chunkRange: 'Downloader.Range'
+        contentEncoding: Optional[str]
         responseContent: bytes
     
     def __init__(
@@ -107,7 +108,7 @@ class Downloader:
         with Path(self.download_file_path / self.download_file_name).resolve().open(mode="wb") as file:
             for chunkData in downloadedChunks:
                 file.seek(chunkData.chunkRange.startRange)
-                file.write(chunkData.responseContent)
+                file.write(decompress(chunkData.responseContent, chunkData.contentEncoding))
     
     def __downloadChunk(
             self,
@@ -122,17 +123,20 @@ class Downloader:
         ) as response:
             response.raise_for_status()
             content = response.content
-            match response.headers.get("Content-Encoding"):
-                case "gzip":
-                    content = gzip.decompress(content)
-                case "deflate":
-                    content = zlib.decompress(content, -8)
-                case None:
-                    pass
             return self.DownloadedChunk(
                 chunkRange=range,
+                contentEncoding=response.headers.get("Content-Encoding"),
                 responseContent=content
             )
+    
+    def decompress(self, content: bytes, encoding: Optional[str] = None) -> bytes:
+        match encoding:
+            case "gzip":
+                return gzip.decompress(content)
+            case "deflate":
+                return zlib.decompress(content, -8)
+            case None:
+                return content
     
     def __enter__(self) -> 'Downloader':
         return self

@@ -2,24 +2,35 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en_GB">
 <context>
+    <name>AboutPage</name>
+    <message>
+        <location filename="main.py" line="3518"/>
+        <source>AboutPage.CMCLVersionLabel.Text</source>
+        <translatorcomment>Keep {}</translatorcomment>
+        <translation>Common Minecraft Launcher
+Version: {} ({})
+Language: {} ({})</translation>
+    </message>
+</context>
+<context>
     <name>DownloadMods</name>
     <message>
-        <location filename="main.py" line="1963"/>
+        <location filename="main.py" line="2052"/>
         <source>DownloadPage.DownloadMods.FilterPanel.Title</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="main.py" line="1965"/>
+        <location filename="main.py" line="2054"/>
         <source>DownloadPage.DownloadMods.SearchLineEdit.Placeholder</source>
         <translation>Type the name of a mod to search</translation>
     </message>
     <message>
-        <location filename="main.py" line="1967"/>
+        <location filename="main.py" line="2056"/>
         <source>DownloadPage.DownloadMods.Actions.PrevPage</source>
         <translation>Prev</translation>
     </message>
     <message>
-        <location filename="main.py" line="1968"/>
+        <location filename="main.py" line="2057"/>
         <source>DownloadPage.DownloadMods.Actions.NextPage</source>
         <translation>Next</translation>
     </message>
@@ -27,70 +38,70 @@
 <context>
     <name>DownloadOptions</name>
     <message>
-        <location filename="main.py" line="1260"/>
-        <location filename="main.py" line="1265"/>
+        <location filename="main.py" line="1347"/>
+        <location filename="main.py" line="1352"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title</source>
         <translation>Version</translation>
     </message>
     <message>
-        <location filename="main.py" line="1262"/>
-        <location filename="main.py" line="1275"/>
+        <location filename="main.py" line="1349"/>
+        <location filename="main.py" line="1362"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title</source>
         <translation>Download Options</translation>
     </message>
     <message>
-        <location filename="main.py" line="1264"/>
-        <location filename="main.py" line="1289"/>
+        <location filename="main.py" line="1351"/>
+        <location filename="main.py" line="1376"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.GroupBox3.Title</source>
         <translation>Other Links</translation>
     </message>
     <message>
-        <location filename="main.py" line="1267"/>
+        <location filename="main.py" line="1354"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.1.Label.Text</source>
         <translation>Version to download</translation>
     </message>
     <message>
-        <location filename="main.py" line="1269"/>
+        <location filename="main.py" line="1356"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.1.PushButton.Text</source>
         <translation>{} (Single click to reselect a version)</translation>
     </message>
     <message>
-        <location filename="main.py" line="1272"/>
+        <location filename="main.py" line="1359"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.2.Label.Text</source>
         <translation>Mod Loader</translation>
     </message>
     <message>
-        <location filename="main.py" line="1274"/>
+        <location filename="main.py" line="1361"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.2.PushButton.Text</source>
         <translation>Click to select mod loader</translation>
     </message>
     <message>
-        <location filename="main.py" line="1277"/>
+        <location filename="main.py" line="1364"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.3.Label.Text</source>
         <translation>Download path</translation>
     </message>
     <message>
-        <location filename="main.py" line="1287"/>
+        <location filename="main.py" line="1374"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.4.Label.Text</source>
         <translation>Version folder name</translation>
     </message>
     <message>
-        <location filename="main.py" line="1291"/>
+        <location filename="main.py" line="1378"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.OpenWiki</source>
         <translation>View this version on Minecraft Wiki</translation>
     </message>
     <message>
-        <location filename="main.py" line="1293"/>
+        <location filename="main.py" line="1380"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.DownloadClient</source>
         <translation>Download link for client .jar file</translation>
     </message>
     <message>
-        <location filename="main.py" line="1295"/>
+        <location filename="main.py" line="1382"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.DownloadServer</source>
         <translation>Download link for client .jar file</translation>
     </message>
     <message>
-        <location filename="main.py" line="1296"/>
+        <location filename="main.py" line="1383"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Download</source>
         <translation>Download</translation>
     </message>
@@ -98,17 +109,17 @@
 <context>
     <name>DownloadPage</name>
     <message>
-        <location filename="main.py" line="2255"/>
+        <location filename="main.py" line="2346"/>
         <source>DownloadPage.Pages.1.Name</source>
         <translation>Vanilla</translation>
     </message>
     <message>
-        <location filename="main.py" line="2258"/>
+        <location filename="main.py" line="2349"/>
         <source>DownloadPage.Pages.1.Actions.Reload</source>
         <translation>Reload</translation>
     </message>
     <message>
-        <location filename="main.py" line="2262"/>
+        <location filename="main.py" line="2353"/>
         <source>DownloadPage.Pages.2.Name</source>
         <translation>Mods</translation>
     </message>
@@ -116,47 +127,47 @@
 <context>
     <name>DownloadVanilla</name>
     <message>
-        <location filename="main.py" line="1380"/>
+        <location filename="main.py" line="1467"/>
         <source>DownloadPage.DownloadVanilla.TopSearchPanel.Title</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="main.py" line="1382"/>
+        <location filename="main.py" line="1469"/>
         <source>DownloadPage.DownloadVanilla.SearchInput.Placeholder</source>
         <translation>Type a version, a type or a date</translation>
     </message>
     <message>
-        <location filename="main.py" line="1444"/>
+        <location filename="main.py" line="1531"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Release</source>
         <translation>Release</translation>
     </message>
     <message>
-        <location filename="main.py" line="1446"/>
+        <location filename="main.py" line="1533"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Snapshot</source>
         <translation>Snapshot</translation>
     </message>
     <message>
-        <location filename="main.py" line="1448"/>
+        <location filename="main.py" line="1535"/>
         <source>DownloadPage.DownloadVanilla.VersionType.OldBeta</source>
         <translation>Ancient Version (Beta)</translation>
     </message>
     <message>
-        <location filename="main.py" line="1450"/>
+        <location filename="main.py" line="1537"/>
         <source>DownloadPage.DownloadVanilla.VersionType.OldAlpha</source>
         <translation>Ancient Version (Alpha)</translation>
     </message>
     <message>
-        <location filename="main.py" line="1452"/>
+        <location filename="main.py" line="1539"/>
         <source>DownloadPage.DownloadVanilla.VersionType.AprilFool</source>
         <translation>April Fool&apos;s Day Version</translation>
     </message>
     <message>
-        <location filename="main.py" line="1454"/>
+        <location filename="main.py" line="1541"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Classic</source>
         <translation>Ancient Version (Classic)</translation>
     </message>
     <message>
-        <location filename="main.py" line="1456"/>
+        <location filename="main.py" line="1543"/>
         <source>DownloadPage.DownloadVanilla.VersionType.PreClassic</source>
         <translation>Ancient Version (Pre-classic)</translation>
     </message>
@@ -164,121 +175,126 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="main.py" line="910"/>
+        <location filename="main.py" line="923"/>
         <source>HomePage.launchButton.Text</source>
         <translation>Launch</translation>
     </message>
     <message>
-        <location filename="main.py" line="912"/>
+        <location filename="main.py" line="925"/>
         <source>HomePage.launchButton.ToolTip.0</source>
         <translation>Launch: {}</translation>
     </message>
     <message>
-        <location filename="main.py" line="913"/>
+        <location filename="main.py" line="926"/>
         <source>HomePage.launchButton.ToolTip.1</source>
         <translation>No version has been selected</translation>
     </message>
     <message>
-        <location filename="main.py" line="915"/>
+        <location filename="main.py" line="928"/>
         <source>HomePage.selectVersionButton.Text</source>
         <translation>Choose a version</translation>
     </message>
     <message>
-        <location filename="main.py" line="917"/>
+        <location filename="main.py" line="930"/>
         <source>HomePage.selectVersionButton.ToolTip.0</source>
         <translation>Selected version: {}</translation>
     </message>
     <message>
-        <location filename="main.py" line="919"/>
+        <location filename="main.py" line="932"/>
         <source>HomePage.selectVersionButton.ToolTip.1</source>
         <translation>No version has been selected</translation>
     </message>
     <message>
-        <location filename="main.py" line="920"/>
+        <location filename="main.py" line="933"/>
         <source>HomePage.reloadButton.Text</source>
         <translation>Reload versions list</translation>
     </message>
     <message>
-        <location filename="main.py" line="921"/>
+        <location filename="main.py" line="934"/>
         <source>HomePage.selectNewMinecraftDirButton.Text</source>
         <translation>Select folder</translation>
     </message>
     <message>
-        <location filename="main.py" line="923"/>
+        <location filename="main.py" line="936"/>
         <source>HomePage.selectNewMinecraftDirButton.ToolTip</source>
         <translation>Current folder: {}</translation>
     </message>
     <message>
-        <location filename="main.py" line="924"/>
+        <location filename="main.py" line="937"/>
         <source>HomePage.versionsManageButton.Text</source>
         <translation>Version Management</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="938"/>
+        <source>HomePage.stopMinecraftProcess.ToolTip</source>
+        <translation>Force terminate Minecraft process(es)</translation>
     </message>
 </context>
 <context>
     <name>LaunchSettings</name>
     <message>
-        <location filename="main.py" line="2509"/>
+        <location filename="main.py" line="2601"/>
         <source>SettingsPage.LaunchSettings.GroupBox_Java.Title</source>
         <translation>Launch Settings</translation>
     </message>
     <message>
-        <location filename="main.py" line="2510"/>
+        <location filename="main.py" line="2602"/>
         <source>SettingsPage.LaunchSettings.Form.4.Label.Text</source>
         <translation>Version Separation</translation>
     </message>
     <message>
-        <location filename="main.py" line="2513"/>
+        <location filename="main.py" line="2605"/>
         <source>SettingsPage.LaunchSettings.Form.4.ComboBox.Items.1</source>
         <translation>Do not separate</translation>
     </message>
     <message>
-        <location filename="main.py" line="2514"/>
+        <location filename="main.py" line="2606"/>
         <source>SettingsPage.LaunchSettings.Form.4.ComboBox.Items.2</source>
         <translation>Separate all versions</translation>
     </message>
     <message>
-        <location filename="main.py" line="2515"/>
+        <location filename="main.py" line="2607"/>
         <source>SettingsPage.LaunchSettings.Form.4.ComboBox.Items.3</source>
         <translation>Separate between mod loaders and other vers</translation>
     </message>
     <message>
-        <location filename="main.py" line="2516"/>
+        <location filename="main.py" line="2608"/>
         <source>SettingsPage.LaunchSettings.Form.4.ComboBox.Items.4</source>
         <translation>Seperate between releases and snapshots</translation>
     </message>
     <message>
-        <location filename="main.py" line="2525"/>
+        <location filename="main.py" line="2617"/>
         <source>SettingsPage.LaunchSettings.Form.4.CheckBox.Text</source>
         <translation>Share Settings File</translation>
     </message>
     <message>
-        <location filename="main.py" line="2528"/>
+        <location filename="main.py" line="2620"/>
         <source>SettingsPage.LaunchSettings.Form.4.CheckBox_2.Text</source>
         <translation>Share Resourcepacks</translation>
     </message>
     <message>
-        <location filename="main.py" line="2531"/>
+        <location filename="main.py" line="2623"/>
         <source>SettingsPage.LaunchSettings.Form.1.Label.Text</source>
         <translation>Java Path</translation>
     </message>
     <message>
-        <location filename="main.py" line="2534"/>
-        <location filename="main.py" line="2570"/>
+        <location filename="main.py" line="2626"/>
+        <location filename="main.py" line="2662"/>
         <source>SettingsPage.LaunchSettings.Form.1.ComboBox.AutoSelect</source>
         <translation>Auto select</translation>
     </message>
     <message>
-        <location filename="main.py" line="2539"/>
+        <location filename="main.py" line="2631"/>
         <source>SettingsPage.LaunchSettings.Form.1.PushButton.Text</source>
         <translation>Auto select Java</translation>
     </message>
     <message>
-        <location filename="main.py" line="2544"/>
+        <location filename="main.py" line="2636"/>
         <source>SettingsPage.LaunchSettings.Form.1.PushButton_2.Text</source>
         <translation>Add a Java</translation>
     </message>
     <message>
-        <location filename="main.py" line="2546"/>
+        <location filename="main.py" line="2638"/>
         <source>SettingsPage.LaunchSettings.Form.1.GroupBox_Advanced.Text</source>
         <translation>Advanced Launch Settings</translation>
     </message>
@@ -286,12 +302,13 @@
 <context>
     <name>LauncherSettings</name>
     <message>
-        <location filename="main.py" line="2793"/>
+        <location filename="main.py" line="2885"/>
         <source>SettingsPage.LauncherSettings.GroupBox.Title</source>
         <translation>Download Settings</translation>
     </message>
     <message>
-        <location filename="main.py" line="2794"/>
+        <location filename="main.py" line="2886"/>
+        <location filename="main.py" line="2902"/>
         <source>SettingsPage.LauncherSettings.Form.1.Label.Text</source>
         <translatorcomment>Keep {:2} in the text.</translatorcomment>
         <translation>Thread Count: {:2}</translation>
@@ -300,24 +317,24 @@
 <context>
     <name>LoadingAnimation</name>
     <message>
-        <location filename="main.py" line="444"/>
-        <location filename="main.py" line="455"/>
+        <location filename="main.py" line="436"/>
+        <location filename="main.py" line="447"/>
         <source>LoadingAnimation.Actions.Reload.Text</source>
         <translation>Reload</translation>
     </message>
     <message>
-        <location filename="main.py" line="504"/>
-        <location filename="main.py" line="509"/>
+        <location filename="main.py" line="496"/>
+        <location filename="main.py" line="501"/>
         <source>LoadingAnimation.Status.Loading.Text</source>
         <translation>Loading</translation>
     </message>
     <message>
-        <location filename="main.py" line="536"/>
+        <location filename="main.py" line="526"/>
         <source>LoadingAnimation.Status.LoadingSuccess.Text</source>
         <translation>Loading completed</translation>
     </message>
     <message>
-        <location filename="main.py" line="540"/>
+        <location filename="main.py" line="530"/>
         <source>LoadingAnimation.Status.Failure.Text</source>
         <translation>Loading failed, please retry</translation>
     </message>
@@ -325,7 +342,7 @@
 <context>
     <name>LoginWindow</name>
     <message>
-        <location filename="main.py" line="578"/>
+        <location filename="main.py" line="570"/>
         <source>LoginWindow.Title.Text</source>
         <translation>Login</translation>
     </message>
@@ -333,37 +350,42 @@
 <context>
     <name>ModInfoPage</name>
     <message>
-        <location filename="main.py" line="1821"/>
-        <location filename="main.py" line="1823"/>
+        <location filename="main.py" line="1908"/>
+        <location filename="main.py" line="1910"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.ModInfo.Title</source>
         <translation>Mod Information</translation>
     </message>
     <message>
-        <location filename="main.py" line="1822"/>
-        <location filename="main.py" line="1824"/>
+        <location filename="main.py" line="1909"/>
+        <location filename="main.py" line="1911"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.ModVersions.Title</source>
         <translation>Mod Version(s)</translation>
     </message>
     <message>
-        <location filename="main.py" line="1825"/>
+        <location filename="main.py" line="1912"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.Actions.Issues</source>
         <translation>Report bugs</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="1933"/>
+        <source>DownloadPage.DownloadMods.ModInfoPage.AskDownloadPath.Title</source>
+        <translation>Select a directory to download mod</translation>
     </message>
 </context>
 <context>
     <name>PersonalisationSettings</name>
     <message>
-        <location filename="main.py" line="3000"/>
+        <location filename="main.py" line="3094"/>
         <source>SettingsPage.PersonalisationSettings.GroupBox4.Title</source>
         <translation>Language</translation>
     </message>
     <message>
-        <location filename="main.py" line="3001"/>
+        <location filename="main.py" line="3095"/>
         <source>SettingsPage.PersonalisationSettings.Form.1.Label.Text</source>
         <translation>Language</translation>
     </message>
     <message>
-        <location filename="main.py" line="3003"/>
+        <location filename="main.py" line="3097"/>
         <source>SettingsPage.PersonalisationSettings.GroupBox4.Tip.Text</source>
         <translation>Language translation may not be 100% accurate</translation>
     </message>
@@ -371,17 +393,17 @@
 <context>
     <name>VersionManagementPage</name>
     <message>
-        <location filename="main.py" line="696"/>
+        <location filename="main.py" line="695"/>
         <source>HomePage.VersionManagementPage.addNewDirectoryButton.Text</source>
         <translation>+ Add a folder</translation>
     </message>
     <message>
-        <location filename="main.py" line="697"/>
+        <location filename="main.py" line="696"/>
         <source>HomePage.VersionManagementPage.currentDir.Text</source>
         <translation>Current folder: {}</translation>
     </message>
     <message>
-        <location filename="main.py" line="703"/>
+        <location filename="main.py" line="702"/>
         <source>HomePage.VersionManagementPage.SelectFolderDialogue.Title</source>
         <translation>Select a folder</translation>
     </message>

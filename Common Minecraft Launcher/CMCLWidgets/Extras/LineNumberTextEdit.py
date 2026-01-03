@@ -14,10 +14,9 @@ class LineNumberTextEdit(TextEdit):
         
         def updateLineNumberBar(self):
             self.update()
-            self.adjustSize()
+            self.adjustLineNumberSize()
         
-        def adjustSize(self):
-            super().adjustSize()
+        def adjustLineNumberSize(self):
             count = self.parent().document().blockCount()
             width = max(
                 (QFontMetrics(self.parent().font()).boundingRect(str(cnt)).width() for cnt in range(0, 10))) * len(

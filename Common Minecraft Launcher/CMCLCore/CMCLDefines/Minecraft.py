@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from ..GetOperationSystem import GetOperationSystemInMojangAPI
+from ..CMCLCache.CacheManager import CacheManager
 
 
 class Minecraft:
@@ -39,6 +40,8 @@ class Minecraft:
         self.__mc_gameSeparation = bool(mc_gameSeparation)
         if self.__mc_gameSeparation:
             self.__mc_gamePlayDir = self.__mc_gameWorkDir / "versions" / self.__mc_gameVersion
+        
+        self.cacheManager = CacheManager()
     
     def __bool__(self) -> bool:
         return bool(
@@ -100,6 +103,7 @@ class Minecraft:
     @mc_gameJsonFile.setter
     def mc_gameJsonFile(self, value: Union[str, os.PathLike[str], Path, LiteralString]):
         self.__mc_gameJsonFile = Path(value).resolve()
+        self.cacheManager.clearCache()
     
     @property
     def mc_gameNativesDir(self) -> Path:
@@ -139,7 +143,11 @@ class Minecraft:
     def mc_gameJsonFileContent(self) -> Dict[Any, Any]:
         if self.mc_gameJsonFile and Path(self.mc_gameJsonFile).exists():
             try:
-                jsonFileContent = json.loads(Path(self.mc_gameJsonFile).read_text(encoding="utf-8"))
+                if self.cacheManager.getCache("jsonFileContent"):
+                    jsonFileContent = self.cacheManager.getCache("jsonFileContent")
+                else:
+                    jsonFileContent = json.loads(Path(self.mc_gameJsonFile).read_text(encoding="utf-8"))
+                    self.cacheManager.setCache("jsonFileContent", jsonFileContent, 180)
                 if self.mc_inheritsFrom:
                     inheritsJsonFile = json.loads(Path(
                         self.mc_gameJsonFile.parent.parent / self.mc_inheritsFrom / f"{self.mc_inheritsFrom}.json"

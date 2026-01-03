@@ -77,14 +77,14 @@ class Tip(TipBase):
     def setCentralWidget(self, widget):
         if isinstance(widget, QWidget):
             self.setProperty("centralWidget", widget)
-            self.resize(widget.width() + 10 + ((32 if self.closeEnabled() else 0) + 5),
+            self.resize(widget.width() + 10 + ((64 if self.closeEnabled() else 0) + 16),
                         widget.height() + 10)
     
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         if hasattr(self.centralWidget(), "setGeometry"):
             self.centralWidget().setGeometry(5, 5, self.width() - (
-                (self._closeButton.width() - 32) if self._closeButton.isVisible() else 0), self.height() - 10)
+                    (64 if self._closeButton.isVisible() else 0) + 16), self.height() - 10)
 
 
 class PopupTip(Tip):
@@ -92,7 +92,7 @@ class PopupTip(Tip):
         LEFT = "left"
         RIGHT = "right"
     
-    def tip(self, position=PopupPosition.RIGHT, duration=-1):
+    def tip(self, position=PopupPosition.RIGHT, duration=-1, topMargin=0):
         if duration >= 0:
             QTimer.singleShot(duration + 1000, self.hide)
         self.show()
@@ -100,11 +100,11 @@ class PopupTip(Tip):
         start_pos = QPoint(self.parent().width(), 0)
         match position:
             case self.PopupPosition.LEFT:
-                pos = QPoint(0, 0)
-                start_pos = QPoint(-self.width(), 0)
+                pos = QPoint(0, topMargin)
+                start_pos = QPoint(-self.width(), topMargin)
             case self.PopupPosition.RIGHT:
-                pos = QPoint(self.parent().width() - self.width(), 0)
-                start_pos = QPoint(self.parent().width() + self.width(), 0)
+                pos = QPoint(self.parent().width() - self.width(), topMargin)
+                start_pos = QPoint(self.parent().width() + self.width(), topMargin)
         
         animation = QPropertyAnimation(self, b"pos", self)
         animation.setDuration(1000)

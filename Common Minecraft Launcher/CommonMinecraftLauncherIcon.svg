@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 296 296">
+<svg xmlns="http://www.w3.org/2000/svg" width="296" height="296" viewBox="-20 -20 296 296">
     <defs>
         <linearGradient id="CMCLBrandGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color: #A5F1FF"/>
             <stop offset="33%" style="stop-color: #A5F1FF"/>
-            <stop offset="66%" style="stop-color: #C5C1FF"/>
-            <stop offset="100%" style="stop-color: #FF99FF"/>
+            <stop offset="66%" style="stop-color: #D5C1FF"/>
+            <stop offset="100%" style="stop-color: #FF8CFF"/>
         </linearGradient>
         <linearGradient id="CMCLBrandGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color: #5A9CCE"/>
@@ -25,23 +25,22 @@
     <path d="M 76 0 L 176 0 L 256 76 L 256 176 L 176 256 L 76 256 L 0 176 L 0 76 Z"
           fill="url(#CMCLBrandGradient1)"
           stroke="url(#CMCLBrandGradient1)"
-          stroke-width="40"
-          stroke-linejoin="round"
-    />
+          stroke-width="41"
+          stroke-linejoin="round"/>
     <path d="M 128 8 L 220 54 L 244 150 L 176 232 L 80 232 L 12 150 L 36 54 Z"
           fill="url(#CMCLBrandGradient2)"
           stroke="url(#CMCLBrandGradient2)"
-          stroke-width="40"
+          stroke-width="41"
           stroke-linejoin="round"/>
     <path d="M 80 44 L 176 44 L 216 120 L 172 196 L 84 196 L 40 120 Z"
           fill="url(#CMCLBrandGradient3)"
           stroke="url(#CMCLBrandGradient3)"
-          stroke-width="40"
+          stroke-width="41"
           stroke-linejoin="round"/>
     <path d="M 88 60 L 168 60 L 192 122 L 128 182 L 64 122 Z"
           fill="url(#CMCLBrandGradient4)"
           stroke="url(#CMCLBrandGradient4)"
-          stroke-width="40"
+          stroke-width="41"
           stroke-linejoin="round"/>
-    <text x="27" y="150" font-family="Consolas" font-size="92" fill="#FFFFFF">CMCL</text>
+    <text x="45%" y="50%" text-anchor="middle" font-family="Consolas" font-size="92" fill="#FFFFFF">CMCL</text>
 </svg>
