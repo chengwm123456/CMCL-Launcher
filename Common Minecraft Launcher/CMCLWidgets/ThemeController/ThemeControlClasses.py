@@ -7,11 +7,18 @@ from PyQt6.QtGui import *
 
 class Colour(QColor):
     def mix(self, colour, percent=50):
+        if percent <= 0:
+            return self
+        if percent >= 100:
+            return colour
         percent /= 100
         r, g, b, a = self.red(), self.green(), self.blue(), self.alpha()
         r2, g2, b2, a2 = colour.red(), colour.green(), colour.blue(), colour.alpha()
         return Colour(r2 * percent + r * (1 - percent), g2 * percent + g * (1 - percent),
                       b2 * percent + b * (1 - percent), a2 * percent + a * (1 - percent))
+    
+    def reverse(self):
+        return Colour(255 - self.red(), 255 - self.green(), 255 - self.blue())
     
     def __bool__(self) -> bool:
         return self.isValid()

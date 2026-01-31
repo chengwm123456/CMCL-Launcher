@@ -9,7 +9,7 @@ import psutil
 from pathlib import Path, PurePath
 import subprocess
 import shlex
-from enum import Enum
+from enum import Enum, IntEnum
 
 from .CMCLDefines import Downloader
 from .CMCLGameDownloading import DownloadVersion
@@ -23,6 +23,14 @@ class QuickPlayMode(Enum):
     SINGLE_PLAYER = "SinglePlayer"
     MULTI_PLAYER = "MultiPlayer"
     REALMS = "Realms"
+
+
+class LaunchError(IntEnum):
+    NoVersion = 1
+    LoseJsonFile = 2
+    NoJava = 3
+    JavaTooOld = 4
+    InvaildPlayerData = 5
 
 
 def GetJavaPath(version: Union[str, int]) -> Optional[Union[str, Path]]:
@@ -69,6 +77,25 @@ def GetJavaPath(version: Union[str, int]) -> Optional[Union[str, Path]]:
             if str(version) == version_data:
                 return java_path
     return None
+
+
+def GetVersion(java):
+    if Path(java).is_file():
+        try:
+            version_data = \
+                subprocess.check_output([java, "--version"], stderr=subprocess.STDOUT,
+                                        creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess,
+                                                                                             "CREATE_NO_WINDOW") else 0).decode().splitlines()[
+                    0].split(
+                    " ")[1].split(".")[0].lstrip('"')
+        except subprocess.CalledProcessError:
+            version_data = \
+                subprocess.check_output([java, "-version"], stderr=subprocess.STDOUT,
+                                        creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess,
+                                                                                             "CREATE_NO_WINDOW") else 0).decode().splitlines()[
+                    0].split(
+                    " ")[2].split(".")[1].lstrip('"')
+        return int(version_data)
 
 
 def FixMinecraftFiles(minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString], version_fix: str):
@@ -202,12 +229,13 @@ def LaunchMinecraft(
         jvm_args=None,
         extra_game_command="",
         player_data=None,
+        ignore_java_version=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         **kw
 ):
     if not version_launch:
-        return 1, "cannout launch without specified a version to launch"
+        return 1, LaunchError.NoVersion
     minecraft_path = Path(minecraft_path or '.').absolute()
     minecraft_path.mkdir(parents=True, exist_ok=True)
     quickplay_mode = kw.get("quickplay_mode", "")
@@ -230,7 +258,7 @@ def LaunchMinecraft(
     else:
         quickplay_command = ""
     if not Path(minecraft_path / "versions" / version_launch / f"{version_launch}.json").exists():
-        return 1, "cannot launch without version json file"
+        return 1, LaunchError.LoseJsonFile
     jsons = json.loads(
         Path(minecraft_path / "versions" / version_launch / f"{version_launch}.json").read_text(encoding="utf-8"))
     if jsons.get("inheritsFrom"):
@@ -240,17 +268,18 @@ def LaunchMinecraft(
         jsons["assets"] = inherits_jsons["assets"]
         jsons["javaVersion"] = inherits_jsons["javaVersion"]
     Path(minecraft_path / "libraries").mkdir(parents=True, exist_ok=True)
-    if not Path(minecraft_path / "assets" / "indexes" / f"{jsons['assets']}.json").exists():
-        return 1, "cannot launch without asset file"
     if not java_path:
         for i in range(int(jsons.get("javaVersion", {}).get("majorVersion", 1)), 999):
             java_path = GetJavaPath(str(i))
             if java_path is not None:
                 break
         else:
-            return 1, "cannot launch without a Java"
+            return 1, LaunchError.NoJava
+    else:
+        if not ignore_java_version and GetVersion(java_path) < int(jsons.get("javaVersion", {}).get("majorVersion", 1)):
+            return 1, LaunchError.JavaTooOld
     if not player_data:
-        return 1, "wrong player data"
+        return 1, LaunchError.InvaildPlayerData
     # with open(os.path.join(minecraft_path, "options.txt"), "r", encoding="utf-8") as file:
     #     info = file.readlines()
     #     for e, i in enumerate(info):
@@ -266,31 +295,7 @@ def LaunchMinecraft(
     # with open(os.path.join(minecraft_path, "options.txt"), "w", encoding="utf-8") as file:
     #     file.write(info)
     default_jvm_args = [
-        '-XX:+UseG1GC',
-        '-XX:+UseAdaptiveSizePolicy',
-        '-XX:MaxInlineSize=420',
-        '-XX:+TieredCompilation',
-        '-XX:+ParallelRefProcEnabled',
-        '-XX:MaxGCPauseMillis=152',
-        '-XX:+UnlockExperimentalVMOptions',
-        '-XX:+UnlockDiagnosticVMOptions',
-        '-XX:+Inline',
-        '-XX:+DisableExplicitGC',
-        '-XX:+AlwaysPreTouch',
-        '-XX:G1NewSizePercent=30',
-        '-XX:G1MaxNewSizePercent=40',
-        '-XX:G1HeapRegionSize=8M',
-        '-XX:G1ReservePercent=20',
-        '-XX:G1HeapWastePercent=5',
-        '-XX:G1MixedGCCountTarget=4',
-        '-XX:InitiatingHeapOccupancyPercent=15',
-        '-XX:G1MixedGCLiveThresholdPercent=90',
-        '-XX:G1RSetUpdatingPauseTimePercent=5',
-        '-XX:SurvivorRatio=31',
-        '-XX:+PerfDisableSharedMem',
-        f'-XX:ParallelGCThreads={psutil.cpu_count()}',
-        f'-XX:ConcGCThreads={psutil.cpu_count()}',
-        '-XX:MaxTenuringThreshold=1',
+        '-XX:+UseZGC',
         '-Dfml.ignoreInvalidMinecraftCertificates=True',
         '-Dfml.ignorePatchDiscrepancies=True',
         '-Dlog4j2.formatMsgNoLookups=true',
@@ -302,7 +307,7 @@ def LaunchMinecraft(
         '-Dorg.lwjgl.util.Debug=true',
     ]
     if jvm_args:
-        jvm_args = default_jvm_args + shlex.split(jvm_args)
+        jvm_args = shlex.split(jvm_args)
     else:
         jvm_args = default_jvm_args
     if kw.get("game_separation"):
@@ -332,8 +337,8 @@ def LaunchMinecraft(
     #     stderr = subprocess.STDOUT
     game = subprocess.Popen(
         shlex.split(command),
-        stdout=stdout,
-        stderr=stderr,
+        # stdout=stdout, # These two params are commented out because
+        # stderr=stderr, # we cannot launch with these two params.
         creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0,
         cwd=str(minecraft_path)
     )

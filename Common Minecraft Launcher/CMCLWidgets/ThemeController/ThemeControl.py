@@ -12,8 +12,6 @@ def setTheme(theme, animation=False):
 
 
 def getThemeColour(colour_role, is_highlight, is_primary, theme=None):
-    if theme == getTheme():
-        theme = None
     return globals()["currentThemeColourManager"].getColour(colour_role, is_highlight, is_primary, theme)
 
 
@@ -36,7 +34,7 @@ def initThemeColours():
     colourManager.setColour(ColourRole.Background, True, False, Theme.Light, Colour(163, 213, 255))
     colourManager.setColour(ColourRole.Background, True, False, Theme.Dark, Colour(80, 146, 255))
     colourManager.setColour(ColourRole.Border, False, False, Theme.Light, Colour(215, 237, 255))
-    colourManager.setColour(ColourRole.Border, False, False, Theme.Dark, Colour(93, 103, 114))
+    colourManager.setColour(ColourRole.Border, False, False, Theme.Dark, Colour(85, 93, 115))
     colourManager.setColour(ColourRole.Border, True, False, Theme.Light, Colour(135, 206, 255))
     colourManager.setColour(ColourRole.Border, True, False, Theme.Dark, Colour(93, 167, 255))
     colourManager.setColour(ColourRole.Background, False, True, Theme.Light, Colour(181, 213, 255))
@@ -57,8 +55,7 @@ def getBorderColour(is_primary=False, is_highlight=False, is_tuple=False):
     border_colour = getThemeColour(
         colour_role=ColourRole.Border,
         is_primary=is_primary,
-        is_highlight=is_highlight,
-        theme=getTheme()
+        is_highlight=is_highlight
     )
     if is_tuple:
         return tuple(border_colour)
@@ -70,8 +67,7 @@ def getBackgroundColour(is_primary=False, is_highlight=False, is_tuple=False):
     background_colour = getThemeColour(
         colour_role=ColourRole.Background,
         is_primary=is_primary,
-        is_highlight=is_highlight,
-        theme=getTheme()
+        is_highlight=is_highlight
     )
     if is_tuple:
         return tuple(background_colour)
@@ -80,8 +76,7 @@ def getBackgroundColour(is_primary=False, is_highlight=False, is_tuple=False):
 
 
 def getForegroundColour(is_primary=False, is_tuple=False):
-    colour = getThemeColour(colour_role=ColourRole.Foreground, is_primary=is_primary, is_highlight=False,
-                            theme=getTheme())
+    colour = getThemeColour(colour_role=ColourRole.Foreground, is_primary=is_primary, is_highlight=False)
     if is_tuple:
         return tuple(colour)
     else:

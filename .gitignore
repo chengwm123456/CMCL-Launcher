@@ -20,6 +20,7 @@ settings.py
 settings.dat
 Thanks_data.json
 .settings.json
+.settings.yaml
 .players
 
 newdesign.py

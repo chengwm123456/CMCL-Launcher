@@ -1,28 +1,30 @@
 # -*- coding: utf-8 -*-
-import json
+# import json
 from pathlib import Path
+import yaml
 
 
 def createSettingsFile():
-    Path(".settings.json").write_text(json.dumps({
+    Path(".settings.yaml").write_text(yaml.dump({
         "Settings": {
             "LaunchSettings": {
                 "Java": {
                     "AutoSelect": True,
                     "JavaPath": None,
                     "JVM": {
-                        "OverrideDefault": False,
                         "JVMArguments": {
                             "Arguments": None
                         }
                     }
                 },
                 "ExtraGameCommand": None,
+                "MemoryAllocation": {},
                 "VersionSeparation": 0,
                 "VersionSeparationConfig": {
                     "ShareVersionOptions": False,
                     "ShareVersionResourcePacks": False
-                }
+                },
+                "LauncherVisibility": 0
             },
             "LauncherSettings": {
                 "Personalisation": {
@@ -43,24 +45,24 @@ def createSettingsFile():
                 "Language": None
             }
         }
-    }, indent=4), encoding="utf-8")
+    }, allow_unicode=True, indent=2), encoding="utf-8")
 
 
 def createVersionConfigFile(file_path, version_name, version_path):
-    Path(file_path / "version.cfg").write_text(json.dumps({
+    Path(file_path / "version.cfg").write_text(yaml.dump({
         "Version": version_name,
         "VersionAlias": version_path,
         "LaunchConfig": {
             "SyncWithDefault": True
         }
-    }, indent=4))
+    }, allow_unicode=True, indent=2))
 
 
 def loadSettingsFile():
-    file = Path(".settings.json")
+    file = Path(".settings.yaml")
     if not file.exists():
         createSettingsFile()
-    return json.loads(file.read_text(encoding="utf-8"))
+    return yaml.safe_load(file.read_text(encoding="utf-8"))
 
 
 def loadSettings():
@@ -74,8 +76,8 @@ def saveSettings(settings):
 
 
 def saveSettingsFile(content):
-    Path(".settings.json").write_text(json.dumps(content, indent=4), encoding="utf-8")
+    Path(".settings.yaml").write_text(yaml.dump(content, allow_unicode=True, indent=2), encoding="utf-8")
 
 
 def loadVersionConfig(file_path):
-    return json.loads(Path(file_path).read_text(encoding="utf-8"))
+    return yaml.safe_load(Path(file_path).read_text(encoding="utf-8"))

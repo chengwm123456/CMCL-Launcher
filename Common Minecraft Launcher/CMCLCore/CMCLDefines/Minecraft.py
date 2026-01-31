@@ -15,7 +15,9 @@ class Minecraft:
         "__mc_gameWorkDir", "__mc_gamePlayDir",
         "__mc_gameJarFile", "__mc_gameJsonFile",
         "__mc_gameNativesDir", "__mc_gameAssetsDir", "__mc_gameLibrariesDir",
-        "__mc_gameSeparation"
+        "__mc_gameSeparation",
+        
+        "cacheManager"
     )
     
     def __init__(
@@ -166,8 +168,6 @@ class Minecraft:
                         jsonFileContent["assets"] = inheritsJsonFile["assets"]
                     if inheritsJsonFile.get("assetIndex"):
                         jsonFileContent["assetIndex"] = inheritsJsonFile["assetIndex"]
-                    if inheritsJsonFile.get("mainClass"):
-                        jsonFileContent["mainClass"] = inheritsJsonFile["mainClass"]
                     
                     if inheritsJsonFile.get("javaVersion"):
                         jsonFileContent["javaVersion"] = inheritsJsonFile["javaVersion"]

@@ -74,14 +74,17 @@ class TextEdit(QTextEdit, Widget):
         self.document().documentLayout().draw(painter, context)
         if not self.toPlainText() and self.placeholderText():
             placeholderDocument = QTextDocument()
-            placeholderDocument.setDefaultStyleSheet(f"body {{ color: rgb(128, 128, 128); }}")
+            placeholderDocument.setDefaultStyleSheet(f"body {{ color: rgb{getForegroundColour(is_tuple=True)}; }}")
             placeholderDocument.setPlainText(self.placeholderText())
             placeholderDocument.setHtml(placeholderDocument.toHtml())
             placeholderDocument.setTextWidth(self.document().textWidth())
             placeholderDocument.setDocumentMargin(self.document().documentMargin())
             placeholderDocument.setDefaultFont(self.document().defaultFont())
             placeholderDocument.setLayoutEnabled(self.document().isLayoutEnabled())
+            painter.save()
+            painter.setOpacity(painter.opacity() * 0.45)
             placeholderDocument.drawContents(painter)
+            painter.restore()
         painter.restore()
         
         painter.save()

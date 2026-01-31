@@ -13,20 +13,19 @@ class ToolTipLabel(QLabel):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         self.setContentsMargins(5, 5, 5, 5)
         self.show()
+        self.setProperty("widgetOpacity", 0.0)
     
     def paintEvent(self, a0):
         self.setStyleSheet("padding: 3px;")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
+        painter.setOpacity(self.property("widgetOpacity"))
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        painter.save()
-        painter.setOpacity(1.0)
         painter.setPen(getBorderColour())
         painter.setBrush(getBackgroundColour())
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
-        painter.restore()
         
         self.setStyleSheet(
             f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {painter.opacity()});")
@@ -59,6 +58,24 @@ class ToolTipWidget(QWidget):
         super().setFont(a0)
         self.label.setFont(a0)
     
+    def fadeIn(self):
+        ani = QPropertyAnimation(self.label, b"widgetOpacity", self)
+        ani.setStartValue(self.label.property("widgetOpacity"))
+        ani.setEndValue(1.0)
+        ani.setDuration(250)
+        ani.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani.start()
+        self.show()
+    
+    def fadeOut(self):
+        ani = QPropertyAnimation(self.label, b"widgetOpacity", self)
+        ani.setStartValue(self.label.property("widgetOpacity"))
+        ani.setEndValue(0.0)
+        ani.setDuration(250)
+        ani.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani.start()
+        ani.finished.connect(lambda: self.hide())
+    
     def hideEvent(self, a0):
         super().hideEvent(a0)
         self.deleteLater()
@@ -78,9 +95,6 @@ class ToolTip(QObject):
                         self.__tooltip.setText(a0.toolTip())
                         self.__tooltip.adjustSize()
                         self.__tooltip.raise_()
-                        self.__tooltip.show()
-                        if a0.toolTipDuration() > 0:
-                            QTimer.singleShot(a0.toolTipDuration(), self.closeTooltip)
                         maxWidth, maxHeight = (QGuiApplication.primaryScreen().geometry().width(),
                                                QGuiApplication.primaryScreen().geometry().height())
                         self.__tooltip.move(QCursor.pos())
@@ -88,6 +102,9 @@ class ToolTip(QObject):
                             self.__tooltip.move(self.__tooltip.x(), self.__tooltip.y() - self.__tooltip.height())
                         if self.__tooltip.x() + self.__tooltip.width() > maxWidth:
                             self.__tooltip.move(self.__tooltip.x() - self.__tooltip.width(), self.__tooltip.y())
+                        self.__tooltip.fadeIn()
+                        if a0.toolTipDuration() > 0:
+                            QTimer.singleShot(a0.toolTipDuration(), self.closeTooltip)
                 return True
             case QEvent.Type.Leave:
                 self.closeTooltip()
@@ -106,5 +123,5 @@ class ToolTip(QObject):
     
     def closeTooltip(self):
         if self.__tooltip:
-            self.__tooltip.hide()
+            self.__tooltip.fadeOut()
         self.__tooltip = None

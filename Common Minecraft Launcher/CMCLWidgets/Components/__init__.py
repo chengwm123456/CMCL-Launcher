@@ -3,6 +3,7 @@ from .Button import (PushButton, CommandLinkButton, ToolButton, TogglePushButton
                      CloseButton, CheckBox, RadioButton, SwitchButton)
 from .ComboBox import ComboBox
 from .GroupBox import GroupBox
+from .ImageWidget import ImageWidget
 from .ItemView import ItemDelegate, ItemView
 from .Label import Label, StrongLabel, TitleLabel
 from .LineEdit import LineEdit

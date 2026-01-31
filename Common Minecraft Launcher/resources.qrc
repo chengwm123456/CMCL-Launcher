@@ -27,6 +27,8 @@
         <file>LeftArrow-black.svg</file>
         <file>RightArrow-white.svg</file>
         <file>RightArrow-black.svg</file>
+        <file>MoreActions-white.svg</file>
+        <file>MoreActions-black.svg</file>
         <file>light.svg</file>
         <file>dark.svg</file>
         <file>user_icon-black.svg</file>
@@ -34,5 +36,7 @@
         <file>acrylic_noise.png</file>
         <file>chengwm_avatar.png</file>
         <file>mcdaotian_avatar.png</file>
+        <file>dirt_block.png</file>
+        <file>grass_block.png</file>
     </qresource>
 </RCC>

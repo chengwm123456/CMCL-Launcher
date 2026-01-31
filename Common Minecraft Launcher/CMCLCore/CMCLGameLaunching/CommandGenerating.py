@@ -96,21 +96,18 @@ def GenerateMinecraftLaunchCommand(
             if isinstance(jvmArgument, dict):
                 rules = jvmArgument["rules"][0]
                 ruleReqOS = rules["os"]
-                if ruleReqOS.get("name") != minecraft.mc_gamePlatformName:
-                    continue
-                if ruleReqOS.get("arch") != minecraft.mc_gamePlatformMachine:
+                if (ruleReqOS.get("name", minecraft.mc_gamePlatformName) != minecraft.mc_gamePlatformName
+                        or ruleReqOS.get("arch", minecraft.mc_gamePlatformMachine) != minecraft.mc_gamePlatformMachine):
                     continue
                 value = jvmArgument["value"]
                 if isinstance(value, list):
                     value = list(map(
-                        lambda: Quote(oneValue) if " " in oneValue and '"' not in oneValue else oneValue, value))
+                        lambda val: Quote(val) if " " in val and '"' not in val else val, value))
                     mcJVMCommand.extend(value)
                 else:
                     mcJVMCommand.append(value)
             else:
-                strArgument = jvmArgument
-                if " " in strArgument:
-                    strArgument = Quote(strArgument)
+                strArgument = Quote(jvmArgument) if " " in jvmArgument and '"' not in jvmArgument else jvmArgument
                 mcJVMCommand.append(
                     JVMArgumentTemplateFilling(
                         strArgument,
@@ -156,5 +153,5 @@ def GenerateMinecraftLaunchCommand(
     else:
         mcAuthlibInjectorCommand = ""
     mcJVMCommand = mcAuthlibInjectorCommand + mcJVMCommand
-    command = [f'"{javaPath.strip(chr(34))}"', mcJVMCommand, mcGameCommand]
+    command = f'"{javaPath.strip(chr(34))}"', mcJVMCommand, mcGameCommand
     return " ".join(command)

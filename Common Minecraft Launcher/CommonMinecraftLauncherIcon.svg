@@ -42,5 +42,5 @@
           stroke="url(#CMCLBrandGradient4)"
           stroke-width="41"
           stroke-linejoin="round"/>
-    <text x="45%" y="50%" text-anchor="middle" font-family="Consolas" font-size="92" fill="#FFFFFF">CMCL</text>
+    <text x="133" y="148" text-anchor="middle" font-family="Consolas" font-size="92" fill="#FFFFFF">CMCL</text>
 </svg>

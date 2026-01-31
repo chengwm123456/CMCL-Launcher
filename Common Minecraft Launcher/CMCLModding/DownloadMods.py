@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import requests
+from pathlib import Path
 
 from .GetMods import ListModVersions
 
@@ -13,9 +14,10 @@ def DownloadMod(mod_name, mod_version, target_path):
             break
     if not mod_files:
         return
+    Path(target_path).mkdir(exist_ok=True)
     for file in mod_files:
-        response = requests.get(file["url"])
-        Path(Path(target_path) / file["filename"]).write_bytes(response.content)
+        response = requests.get(file["url"], headers={"User-Agent": "CMCL"})
+        (Path(target_path) / file["filename"]).write_bytes(response.content)
         # downloader = Downloader(file["url"], file["filename"], target_path)
         # downloader.downloadFile()
         # downloaders.append(downloader)

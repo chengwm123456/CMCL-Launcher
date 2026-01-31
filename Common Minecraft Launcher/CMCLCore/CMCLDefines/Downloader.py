@@ -10,6 +10,7 @@ from email.message import EmailMessage
 
 import gzip
 import zlib
+import zstandard as zstd
 
 
 class Downloader:
@@ -33,7 +34,10 @@ class Downloader:
             chunk_size: Union[int, str] = 1024 * 1024 * 8
     ):
         self.download_url = str(download_url)
-        self.download_file_name = Path(download_file_name)
+        if download_file_name:
+            self.download_file_name = Path(download_file_name)
+        else:
+            self.download_file_name = None
         self.download_file_path = Path(download_file_path).resolve()
         self.__maximumThreads = int(maximum_threads or 8)
         self.__chunkSize = max(1024, int(chunk_size))
@@ -79,18 +83,22 @@ class Downloader:
             msg = EmailMessage()
             msg["Content-Disposition"] = requestHeaders.get("Content-Disposition")
             params = msg["Content-Disposition"].params
-            if not self.download_file_name:
+            print(params, self.download_file_name, bool(self.download_file_name))
+            if not self.download_file_name and params.get("filename"):
                 self.download_file_name = Path(params["filename"])
         
-        rangeRequestState = requestHeaders.get("Accept-Ranges", "none").lower()
-        if rangeRequestState != "none":
+        if not self.download_file_name:
+            raise ValueError("Cannot leave filename blank while no `Content-Disposition` is in header")
+        
+        acceptRanges = requestHeaders.get("Accept-Ranges", "none").lower()
+        if acceptRanges != "none":
             with ThreadPoolExecutor(max_workers=self.maximumThreads) as executor:
                 startPosition = 0
                 while startPosition < contentLength:
                     downloadedChunks.append(
                         executor.submit(
                             self.__downloadChunk,
-                            self.Range(startPosition, min(startPosition + self.__chunkSize, contentLength))
+                            range=self.Range(startPosition, min(startPosition + self.__chunkSize, contentLength))
                         )
                     )
                     startPosition += self.__chunkSize
@@ -98,17 +106,22 @@ class Downloader:
         else:
             with requests.get(self.download_url, stream=True) as response:
                 response.raise_for_status()
-                downloadedChunks.append(
-                    self.DownloadedChunk(
-                        chunkRange=self.Range(startRange=0, endRange=contentLength),
-                        responseContent=response.content
-                    )
-                )
+                startPosition = 0
+                for chunk in response.iter_content(chunk_size=self.__chunkSize):
+                    if chunk:
+                        downloadedChunks.append(
+                            self.DownloadedChunk(
+                                chunkRange=self.Range(startPosition,
+                                                      min(startPosition + self.__chunkSize, contentLength)),
+                                responseContent=chunk
+                            )
+                        )
+                        startPosition += self.__chunkSize
         self.download_file_path.mkdir(parents=True, exist_ok=True)
         with Path(self.download_file_path / self.download_file_name).resolve().open(mode="wb") as file:
             for chunkData in downloadedChunks:
                 file.seek(chunkData.chunkRange.startRange)
-                file.write(decompress(chunkData.responseContent, chunkData.contentEncoding))
+                file.write(self.decompress(chunkData.responseContent, chunkData.contentEncoding))
     
     def __downloadChunk(
             self,
@@ -118,7 +131,7 @@ class Downloader:
                 self.download_url,
                 headers={
                     "Range": f"bytes={int(range.startRange)}-{int(range.endRange) - 1}",
-                    "Accept-Encoding": "gzip, deflate, identity"
+                    "Accept-Encoding": "gzip, deflate, zstd, identity"
                 }
         ) as response:
             response.raise_for_status()
@@ -134,8 +147,10 @@ class Downloader:
             case "gzip":
                 return gzip.decompress(content)
             case "deflate":
-                return zlib.decompress(content, -8)
-            case None:
+                return zlib.decompress(content)
+            case "zstd":
+                return zstd.ZstdDecompressor().decompress(content)
+            case _:
                 return content
     
     def __enter__(self) -> 'Downloader':

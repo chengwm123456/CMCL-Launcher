@@ -325,11 +325,38 @@ class DialogueMask(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setProperty("maskOpacity", 0.0)
+        self._a = 0
+        self.hide()
+    
+    def fadeIn(self):
+        if self.isVisible():
+            return
+        ani = QPropertyAnimation(self, b"maskOpacity", self)
+        ani.setStartValue(self.property("maskOpacity"))
+        ani.setEndValue(1.0)
+        ani.setDuration(500)
+        ani.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani.start()
+        self.show()
+        self._a = 1
+    
+    def fadeOut(self):
+        if not self._a:
+            return
+        self._a = 0
+        ani = QPropertyAnimation(self, b"maskOpacity", self)
+        ani.setStartValue(self.property("maskOpacity"))
+        ani.setEndValue(0.0)
+        ani.setDuration(500)
+        ani.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani.start()
+        ani.finished.connect(lambda: self.hide())
     
     def paintEvent(self, a0):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.fillRect(self.rect(), QColor(0, 0, 0, 120))
+        painter.fillRect(self.rect(), QColor(0, 0, 0, int(120 * self.property("maskOpacity"))))
     
     def event(self, a0):
         if self.parent():
@@ -377,15 +404,15 @@ class MaskedDialogue(RoundedDialogue):
     
     def paintEvent(self, *args, **kwargs):
         super().paintEvent(*args, **kwargs)
-        self.updateMaskVisible()
+        self.updateMaskVisibility()
     
     def showEvent(self, a0):
         super().showEvent(a0)
-        self.updateMaskVisible()
+        self.updateMaskVisibility()
     
     def hideEvent(self, *args, **kwargs):
         super().hideEvent(*args, **kwargs)
-        self.updateMaskVisible()
+        self.updateMaskVisibility()
     
     def moveEvent(self, *args, **kwargs):
         super().moveEvent(*args, **kwargs)
@@ -395,9 +422,12 @@ class MaskedDialogue(RoundedDialogue):
         super().resizeEvent(*args, **kwargs)
         self.updateDialoguePosition()
     
-    def updateMaskVisible(self):
+    def updateMaskVisibility(self):
         if hasattr(self, "dialogueMask"):
-            self.dialogueMask.setVisible(self.isVisible())
+            if self.isVisible():
+                self.dialogueMask.fadeIn()
+            else:
+                self.dialogueMask.fadeOut()
     
     def updateDialoguePosition(self):
         if not hasattr(self, "dialogueMask"):
@@ -432,15 +462,11 @@ class RoundedMenu(QMenu):
             border-radius: {self.BORDER_RADIUS}px;
             margin-bottom: 3px;
             margin-right: 3px;
+            min-height: 32px;
         }}
-        {name}::item{{
-            background: rgba({str(getBackgroundColour(is_tuple=True)).strip('()')}, 0.6);
-            color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, 0.6);
-            border-radius: 16px;
-            border: 1px solid rgba({str(getBorderColour(is_tuple=True)).strip('()')}, 0.6);
-            padding: 4px 2px;
-            margin: 3px;
-            height: 30px;
+        {name}::item {{
+            border: 1px solid transparent;
+            border-radius: 10px;
         }}
         {name}::item:selected{{
             background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});
@@ -453,9 +479,11 @@ class RoundedMenu(QMenu):
             background: rgb({str(getBackgroundColour(is_highlight=True, is_tuple=True)).strip('()')});
         }}
         {name}::item:disabled{{
-            background: rgba({str(getBackgroundColour(is_tuple=True)).strip('()')}, 0.3);
             color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, 0.3);
-            border: 1px solid rgba({str(getBorderColour(is_tuple=True)).strip('()')}, 0.3);
+        }}
+        {name}::separator{{
+            height: 1px;
+            background: rgb({str(getBorderColour(is_tuple=True)).strip('()')});
         }}
         """)
     

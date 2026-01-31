@@ -11,7 +11,7 @@ from ..ThemeController import *
 from .Widget import Widget
 
 
-class LineEdit(QLineEdit, Widget):
+class LineEditBase(QLineEdit, Widget):
     @overload
     def __init__(self, parent=None):
         ...
@@ -51,8 +51,6 @@ class LineEdit(QLineEdit, Widget):
             completer.popup().setItemDelegate(ItemDelegate(completerMenu))
     
     def paintEvent(self, a0):
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         if self.findChild(CloseButton) and self.findChild(QToolButton):
             old_button = self.findChild(QToolButton)
             new_button = self.findChild(CloseButton)
@@ -65,6 +63,39 @@ class LineEdit(QLineEdit, Widget):
                 self.setCursor(Qt.CursorShape.ArrowCursor)
             else:
                 self.setCursor(Qt.CursorShape.IBeamCursor)
+        
+        self.setStyleSheet(
+            f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))}); background: transparent; selection-color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))}); selection-background-color: rgb{getBorderColour(is_highlight=True, is_tuple=True)}; border: none; padding: 5px;")
+        # op = QStyleOptionFrame()
+        # op.initFrom(self)
+        # self.initStyleOption(op)
+        super().paintEvent(a0)
+    
+    def contextMenuEvent(self, e):
+        super().contextMenuEvent(e)
+        menus = self.findChildren(QMenu)
+        if menus:
+            menu = menus[-1]
+            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
+            RoundedMenu.updateQSS(menu)
+            menu.popup(QCursor.pos())
+
+
+class LineEdit(LineEditBase):
+    @overload
+    def __init__(self, parent=None):
+        ...
+    
+    @overload
+    def __init__(self, contents, parent=None):
+        ...
+    
+    def __init__(self, *__args):
+        super().__init__(*__args)
+    
+    def paintEvent(self, a0):
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
@@ -83,18 +114,4 @@ class LineEdit(QLineEdit, Widget):
             painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
             painter.restore()
         
-        self.setStyleSheet(
-            f"color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))}); background: transparent; selection-color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {self.property('baseOpacity') + (self.property('frameOpacity') * (1.0 - self.property('baseOpacity')))}); selection-background-color: rgb{getBorderColour(is_highlight=True, is_tuple=True)}; border: none; padding: 5px;")
-        op = QStyleOptionFrame()
-        op.initFrom(self)
-        self.initStyleOption(op)
         super().paintEvent(a0)
-    
-    def contextMenuEvent(self, e):
-        super().contextMenuEvent(e)
-        menus = self.findChildren(QMenu)
-        if menus:
-            menu = menus[-1]
-            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
-            RoundedMenu.updateQSS(menu)
-            menu.popup(QCursor.pos())

@@ -4,7 +4,7 @@
 <context>
     <name>AboutPage</name>
     <message>
-        <location filename="main.py" line="3518"/>
+        <location filename="main.py" line="3651"/>
         <source>AboutPage.CMCLVersionLabel.Text</source>
         <translatorcomment>保留 {}</translatorcomment>
         <translation>Common Minecraft Launcher
@@ -15,22 +15,22 @@
 <context>
     <name>DownloadMods</name>
     <message>
-        <location filename="main.py" line="2052"/>
+        <location filename="main.py" line="2178"/>
         <source>DownloadPage.DownloadMods.FilterPanel.Title</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="main.py" line="2054"/>
+        <location filename="main.py" line="2180"/>
         <source>DownloadPage.DownloadMods.SearchLineEdit.Placeholder</source>
         <translation>搜索模组名称</translation>
     </message>
     <message>
-        <location filename="main.py" line="2056"/>
+        <location filename="main.py" line="2182"/>
         <source>DownloadPage.DownloadMods.Actions.PrevPage</source>
         <translation>上一页</translation>
     </message>
     <message>
-        <location filename="main.py" line="2057"/>
+        <location filename="main.py" line="2183"/>
         <source>DownloadPage.DownloadMods.Actions.NextPage</source>
         <translation>下一页</translation>
     </message>
@@ -38,71 +38,82 @@
 <context>
     <name>DownloadOptions</name>
     <message>
-        <location filename="main.py" line="1347"/>
-        <location filename="main.py" line="1352"/>
+        <location filename="main.py" line="1429"/>
+        <location filename="main.py" line="1436"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title</source>
         <translation>版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="1349"/>
-        <location filename="main.py" line="1362"/>
+        <location filename="main.py" line="1431"/>
+        <location filename="main.py" line="1446"/>
+        <source>DownloadPage.DownloadVanilla.DownloadOptions.GroupBox4.Title</source>
+        <translation>模组加载器</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="1433"/>
+        <location filename="main.py" line="1456"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title</source>
         <translation>下载设置</translation>
     </message>
     <message>
-        <location filename="main.py" line="1351"/>
-        <location filename="main.py" line="1376"/>
+        <location filename="main.py" line="1435"/>
+        <location filename="main.py" line="1471"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.GroupBox3.Title</source>
         <translation>其他链接</translation>
     </message>
     <message>
-        <location filename="main.py" line="1354"/>
+        <location filename="main.py" line="1438"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.1.Label.Text</source>
         <translation>下载版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="1356"/>
+        <location filename="main.py" line="1440"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.1.PushButton.Text</source>
         <translatorcomment>`{}` 会被替换成具体的版本</translatorcomment>
         <translation>{}（单击重新选择版本）</translation>
     </message>
     <message>
-        <location filename="main.py" line="1359"/>
+        <location filename="main.py" line="1450"/>
+        <location filename="main.py" line="1454"/>
+        <source>DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload</source>
+        <translatorcomment>偏向“能下载但是不要”而不是“不能下载”</translatorcomment>
+        <translation>不下载</translation>
+    </message>
+    <message>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.2.Label.Text</source>
-        <translation>模组加载器</translation>
+        <translation type="vanished">模组加载器</translation>
     </message>
     <message>
-        <location filename="main.py" line="1361"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.2.PushButton.Text</source>
-        <translation>点击选择模组加载器</translation>
+        <translation type="vanished">点击选择模组加载器</translation>
     </message>
     <message>
-        <location filename="main.py" line="1364"/>
+        <location filename="main.py" line="1458"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.3.Label.Text</source>
         <translation>下载路径</translation>
     </message>
     <message>
-        <location filename="main.py" line="1374"/>
+        <location filename="main.py" line="1468"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Form.4.Label.Text</source>
         <translation>版本文件夹名</translation>
     </message>
     <message>
-        <location filename="main.py" line="1378"/>
+        <location filename="main.py" line="1473"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.OpenWiki</source>
         <translation>在 Minecraft Wiki 上查看该版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="1380"/>
+        <location filename="main.py" line="1475"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.DownloadClient</source>
         <translation>Minecraft 客户端 .jar 文件下载链接</translation>
     </message>
     <message>
-        <location filename="main.py" line="1382"/>
+        <location filename="main.py" line="1477"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.DownloadServer</source>
         <translation>Minecraft 服务端 .jar 文件下载链接</translation>
     </message>
     <message>
-        <location filename="main.py" line="1383"/>
+        <location filename="main.py" line="1478"/>
         <source>DownloadPage.DownloadVanilla.DownloadOptions.Download</source>
         <translation>下载</translation>
     </message>
@@ -110,17 +121,17 @@
 <context>
     <name>DownloadPage</name>
     <message>
-        <location filename="main.py" line="2346"/>
+        <location filename="main.py" line="2472"/>
         <source>DownloadPage.Pages.1.Name</source>
         <translation>原版游戏</translation>
     </message>
     <message>
-        <location filename="main.py" line="2349"/>
+        <location filename="main.py" line="2475"/>
         <source>DownloadPage.Pages.1.Actions.Reload</source>
         <translation>重新加载</translation>
     </message>
     <message>
-        <location filename="main.py" line="2353"/>
+        <location filename="main.py" line="2479"/>
         <source>DownloadPage.Pages.2.Name</source>
         <translation>模组</translation>
     </message>
@@ -128,48 +139,48 @@
 <context>
     <name>DownloadVanilla</name>
     <message>
-        <location filename="main.py" line="1467"/>
+        <location filename="main.py" line="1588"/>
         <source>DownloadPage.DownloadVanilla.TopSearchPanel.Title</source>
         <translation>搜索版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="1469"/>
+        <location filename="main.py" line="1590"/>
         <source>DownloadPage.DownloadVanilla.SearchInput.Placeholder</source>
         <translation>输入版本、类型、日期</translation>
     </message>
     <message>
-        <location filename="main.py" line="1531"/>
+        <location filename="main.py" line="1652"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Release</source>
         <translation>正式版</translation>
     </message>
     <message>
-        <location filename="main.py" line="1533"/>
+        <location filename="main.py" line="1654"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Snapshot</source>
         <translation>快照</translation>
     </message>
     <message>
-        <location filename="main.py" line="1535"/>
+        <location filename="main.py" line="1656"/>
         <source>DownloadPage.DownloadVanilla.VersionType.OldBeta</source>
         <translatorcomment>In Chinese community, versions earier than 1.0.0 are called &quot;远古版&quot;.</translatorcomment>
         <translation>远古版</translation>
     </message>
     <message>
-        <location filename="main.py" line="1537"/>
+        <location filename="main.py" line="1658"/>
         <source>DownloadPage.DownloadVanilla.VersionType.OldAlpha</source>
         <translation>远古版</translation>
     </message>
     <message>
-        <location filename="main.py" line="1539"/>
+        <location filename="main.py" line="1660"/>
         <source>DownloadPage.DownloadVanilla.VersionType.AprilFool</source>
         <translation>愚人节版</translation>
     </message>
     <message>
-        <location filename="main.py" line="1541"/>
+        <location filename="main.py" line="1662"/>
         <source>DownloadPage.DownloadVanilla.VersionType.Classic</source>
         <translation>远古版</translation>
     </message>
     <message>
-        <location filename="main.py" line="1543"/>
+        <location filename="main.py" line="1664"/>
         <source>DownloadPage.DownloadVanilla.VersionType.PreClassic</source>
         <translation>远古版</translation>
     </message>
@@ -177,57 +188,57 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="main.py" line="923"/>
+        <location filename="main.py" line="921"/>
         <source>HomePage.launchButton.Text</source>
         <translation>启动</translation>
     </message>
     <message>
-        <location filename="main.py" line="925"/>
+        <location filename="main.py" line="923"/>
         <source>HomePage.launchButton.ToolTip.0</source>
         <translation>启动：{}</translation>
     </message>
     <message>
-        <location filename="main.py" line="926"/>
+        <location filename="main.py" line="924"/>
         <source>HomePage.launchButton.ToolTip.1</source>
         <translation>暂未选择版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="928"/>
+        <location filename="main.py" line="926"/>
         <source>HomePage.selectVersionButton.Text</source>
         <translation>选择版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="930"/>
+        <location filename="main.py" line="928"/>
         <source>HomePage.selectVersionButton.ToolTip.0</source>
         <translation>当前版本：{}</translation>
     </message>
     <message>
-        <location filename="main.py" line="932"/>
+        <location filename="main.py" line="930"/>
         <source>HomePage.selectVersionButton.ToolTip.1</source>
         <translation>暂未选择版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="933"/>
+        <location filename="main.py" line="931"/>
         <source>HomePage.reloadButton.Text</source>
         <translation>重新加载版本列表</translation>
     </message>
     <message>
-        <location filename="main.py" line="934"/>
+        <location filename="main.py" line="932"/>
         <source>HomePage.selectNewMinecraftDirButton.Text</source>
         <translation>选择文件夹</translation>
     </message>
     <message>
-        <location filename="main.py" line="936"/>
+        <location filename="main.py" line="934"/>
         <source>HomePage.selectNewMinecraftDirButton.ToolTip</source>
         <translation>当前文件夹：{}</translation>
     </message>
     <message>
-        <location filename="main.py" line="937"/>
+        <location filename="main.py" line="935"/>
         <source>HomePage.versionsManageButton.Text</source>
         <translation>版本管理</translation>
     </message>
     <message>
-        <location filename="main.py" line="938"/>
+        <location filename="main.py" line="936"/>
         <source>HomePage.stopMinecraftProcess.ToolTip</source>
         <translation>强制关闭游戏进程</translation>
     </message>
@@ -235,68 +246,68 @@
 <context>
     <name>LaunchSettings</name>
     <message>
-        <location filename="main.py" line="2601"/>
+        <location filename="main.py" line="2728"/>
         <source>SettingsPage.LaunchSettings.GroupBox_Java.Title</source>
         <translation>启动设置</translation>
     </message>
     <message>
-        <location filename="main.py" line="2602"/>
+        <location filename="main.py" line="2729"/>
         <source>SettingsPage.LaunchSettings.Form.4.Label.Text</source>
         <translation>版本隔离</translation>
     </message>
     <message>
-        <location filename="main.py" line="2605"/>
+        <location filename="main.py" line="2732"/>
         <source>SettingsPage.LaunchSettings.Form.4.ComboBox.Items.1</source>
         <translation>不隔离</translation>
     </message>
     <message>
-        <location filename="main.py" line="2606"/>
+        <location filename="main.py" line="2733"/>
         <source>SettingsPage.LaunchSettings.Form.4.ComboBox.Items.2</source>
         <translation>隔离所有版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="2607"/>
+        <location filename="main.py" line="2734"/>
         <source>SettingsPage.LaunchSettings.Form.4.ComboBox.Items.3</source>
         <translation>隔离模组加载器与其他版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="2608"/>
+        <location filename="main.py" line="2735"/>
         <source>SettingsPage.LaunchSettings.Form.4.ComboBox.Items.4</source>
         <translation>隔离正式版与测试版</translation>
     </message>
     <message>
-        <location filename="main.py" line="2617"/>
+        <location filename="main.py" line="2744"/>
         <source>SettingsPage.LaunchSettings.Form.4.CheckBox.Text</source>
         <translation>共用设置文件</translation>
     </message>
     <message>
-        <location filename="main.py" line="2620"/>
+        <location filename="main.py" line="2747"/>
         <source>SettingsPage.LaunchSettings.Form.4.CheckBox_2.Text</source>
         <translation>共用资源包</translation>
     </message>
     <message>
-        <location filename="main.py" line="2623"/>
+        <location filename="main.py" line="2750"/>
         <source>SettingsPage.LaunchSettings.Form.1.Label.Text</source>
         <translation>Java 路径</translation>
     </message>
     <message>
-        <location filename="main.py" line="2626"/>
-        <location filename="main.py" line="2662"/>
+        <location filename="main.py" line="2753"/>
+        <location filename="main.py" line="2790"/>
         <source>SettingsPage.LaunchSettings.Form.1.ComboBox.AutoSelect</source>
         <translation>自动选择</translation>
     </message>
     <message>
-        <location filename="main.py" line="2631"/>
+        <location filename="main.py" line="2758"/>
         <source>SettingsPage.LaunchSettings.Form.1.PushButton.Text</source>
         <translation>自动选择 Java</translation>
     </message>
     <message>
-        <location filename="main.py" line="2636"/>
+        <location filename="main.py" line="2763"/>
         <source>SettingsPage.LaunchSettings.Form.1.PushButton_2.Text</source>
         <translation>添加 Java</translation>
     </message>
     <message>
-        <location filename="main.py" line="2638"/>
+        <location filename="main.py" line="2765"/>
         <source>SettingsPage.LaunchSettings.Form.1.GroupBox_Advanced.Text</source>
         <translation>高级启动设置</translation>
     </message>
@@ -304,13 +315,13 @@
 <context>
     <name>LauncherSettings</name>
     <message>
-        <location filename="main.py" line="2885"/>
+        <location filename="main.py" line="3020"/>
         <source>SettingsPage.LauncherSettings.GroupBox.Title</source>
         <translation>下载设置</translation>
     </message>
     <message>
-        <location filename="main.py" line="2886"/>
-        <location filename="main.py" line="2902"/>
+        <location filename="main.py" line="3021"/>
+        <location filename="main.py" line="3037"/>
         <source>SettingsPage.LauncherSettings.Form.1.Label.Text</source>
         <translatorcomment>保留原文的 {:2}</translatorcomment>
         <translation>下载线程数：{:2}</translation>
@@ -319,24 +330,24 @@
 <context>
     <name>LoadingAnimation</name>
     <message>
-        <location filename="main.py" line="436"/>
-        <location filename="main.py" line="447"/>
+        <location filename="main.py" line="430"/>
+        <location filename="main.py" line="441"/>
         <source>LoadingAnimation.Actions.Reload.Text</source>
         <translation>重新加载</translation>
     </message>
     <message>
-        <location filename="main.py" line="496"/>
-        <location filename="main.py" line="501"/>
+        <location filename="main.py" line="490"/>
+        <location filename="main.py" line="495"/>
         <source>LoadingAnimation.Status.Loading.Text</source>
         <translation>加载中</translation>
     </message>
     <message>
-        <location filename="main.py" line="526"/>
+        <location filename="main.py" line="520"/>
         <source>LoadingAnimation.Status.LoadingSuccess.Text</source>
         <translation>已加载完成</translation>
     </message>
     <message>
-        <location filename="main.py" line="530"/>
+        <location filename="main.py" line="524"/>
         <source>LoadingAnimation.Status.Failure.Text</source>
         <translation>加载失败，请重试</translation>
     </message>
@@ -344,7 +355,7 @@
 <context>
     <name>LoginWindow</name>
     <message>
-        <location filename="main.py" line="570"/>
+        <location filename="main.py" line="564"/>
         <source>LoginWindow.Title.Text</source>
         <translation>登录</translation>
     </message>
@@ -352,24 +363,24 @@
 <context>
     <name>ModInfoPage</name>
     <message>
-        <location filename="main.py" line="1908"/>
-        <location filename="main.py" line="1910"/>
+        <location filename="main.py" line="2037"/>
+        <location filename="main.py" line="2039"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.ModInfo.Title</source>
         <translation>模组信息</translation>
     </message>
     <message>
-        <location filename="main.py" line="1909"/>
-        <location filename="main.py" line="1911"/>
+        <location filename="main.py" line="2038"/>
+        <location filename="main.py" line="2040"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.ModVersions.Title</source>
         <translation>模组版本</translation>
     </message>
     <message>
-        <location filename="main.py" line="1912"/>
+        <location filename="main.py" line="2041"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.Actions.Issues</source>
         <translation>汇报漏洞</translation>
     </message>
     <message>
-        <location filename="main.py" line="1933"/>
+        <location filename="main.py" line="2062"/>
         <source>DownloadPage.DownloadMods.ModInfoPage.AskDownloadPath.Title</source>
         <translation>选择模组下载路径</translation>
     </message>
@@ -377,17 +388,17 @@
 <context>
     <name>PersonalisationSettings</name>
     <message>
-        <location filename="main.py" line="3094"/>
+        <location filename="main.py" line="3229"/>
         <source>SettingsPage.PersonalisationSettings.GroupBox4.Title</source>
         <translation>语言（Language）</translation>
     </message>
     <message>
-        <location filename="main.py" line="3095"/>
+        <location filename="main.py" line="3230"/>
         <source>SettingsPage.PersonalisationSettings.Form.1.Label.Text</source>
         <translation>界面语言</translation>
     </message>
     <message>
-        <location filename="main.py" line="3097"/>
+        <location filename="main.py" line="3232"/>
         <source>SettingsPage.PersonalisationSettings.GroupBox4.Tip.Text</source>
         <translation>语言翻译未必 100% 准确</translation>
     </message>
@@ -395,18 +406,18 @@
 <context>
     <name>VersionManagementPage</name>
     <message>
-        <location filename="main.py" line="695"/>
+        <location filename="main.py" line="693"/>
         <source>HomePage.VersionManagementPage.addNewDirectoryButton.Text</source>
         <translation>+ 添加文件夹</translation>
     </message>
     <message>
-        <location filename="main.py" line="696"/>
+        <location filename="main.py" line="694"/>
         <source>HomePage.VersionManagementPage.currentDir.Text</source>
         <translatorcomment>`{}` 会被替换成具体的路径</translatorcomment>
         <translation>当前文件夹：{}</translation>
     </message>
     <message>
-        <location filename="main.py" line="702"/>
+        <location filename="main.py" line="700"/>
         <source>HomePage.VersionManagementPage.SelectFolderDialogue.Title</source>
         <translation>选择游戏文件夹</translation>
     </message>

@@ -9,15 +9,15 @@ from pathlib import Path
 
 
 class CacheManager:
-    @dataclass
+    @dataclass(frozen=True)
     class Cache:
         age: int = 0
         start: int = 0
         content: Any = None
         
         @classmethod
-        def fromJSON(cls, json_data: dict):
-            return cls(**json_data)
+        def fromJSON(cls, jsonData: dict):
+            return cls(**jsonData)
         
         def toJSON(self):
             return {"age": self.age, "start": self.start, "content": self.content}
@@ -43,8 +43,10 @@ class CacheManager:
         return cache.content
     
     def setCache(self, key: Hashable, value: Any = None, age: int = 60):
-        cache = self.Cache(age=age, start=int(time.time()), content=value)
-        self.caches[key] = cache
+        if value is None:
+            del self.caches[key]
+            return
+        self.caches[key] = self.Cache(age=age, start=int(time.time()), content=value)
     
     def clearCache(self):
         self.caches.clear()

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import os
+import json
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -19,7 +21,7 @@ def DownloadFabricZip(game, loader, target_path):
     DownloadFabric(game, loader, "/profile/zip", Path(target_path))
 
 
-def DownloadFabricLibraries(json_info):
+def DownloadFabricLibraries(json_info, minecraft_path):
     libraries_file_data = json_info["libraries"]
     for i in range(0, len(libraries_file_data)):
         data = libraries_file_data[i]
@@ -29,23 +31,28 @@ def DownloadFabricLibraries(json_info):
         full_path = path_of_file / file_name
         libraries_dir_path = Path(minecraft_path / "libraries")
         path = Path(libraries_dir_path / full_path)
-        url = data_of_file["url"]
+        url = data["url"]
         full_url = str(full_path).replace(os.sep, "/")
-        url = url.rstrip("/") + full_url
+        url = url.rstrip("/") + "/" + full_url.lstrip("/")
         if not Path(path).exists():
             DownloadLibraryFile(url, path)
 
 
-def DownloadFabricFull(game, loader, minecraft_path):
+def DownloadFabricFull(game, loader, minecraft_path, vanilla_download=True):
     versions_path = Path(minecraft_path) / "versions"
-    DownloadFabricZip(game, loader, versions_path)
-    zip_path = versions_path / f"fabric-loader-{loader}-{game}.zip"
-    zip_file = ZipFile(zip_path)
-    zip_file.extractall(versions_path)
-    zip_file.close()
-    zip_path.unlink(missing_ok=True)
+    if not (versions_path / f"fabric-loader-{loader}-{game}").exists():
+        DownloadFabricZip(game, loader, versions_path)
+        zip_path = versions_path / f"fabric-loader-{loader}-{game}.zip"
+        zip_file = ZipFile(zip_path)
+        zip_file.extractall(versions_path)
+        zip_file.close()
+        zip_path.unlink(missing_ok=True)
     jar_file = versions_path / f"fabric-loader-{loader}-{game}" / f"fabric-loader-{loader}-{game}.jar"
+    if (versions_path / game / f"{game}.jar").exists():
+        jar_file.unlink(missing_ok=True)
+        jar_file.symlink_to(versions_path / game / f"{game}.jar")
     json_file = versions_path / f"fabric-loader-{loader}-{game}" / f"fabric-loader-{loader}-{game}.json"
-    json_info = json.loads(json_info.read_text(encoding="utf-8"))
-    DownloadFabricLibraries(json_info)
-    DownloadMinecraft(minecraft_path, game)
+    json_info = json.loads(Path(json_file).read_text(encoding="utf-8"))
+    DownloadFabricLibraries(json_info, minecraft_path)
+    if vanilla_download:
+        DownloadMinecraft(minecraft_path, game)
