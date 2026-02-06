@@ -77,9 +77,10 @@ def getMetricsDpi(hwnd, horizontal=True):
     hdc = win32gui.GetDC(int(hwnd))
     if not hdc:
         return 96
-    dpiX, dpiY = win32print.GetDeviceCaps(hdc, win32con.LOGPIXELSX), win32print.GetDeviceCaps(hdc,
-                                                                                              win32con.LOGPIXELSY)
+    dpiX, dpiY = (win32print.GetDeviceCaps(hdc, win32con.LOGPIXELSX),
+                  win32print.GetDeviceCaps(hdc, win32con.LOGPIXELSY))
     win32gui.ReleaseDC(int(hwnd), hdc)
+    
     if dpiX and not horizontal:
         return dpiX
     if dpiY and horizontal:

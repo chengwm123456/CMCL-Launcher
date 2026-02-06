@@ -18,7 +18,13 @@ def createSettingsFile():
                     }
                 },
                 "ExtraGameCommand": None,
-                "MemoryAllocation": {},
+                "MemoryAllocation": {
+                    "AutoAllocate": True,
+                    "AllocationConfig": {
+                        "InitialHeapSize": None,
+                        "MaximumHeapSize": None
+                    }
+                },
                 "VersionSeparation": 0,
                 "VersionSeparationConfig": {
                     "ShareVersionOptions": False,

@@ -18,6 +18,7 @@ from . import GetOperationSystem
 from .CMCLGameLaunching.CommandGenerating import GenerateMinecraftLaunchCommand
 from .CMCLDefines import Minecraft
 
+import gc
 
 class QuickPlayMode(Enum):
     SINGLE_PLAYER = "SinglePlayer"
@@ -335,6 +336,7 @@ def LaunchMinecraft(
     #     stdout = subprocess.STDOUT
     # if not stderr:
     #     stderr = subprocess.STDOUT
+    gc.collect()
     game = subprocess.Popen(
         shlex.split(command),
         # stdout=stdout, # These two params are commented out because

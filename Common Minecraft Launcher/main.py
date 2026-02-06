@@ -26,6 +26,7 @@ import logging
 
 from CMCLWidgets import *
 from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtCharts import QChart, QChartView, QPieSeries
 
 from CMCLCore.Launch import LaunchMinecraft, LaunchError
 from CMCLCore.Login import MicrosoftPlayerLogin
@@ -45,6 +46,7 @@ from CMCLModding.GetFabric import GetFabricLoaderVersions, GetFabricApiVersions
 from CMCLModding.GetForge import GetNeoForgeVersions
 from CMCLModding.DownloadMods import DownloadMod
 from CMCLModding.DownloadFabric import DownloadFabricFull
+from CMCLModding.DownloadForge import DownloadNeoForgeFull
 from CMCLModding.ModManagement import GetLoaderType
 
 from CMCLSaveEditing.LevelDat import LoadData
@@ -713,7 +715,7 @@ class HomePage(QFrame):
                     newBtn.setToolTip(dire)
                     newBtn.setAutoExclusive(True)
                     newBtn.setChecked(True)
-                    newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 13):])
+                    newBtn.setText(dire[-min(len(str(Path(dire).resolve())), 15):])
                     newBtn.pressed.connect(lambda d=dire: self.selectDir(str(Path(d).resolve())))
                     newBtn.setCheckable(True)
                     self.verticalLayout.insertWidget(
@@ -745,7 +747,7 @@ class HomePage(QFrame):
                     versionConfig = Path(version[1] / "version.cfg")
                     versionName = version[0]
                     if versionConfig.exists():
-                        cfg = json.loads(Path(versionConfig).read_text(encoding="utf-8"))
+                        cfg = yaml.safe_load(Path(versionConfig).read_text(encoding="utf-8"))
                         versionName = cfg["VersionAlias"]
                         self.versionAliasConv[versionName] = version[0]
                     item = QListWidgetItem(versionName, self.listWidget)
@@ -861,7 +863,10 @@ class HomePage(QFrame):
                 minecraft_path, self.version,
                 settings["LaunchSettings"]["Java"]["JavaPath"],
                 CMCLVersion[0], "CMCL",
-                None, None,
+                settings["LaunchSettings"]["MemoryAllocation"]["AllocationConfig"]["InitialHeapSize"] if not
+                settings["LaunchSettings"]["MemoryAllocation"]["AutoAllocate"] else None,
+                settings["LaunchSettings"]["MemoryAllocation"]["AllocationConfig"]["MaxHeapSize"] if not
+                settings["LaunchSettings"]["MemoryAllocation"]["AutoAllocate"] else None,
                 settings["LaunchSettings"]["Java"]["JVM"]["JVMArguments"]["Arguments"],
                 settings["LaunchSettings"]["ExtraGameCommand"],
                 currentPlayer,
@@ -957,7 +962,7 @@ class HomePage(QFrame):
                 versionConfig = Path(version[1] / "version.cfg")
                 versionName = version[0]
                 if versionConfig.exists():
-                    cfg = json.loads(Path(versionConfig).read_text(encoding="utf-8"))
+                    cfg = yaml.safe_load(Path(versionConfig).read_text(encoding="utf-8"))
                     versionName = cfg["VersionAlias"]
                     self.versionAliasConv[versionName] = version[0]
                 item = QListWidgetItem(versionName, listWidget)
@@ -1257,18 +1262,24 @@ class DownloadPage(QFrame):
             
             class DownloadVersionThread(QThread):
                 def __init__(self, parent, minecraft_pth=minecraft_path, version=None,
-                             fabric_loader=None, fabric_api=None):
+                             neoforge_loader=None, fabric_loader=None, fabric_api=None):
                     super().__init__(parent)
                     self.minecraft_path = minecraft_pth
                     self.version = version
+                    self.neoforge_loader = neoforge_loader
                     self.fabric_loader = fabric_loader
                     self.fabric_api = fabric_api
                 
                 def run(self):
                     DownloadMinecraft(self.minecraft_path, self.version, self.version,
-                                      settings["LauncherSettings"]["DownloadSettings"]["DownloadThreadsCount"],
-                                      settings["LauncherSettings"]["DownloadSettings"]["DownloadChunkSize"] * 8 * 1024)
+                                      max_workers=settings["LauncherSettings"]["DownloadSettings"][
+                                          "DownloadThreadsCount"],
+                                      chunk_size=settings["LauncherSettings"]["DownloadSettings"][
+                                                     "DownloadChunkSize"] * 8 * 1024)
                     createVersionConfigFile(self.minecraft_path / "versions" / self.version, self.version, self.version)
+                    if self.neoforge_loader:
+                        DownloadNeoForgeFull(self.version, self.neoforge_loader, self.minecraft_path,
+                                             vanilla_download=False)
                     if self.fabric_loader:
                         DownloadFabricFull(self.version, self.fabric_loader, self.minecraft_path,
                                            vanilla_download=False)
@@ -1448,6 +1459,8 @@ class DownloadPage(QFrame):
                 self.fetchModLoadersThread.fetched.connect(self.displayModLoaders)
                 self.fetchModLoadersThread.start()
                 
+                self.updateModLoadersAvailability()
+                
                 app.registerRetranslateFunction(self.retranslateUI)
                 self.retranslateUI()
             
@@ -1471,14 +1484,9 @@ class DownloadPage(QFrame):
                 #     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.PushButton.Text"))  # 点击选择模组加载器
                 self.groupBox_4.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox4.Title"))
                 self.form_5_Label.setText("NeoForge")
-                self.form_5_ComboBox.setItemText(0, self.tr(
-                    "DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload"))
                 self.form_6_Label.setText("Fabric")
-                self.form_6_ComboBox.setItemText(0, self.tr(
-                    "DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload"))  # 不下载
                 self.form_7_Label.setText("Fabric API")
-                self.form_7_ComboBox.setItemText(0, self.tr(
-                    "DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload"))
+                self.updateModLoadersAvailability()
                 self.groupBox_2.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title"))
                 self.form_3_Label.setText(
                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.3.Label.Text"))  # 下载路径
@@ -1525,13 +1533,14 @@ jar 下载位置在：
                     self.window(),
                     Path(self.form_3_LineEdit.text() or minecraft_path),
                     self.version,
+                    self.form_5_ComboBox.currentData(),
                     self.form_6_ComboBox.currentData(),
                     self.form_7_ComboBox.currentData()
                 )
                 thread.start()
             
             def displayModLoaders(self, loaders):
-                for version in loaders["NeoForge"]["versions"]:
+                for version in reversed(loaders["NeoForge"]["versions"]):
                     display_version = version
                     display_version = "NeoForge " + display_version
                     self.form_5_ComboBox.addItem(display_version, version)
@@ -1551,13 +1560,27 @@ jar 下载位置在：
                 if self.form_5_ComboBox.currentIndex() > 0:
                     self.form_6_ComboBox.setDisabled(True)
                     self.form_7_ComboBox.setDisabled(True)
+                    self.form_6_ComboBox.setCurrentIndex(0)
+                    self.form_7_ComboBox.setCurrentIndex(0)
+                    self.form_6_ComboBox.setItemText(0, "与 NeoForge 不兼容")
+                    self.form_7_ComboBox.setItemText(0, "与 NeoForge 不兼容")
                 else:
                     self.form_6_ComboBox.setEnabled(True)
+                    self.form_6_ComboBox.setItemText(0, self.tr(
+                        "DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload"))
                     if self.form_6_ComboBox.currentIndex() > 0:
                         self.form_5_ComboBox.setDisabled(True)
+                        self.form_5_ComboBox.setCurrentIndex(0)
+                        self.form_5_ComboBox.setItemText(0, "与 Fabric 不兼容")
                         self.form_7_ComboBox.setEnabled(True)
+                        self.form_7_ComboBox.setItemText(0, self.tr(
+                            "DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload"))
                     else:
                         self.form_5_ComboBox.setEnabled(True)
+                        self.form_5_ComboBox.setItemText(0, self.tr(
+                            "DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload"))
+                        self.form_7_ComboBox.setCurrentIndex(0)
+                        self.form_7_ComboBox.setItemText(0, "请先选择一个 Fabric 版本")
                         self.form_7_ComboBox.setDisabled(True)
             
             def openWiki(self):
@@ -2787,10 +2810,13 @@ class SettingsPage(QFrame):
             self.horizontalLayout = QHBoxLayout()
             
             self.radioButton = RadioButton(self.groupBox_Allocation)
-            self.radioButton.setChecked(True)
+            self.radioButton.setChecked(settings["LaunchSettings"]["MemoryAllocation"]["AutoAllocate"])
+            self.radioButton.toggled.connect(lambda state: self.updateAllocationMode(True))
             self.horizontalLayout.addWidget(self.radioButton)
             
             self.radioButton_2 = RadioButton(self.groupBox_Allocation)
+            self.radioButton_2.setChecked(not settings["LaunchSettings"]["MemoryAllocation"]["AutoAllocate"])
+            self.radioButton_2.toggled.connect(lambda state: self.updateAllocationMode(False))
             self.horizontalLayout.addWidget(self.radioButton_2)
             
             self.verticalLayout_2.addLayout(self.horizontalLayout)
@@ -2804,9 +2830,45 @@ class SettingsPage(QFrame):
             self.form_3.setLayout(0, QFormLayout.ItemRole.FieldRole, self.form_6_HorizontalLayout)
             
             self.form_6_Slider = Slider(Qt.Orientation.Horizontal, self.groupBox_Allocation)
+            self.form_6_Slider.setEnabled(self.radioButton_2.isChecked())
+            self.form_6_Slider.valueChanged.connect(self.updateInitialMemory)
             self.form_6_HorizontalLayout.addWidget(self.form_6_Slider)
             
+            self.form_6_ValueLabel = Label(self.groupBox_Allocation)
+            self.form_6_HorizontalLayout.addWidget(self.form_6_ValueLabel)
+            
+            self.form_7_Label = Label(self.groupBox_Allocation)
+            self.form_3.setWidget(1, QFormLayout.ItemRole.LabelRole, self.form_7_Label)
+            
+            self.form_7_HorizontalLayout = QHBoxLayout()
+            self.form_3.setLayout(1, QFormLayout.ItemRole.FieldRole, self.form_7_HorizontalLayout)
+            
+            self.form_7_Slider = Slider(Qt.Orientation.Horizontal, self.groupBox_Allocation)
+            self.form_7_Slider.setEnabled(self.radioButton_2.isChecked())
+            self.form_7_Slider.valueChanged.connect(self.updateMaxMemory)
+            self.form_7_HorizontalLayout.addWidget(self.form_7_Slider)
+            
+            self.form_7_ValueLabel = Label(self.groupBox_Allocation)
+            self.form_7_HorizontalLayout.addWidget(self.form_7_ValueLabel)
+            
+            self.updateInitialMemory(self.form_6_Slider.value())
+            self.updateMaxMemory(self.form_7_Slider.value())
+            
             self.verticalLayout_2.addLayout(self.form_3)
+            
+            self.series = QPieSeries()
+            self.series.setHoleSize(0.35)
+            
+            self.chart = QChart()
+            self.chart.addSeries(self.series)
+            self.chart.legend().hide()
+            
+            self.chart_view = QChartView(self.chart)
+            self.chart_view.setRenderHints(self.chart_view.renderHints())
+            
+            self.chart_view.setFixedHeight(300)
+            
+            self.verticalLayout_2.addWidget(self.chart_view)
             
             self.groupBox_Advanced = GroupBox(self.scrollAreaWidgetContents)
             self.groupBox_Advanced.setCheckable(True)
@@ -2844,6 +2906,11 @@ class SettingsPage(QFrame):
             self.getJavaThread = None
             self.javaList = None
             self.updateJavaPathComboBox()
+            
+            timer = QTimer(self)
+            timer.timeout.connect(self.updateMemDisplay)
+            timer.start(1000)
+            self.updateMemDisplay()
             
             app.registerRetranslateFunction(self.retranslateUI)
             self.retranslateUI()
@@ -2902,7 +2969,8 @@ class SettingsPage(QFrame):
             self.groupBox_Allocation.setTitle("内存分配")
             self.radioButton.setText("自动分配")
             self.radioButton_2.setText("手动分配")
-            self.form_6_Label.setText("自定义内存")
+            self.form_6_Label.setText("初始内存")
+            self.form_7_Label.setText("最大内存")
             self.groupBox_Advanced.setTitle(
                 self.tr("SettingsPage.LaunchSettings.Form.1.GroupBox_Advanced.Text"))  # 高级启动设置
             self.form_2_Label.setText("JVM 启动参数头")
@@ -2923,6 +2991,7 @@ JVM 参数就是：
 “-fullscreen”
 自动去除前后空格，设置错误不影响启动（但是影响游玩）
 同时，这是全局设置，请注意版本兼容性。""")
+            self.updateChart()
         
         def updateJavaPathComboBox(self, state=True):
             if self.form_1_PushButton.isChecked():
@@ -2979,7 +3048,6 @@ JVM 参数就是：
         def updateJavaPath(self, text):
             if not self.form_1_PushButton.isChecked():
                 settings["LaunchSettings"]["Java"]["AutoSelect"] = False
-                print(text, self.form_1_ComboBox.currentIndex(), self.form_1_ComboBox.currentData())
                 settings["LaunchSettings"]["Java"]["JavaPath"] = str(
                     self.form_1_ComboBox.currentData() or "")
             else:
@@ -3043,6 +3111,96 @@ JVM 参数就是：
         
         def updateSharingResourcePacksState(self, state):
             settings["LaunchSettings"]["VersionSeparationConfig"]["ShareVersionResourcePacks"] = state
+        
+        def updateMemDisplay(self):
+            self.updateChart()
+            memory = psutil.virtual_memory()
+            available = memory.available
+            
+            self.form_6_Slider.setMaximum(available // 1024 // 1024)
+            self.form_7_Slider.setMaximum(available // 1024 // 1024)
+            
+            if self.radioButton.isChecked():
+                max_memory = int(4294967296 * (psutil.virtual_memory().free / 4294967296))
+                max_memory = min(max_memory, available)
+                ani = QPropertyAnimation(self.form_6_Slider, b"value", self)
+                ani.setStartValue(self.form_6_Slider.value())
+                ani.setEndValue(max_memory // 1024 // 1024)
+                ani.setDuration(1000)
+                ani.setEasingCurve(QEasingCurve.Type.InOutQuad)
+                ani.start()
+                ani = QPropertyAnimation(self.form_7_Slider, b"value", self)
+                ani.setStartValue(self.form_7_Slider.value())
+                ani.setEndValue(max_memory // 1024 // 1024)
+                ani.setDuration(1000)
+                ani.setEasingCurve(QEasingCurve.Type.InOutQuad)
+                ani.start()
+        
+        def updateChart(self):
+            memory = psutil.virtual_memory()
+            total = memory.total / (1024 ** 3)  # GB
+            available = memory.available / (1024 ** 3)
+            used = memory.used / (1024 ** 3)
+            percent = memory.percent
+            
+            max_memory = self.form_7_Slider.value() / 1024
+            max_memory = min(max_memory, available)
+            available_percent = (available - max_memory) / total
+            
+            self.chart.setTheme(
+                QChart.ChartTheme.ChartThemeDark if getTheme() == Theme.Dark else QChart.ChartTheme.ChartThemeLight)
+            self.chart.setBackgroundBrush(QBrush(QColor(0, 0, 0, 0)))
+            
+            self.series.clear()
+            
+            used_slice = self.series.append(f"已使用 {used:.2f}GB ({percent:.1f}%)", used)
+            allocable_slice = self.series.append(f"游戏分配 {max_memory:.2f}GB ({max_memory / total * 100:.1f}%)",
+                                                 max_memory)
+            if available_percent > 0:
+                available_slice = self.series.append(f"可用 {available - max_memory:.2f}GB ({available_percent:.1f}%)",
+                                                     available - max_memory)
+            used_slice.setLabelVisible(True)
+            allocable_slice.setLabelVisible(True)
+            if available_percent > 0.01:
+                available_slice.setLabelVisible(True)
+            
+            used_slice.setColor(QColor(255, 99, 132))
+            allocable_slice.setColor(QColor(132, 164, 235))
+            if available_percent > 0:
+                available_slice.setColor(QColor(75, 192, 192))
+            
+            allocable_slice.setExploded(True)
+        
+        def updateAllocationMode(self, mode):
+            settings["LaunchSettings"]["MemoryAllocation"]["AutoAllocate"] = mode
+            if not mode:
+                self.form_6_Slider.setEnabled(True)
+                self.form_7_Slider.setEnabled(True)
+            else:
+                self.form_6_Slider.setEnabled(False)
+                self.form_7_Slider.setEnabled(False)
+        
+        def updateInitialMemory(self, value):
+            if value > self.form_7_Slider.value():
+                value = self.form_7_Slider.value()
+                self.form_6_Slider.setValue(value)
+            if settings["LaunchSettings"]["MemoryAllocation"]["AutoAllocate"]:
+                settings["LaunchSettings"]["MemoryAllocation"]["AllocationConfig"]["InitialHeapSize"] = None
+            else:
+                settings["LaunchSettings"]["MemoryAllocation"]["AllocationConfig"][
+                    "InitialHeapSize"] = value * 1024 * 1024
+            self.form_6_ValueLabel.setText(f"{value}MB")
+        
+        def updateMaxMemory(self, value):
+            if self.form_6_Slider.value() > self.form_7_Slider.value():
+                self.form_6_Slider.setValue(self.form_7_Slider.value())
+            if settings["LaunchSettings"]["MemoryAllocation"]["AutoAllocate"]:
+                settings["LaunchSettings"]["MemoryAllocation"]["AllocationConfig"][
+                    "MaximumHeapSize"] = value * 1024 * 1024
+            else:
+                settings["LaunchSettings"]["MemoryAllocation"]["AllocationConfig"][
+                    "MaximumHeapSize"] = value * 1024 * 1024
+            self.form_7_ValueLabel.setText(f"{value}MB")
         
         def setJVMArguments(self):
             settings["LaunchSettings"]["Java"]["JVM"]["JVMArguments"]["Arguments"] = self.form_2_TextEdit.toPlainText()
@@ -4438,14 +4596,25 @@ class UpdateLogDialogue(MaskedDialogue):
         self.retranslateUI()
     
     def retranslateUI(self):
-        self.label.setText(f'''<!DOCTYPE html><html><head/><body>{markdown2.markdown("""<h1 align="center">Common Minecraft Launcher</h1>
+        self.label.setText(
+            f'''<!DOCTYPE html><html><head><style>code {{ font-family: \"Consolas\" }}</style></head><body>{markdown2.markdown("""<h1 align="center">Common Minecraft Launcher</h1>
 <h2 align="center">Version AlphaDev-26001</h2>
 这是 2026 年的第一个版本！
 
 ### 添加
 - 下载模组加载器功能；
+  - 可以展示 Neoforge、Fabric 及 Fabric API 所有版本；
   - 全自动，无人工操作部分；
-  - 自动下载 Fabric API。
+  - 自动下载 Fabric API；
+- 支持隔离模组加载器和其他版本；
+- 添加“启动器可见性”设置；
+- 其他内容。
+
+#### 底层代码
+- 引入 Cache（缓存），目前还未推广使用；
+- 启动命令生成：
+  - 现在对于模板填充使用了新的方法；
+  - 启动逻辑优化。
 
 ### 修改
 - 更新版权标识；
@@ -4454,6 +4623,7 @@ class UpdateLogDialogue(MaskedDialogue):
 
 ### 修复
 - 无法启动游戏 `.json` 文件带有 `inheritsFrom` 键的游戏实例。
+- 修复启动器启动时处理版本隔离代码的一处笔误（`parents` 错拼成 `parent` 造成无法启动）
 
 ### 启动器仓库
 [CMCL-Launcher](https://www.github.com/chengwm123456/CMCL-Launcher)
@@ -4642,7 +4812,12 @@ class MainLauncherWindow(MainWindow):
             setTheme(Theme.Light, True)
             settings["LauncherSettings"]["Personalisation"]["CurrentTheme"] = "Light"
         for window in QGuiApplication.allWindows():
-            window.requestUpdate()
+            if isinstance(window, QWidget):
+                window.update()
+                for child in window.findChildren(QWidget):
+                    child.update()
+            else:
+                window.requestUpdate()
     
     def toggleThemeFunction(self):
         self.toggleGlobalTheme()
@@ -4928,7 +5103,6 @@ with Path("latest.log").open("w", encoding="utf-8") as out:
         cProfile.run("init()", "initAnalysis.log")
         window.show()
         if hasattr(window, "updateDialogue"):
-            window.update()
             window.updateDialogue.show()
         outUpd = QTimer(window)
         outUpd.timeout.connect(lambda: (out.flush(), saveSettingsMain(settings)))

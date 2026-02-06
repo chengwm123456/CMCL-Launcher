@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from ctypes import *
-from ctypes.wintypes import *
+import ctypes
+from ctypes import wintypes
 from enum import IntEnum
 
 
@@ -16,7 +16,7 @@ class WINDOWPOS(ctypes.Structure):
     ]
 
 
-PWINDOWPOS = POINTER(WINDOWPOS)
+PWINDOWPOS = ctypes.POINTER(WINDOWPOS)
 
 
 class NCCALCSIZE_PARAMS(ctypes.Structure):
@@ -26,7 +26,7 @@ class NCCALCSIZE_PARAMS(ctypes.Structure):
     ]
 
 
-LPNCCALCSIZE_PARAMS = POINTER(NCCALCSIZE_PARAMS)
+LPNCCALCSIZE_PARAMS = ctypes.POINTER(NCCALCSIZE_PARAMS)
 
 
 class MARGINS(ctypes.Structure):
@@ -64,3 +64,10 @@ class DWMWINDOWATTRIBUTE(IntEnum):
     DWMWA_VISIBLE_FRAME_BORDER_THICKNESS = 37
     DWMWA_SYSTEMBACKDROP_TYPE = 38
     DWMWA_LAST = 39
+
+
+class DWMNCRENDERINGPOLICY(IntEnum):
+    DWMNCRP_USEWINDOWSTYLE = 0
+    DWMNCRP_DISABLED = 1
+    DWMNCRP_ENABLED = 2
+    DWMNCRP_LAS = 3

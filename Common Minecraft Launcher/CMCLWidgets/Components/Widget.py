@@ -11,7 +11,7 @@ class Widget(QWidget):
         super().__init__(*__args)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        self.setAttribute(Qt.WidgetAttribute.WA_StaticContents)
+        self.setUpdatesEnabled(True)
         self.installEventFilter(self)
         self.installEventFilter(ToolTip(self))
         
@@ -30,12 +30,13 @@ class Widget(QWidget):
         self.setProperty("widgetAttributes", widgetAttributes)
     
     def eventFilter(self, a0, a1):
-        if not (a0.property("baseOpacity") or a0.property("frameOpacity")):
+        if not (a0.property("widgetOpacity") or a0.property("baseOpacity") or a0.property("frameOpacity")):
+            a0.setProperty("widgetOpacity", 0.6 if a0.isEnabled() else 0.3)
             a0.setProperty("baseOpacity", 0.6 if a0.isEnabled() else 0.3)
             a0.setProperty("frameOpacity", 0.0)
         a0.setProperty("frameRectAdjustment", 0)
         match a1.type():
-            case QEvent.Type.MouseButtonPress | QEvent.Type.MouseMove:
+            case QEvent.Type.MouseButtonPress | QEvent.Type.MouseButtonRelease | QEvent.Type.MouseMove:
                 a0.setAttribute(Qt.WidgetAttribute.WA_UnderMouse)
             case QEvent.Type.Enter:
                 if a0.isEnabled():

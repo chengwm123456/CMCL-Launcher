@@ -102,9 +102,9 @@ def DownloadAssetObjectFile(path: Union[str, Path, PurePath, os.PathLike, Litera
 
 def DownloadAssetsObjectFiles(minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString],
                               asset_id: Union[str, int],
-                              max_workers: int = 8):
+                              **options):
     futures = []
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=options.get("max_workers", 8)) as executor:
         for i in json.loads(Path(minecraft_path / "assets" / "indexes" / f"{str(asset_id)}.json").read_text(
                 encoding="utf-8"))["objects"].values():
             futures.append(executor.submit(
@@ -118,7 +118,7 @@ def DownloadAssetsObjectFiles(minecraft_path: Union[str, Path, PurePath, os.Path
 
 def DownloadLibraryFiles(version: Union[str, None] = None,
                          minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = ".",
-                         max_workers: int = 8):
+                         **options):
     if not version:
         return
     minecraft_path = Path(minecraft_path)
@@ -134,7 +134,7 @@ def DownloadLibraryFiles(version: Union[str, None] = None,
     libraries_file_data = libraries_file_data["libraries"]
     
     futures = []
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=options.get("max_workers", 8)) as executor:
         for i in range(0, len(libraries_file_data)):
             if libraries_file_data[i].get("rules", None) is not None:
                 try:
@@ -165,8 +165,7 @@ def DownloadMinecraft(
         minecraft_path: Union[str, Path, PurePath, os.PathLike, LiteralString] = ".",
         version: Optional[Union[str]] = None,
         version_path: Optional[Union[str]] = None,
-        max_workers: int = 8,
-        chunk_size: int = 1024 * 1024 * 8
+        **options
 ):
     if not version:
         return
@@ -179,12 +178,14 @@ def DownloadMinecraft(
     if not Path(minecraft_path / "versions" / version_path / f"{version_path}.jar").exists():
         client_url = GetMinecraftClientDownloadUrl(version=version)
         downloader = Downloader(client_url, f"{version_path}.jar", Path(minecraft_path / "versions" / version_path),
-                                maximum_threads=max_workers, chunk_size=chunk_size)
+                                maximum_threads=options.get("max_workers", 8),
+                                chunk_size=options.get("chunk_size", 1024 * 1024 * 8))
         downloader.downloadFile()
-    DownloadLibraryFiles(minecraft_path=minecraft_path, version=version, max_workers=max_workers)
+    DownloadLibraryFiles(minecraft_path=minecraft_path, version=version, max_workers=options.get("max_workers", 8))
     DownloadAssetIndexFile(minecraft_path=minecraft_path,
                            json_path=Path(minecraft_path / "versions" / version_path / f"{version_path}.json"))
     asset_id = json.loads(
         Path(minecraft_path / "versions" / version_path / f"{version_path}.json").read_text(encoding="utf-8"))[
         "assetIndex"]["id"]
-    DownloadAssetsObjectFiles(minecraft_path=minecraft_path, asset_id=asset_id, max_workers=max_workers)
+    DownloadAssetsObjectFiles(minecraft_path=minecraft_path, asset_id=asset_id,
+                              max_workers=options.get("max_workers", 8))

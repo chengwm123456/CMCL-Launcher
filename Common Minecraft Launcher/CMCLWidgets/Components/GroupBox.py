@@ -25,15 +25,32 @@ class GroupBox(QGroupBox, Widget):
         else:
             self.setStyle(QStyleFactory.create("Windows"))
         if self.title() or self.isCheckable():
-            self.setStyleSheet("GroupBox { padding: 21px 5px 5px 5px; }")
+            self.setContentsMargins(5, 21, 5, 5)
         else:
-            self.setStyleSheet("GroupBox { padding: 5px 5px 5px 5px; }")
+            self.setContentsMargins(5, 5, 5, 5)
+        self.updateGeometry()
+    
+    def setTitle(self, title):
+        super().setTitle(title)
+        if self.title() or self.isCheckable():
+            self.setContentsMargins(5, 21, 5, 5)
+        else:
+            self.setContentsMargins(5, 5, 5, 5)
+        self.updateGeometry()
+    
+    def setCheckable(self, checkable):
+        super().setCheckable(checkable)
+        if self.title() or self.isCheckable():
+            self.setContentsMargins(5, 21, 5, 5)
+        else:
+            self.setContentsMargins(5, 5, 5, 5)
+        self.updateGeometry()
     
     def paintEvent(self, a0):
         if self.title() or self.isCheckable():
-            self.setStyleSheet("GroupBox { padding: 21px 5px 5px 5px; }")
+            self.setContentsMargins(5, 21, 5, 5)
         else:
-            self.setStyleSheet("GroupBox { padding: 5px 5px 5px 5px; }")
+            self.setContentsMargins(5, 5, 5, 5)
         
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)

@@ -9,16 +9,17 @@ from CMCLCore.CMCLDefines.Downloader import Downloader
 from CMCLCore.CMCLGameDownloading import DownloadMinecraft, DownloadLibraryFile
 
 
-def DownloadFabric(game, loader, path, target_path):
+def DownloadFabric(game, loader, path, target_path, **options):
     target_path = Path(target_path)
     base_url = GetDownloadUrlBase(game, loader)
     base_url += "/" + path.strip("/")
-    downloader = Downloader(base_url, "", target_path)
+    downloader = Downloader(base_url, "", target_path, options.get("max_workers", 8),
+                            options.get("chunk_size", 1024 * 1024 * 8))
     downloader.downloadFile()
 
 
-def DownloadFabricZip(game, loader, target_path):
-    DownloadFabric(game, loader, "/profile/zip", Path(target_path))
+def DownloadFabricZip(game, loader, target_path, **options):
+    DownloadFabric(game, loader, "/profile/zip", Path(target_path), **options)
 
 
 def DownloadFabricLibraries(json_info, minecraft_path):
@@ -38,10 +39,11 @@ def DownloadFabricLibraries(json_info, minecraft_path):
             DownloadLibraryFile(url, path)
 
 
-def DownloadFabricFull(game, loader, minecraft_path, vanilla_download=True):
+def DownloadFabricFull(game, loader, minecraft_path, vanilla_download=True, **options):
     versions_path = Path(minecraft_path) / "versions"
+    (Path(minecraft_path) / "versions" / f"fabric-loader-{loader}-{game}").mkdir(parents=True, exist_ok=True)
     if not (versions_path / f"fabric-loader-{loader}-{game}").exists():
-        DownloadFabricZip(game, loader, versions_path)
+        DownloadFabricZip(game, loader, versions_path, **options)
         zip_path = versions_path / f"fabric-loader-{loader}-{game}.zip"
         zip_file = ZipFile(zip_path)
         zip_file.extractall(versions_path)
@@ -55,4 +57,4 @@ def DownloadFabricFull(game, loader, minecraft_path, vanilla_download=True):
     json_info = json.loads(Path(json_file).read_text(encoding="utf-8"))
     DownloadFabricLibraries(json_info, minecraft_path)
     if vanilla_download:
-        DownloadMinecraft(minecraft_path, game)
+        DownloadMinecraft(minecraft_path, game, **options)

@@ -12,6 +12,8 @@ import gzip
 import zlib
 import zstandard as zstd
 
+import gc
+
 
 class Downloader:
     @dataclass(frozen=True)
@@ -122,6 +124,8 @@ class Downloader:
             for chunkData in downloadedChunks:
                 file.seek(chunkData.chunkRange.startRange)
                 file.write(self.decompress(chunkData.responseContent, chunkData.contentEncoding))
+        
+        gc.collect()
     
     def __downloadChunk(
             self,
@@ -135,7 +139,10 @@ class Downloader:
                 }
         ) as response:
             response.raise_for_status()
-            content = response.content
+            if range.endRange - range.startRange <= 1024 * 8:
+                content = response.content
+            else:
+                content = response.iter_content(chunk_size=self.__chunkSize)
             return self.DownloadedChunk(
                 chunkRange=range,
                 contentEncoding=response.headers.get("Content-Encoding"),

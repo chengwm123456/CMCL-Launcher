@@ -1,6 +1,7 @@
 .fleet
 .idea
 .venv
+.vscode
 config
 __pycache__
 CMCL-zh-cn.qm

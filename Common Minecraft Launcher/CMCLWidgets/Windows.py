@@ -268,6 +268,8 @@ class Window(FramelessWindow):
                 if self.titleBar.childAt(self.mapFromGlobal(pos)) is self.titleBar.maximiseButton:
                     self.titleBar.maximiseButton.setAttribute(Qt.WidgetAttribute.WA_UnderMouse)
                     return True, win32con.HTMAXBUTTON
+                else:
+                    self.titleBar.maximiseButton.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, False)
         
         return super().nativeEvent(eventType, message)
 
@@ -337,6 +339,7 @@ class DialogueMask(QWidget):
         ani.setEndValue(1.0)
         ani.setDuration(500)
         ani.setEasingCurve(QEasingCurve.Type.OutQuad)
+        ani.valueChanged.connect(lambda: self.parent().update())
         ani.start()
         self.show()
         self._a = 1
@@ -391,7 +394,7 @@ class RoundedDialogue(QDialog, Window):
 
 class MaskedDialogue(RoundedDialogue):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__()
         self.dialogueMask = DialogueMask(parent)
         
         pos = self.parent().mapToGlobal(QPoint(0, 0)) if self.parent() else QPoint(0, 0)

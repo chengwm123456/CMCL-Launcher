@@ -8,7 +8,7 @@ from ..ThemeController import *
 from .Widget import Widget
 
 
-class Panel(QFrame, Widget):
+class Panel(Widget):
     @overload
     def __init__(self, parent=None):
         ...

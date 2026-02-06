@@ -34,7 +34,7 @@ def initThemeColours():
     colourManager.setColour(ColourRole.Background, True, False, Theme.Light, Colour(163, 213, 255))
     colourManager.setColour(ColourRole.Background, True, False, Theme.Dark, Colour(80, 146, 255))
     colourManager.setColour(ColourRole.Border, False, False, Theme.Light, Colour(215, 237, 255))
-    colourManager.setColour(ColourRole.Border, False, False, Theme.Dark, Colour(85, 93, 115))
+    colourManager.setColour(ColourRole.Border, False, False, Theme.Dark, Colour(73, 81, 93))
     colourManager.setColour(ColourRole.Border, True, False, Theme.Light, Colour(135, 206, 255))
     colourManager.setColour(ColourRole.Border, True, False, Theme.Dark, Colour(93, 167, 255))
     colourManager.setColour(ColourRole.Background, False, True, Theme.Light, Colour(181, 213, 255))

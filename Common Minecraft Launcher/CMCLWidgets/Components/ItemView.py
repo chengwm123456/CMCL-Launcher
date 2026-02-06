@@ -62,6 +62,36 @@ class ItemDelegateLineEdit(QLineEdit, Widget):
 
 class ItemDelegate(QItemDelegate):
     def paint(self, painter, option, index):
+        if index.column() == 0:
+            row = index.row()
+            model = index.model()
+            rowCount = model.rowCount()
+            
+            if row % 2 == 1:
+                rowRect = QRect(option.rect)
+                
+                if isinstance(model, QAbstractListModel):
+                    pass
+                else:
+                    for col in range(1, model.columnCount()):
+                        colIndex = model.index(row, col)
+                        colRect = self.parent().visualRect(colIndex)
+                        if not colRect.isEmpty() and colRect.right() > rowRect.right():
+                            rowRect.setWidth(colRect.right() - rowRect.left())
+                    rowRect.setX(rowRect.x() + 5)
+                    rowRect.setWidth(rowRect.width() + 5)
+                
+                painter.save()
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                
+                viewport = self.parent().viewport()
+                painter.setOpacity(viewport.property("baseOpacity") if viewport else 1.0)
+                painter.setPen(getBorderColour())
+                painter.setBrush(getBackgroundColour())
+                painter.drawRoundedRect(rowRect.adjusted(0, -1, 0, 0), 16, 16)
+                
+                painter.restore()
+        
         option.rect.setX(option.rect.x() + 10)
         option.rect.setWidth(option.rect.width() - 5)
         super().paint(painter, option, index)
