@@ -5,7 +5,7 @@
 <div align="center">
 
 ![CurrentLanguage](https://img.shields.io/badge/Current_language-English-5191FF)
-![CurrentVersion](https://img.shields.io/badge/Current_version-AlphaDev--25002-5191FF)
+![CurrentVersion](https://img.shields.io/badge/Current_version-AlphaDev--26001-5191FF)
 
 </div>
 

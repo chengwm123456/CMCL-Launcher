@@ -92,6 +92,27 @@ class ItemDelegate(QItemDelegate):
                 
                 painter.restore()
         
+        if option.state & QStyle.StateFlag.State_Selected:
+            painter.save()
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            
+            viewport = self.parent().viewport()
+            painter.setOpacity(viewport.property("baseOpacity") if viewport else 1.0)
+            
+            painter.setPen(getBorderColour(is_highlight=True))
+            painter.setBrush(getBackgroundColour(is_highlight=True))
+            
+            rowRect = QRect(option.rect)
+            rowRect.setX(rowRect.x() + 5)
+            rowRect.setWidth(rowRect.width() + 5)
+            painter.drawRoundedRect(rowRect.adjusted(0, -1, 0, 0), 16, 16)
+            
+            painter.restore()
+        
+        option.state &= ~QStyle.StateFlag.State_Selected
+        option.state &= ~QStyle.StateFlag.State_HasFocus
+        option.showDecorationSelected = False
+        
         option.rect.setX(option.rect.x() + 10)
         option.rect.setWidth(option.rect.width() - 5)
         super().paint(painter, option, index)

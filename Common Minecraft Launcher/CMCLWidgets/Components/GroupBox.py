@@ -140,7 +140,9 @@ class GroupBox(QGroupBox, Widget):
                     self.property("baseOpacity") + (
                             self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))
                 painter.drawLines([
-                    QLine(QPoint(4 + rect.x(), rect.y() + 8), QPoint(rect.width() // 2 + rect.x(), rect.y() + 10)),
-                    QLine(QPoint(rect.width() // 2 + rect.x(), rect.y() + 10), QPoint(9 + rect.x(), rect.y() + 4))
+                    QLineF(QPointF(rect.x() + (rect.width() / 3), rect.y() + (rect.height() * 2 / 3)),
+                           QPointF(rect.width() / 2 + rect.x(), rect.y() + (rect.height() * 5 / 6))),
+                    QLineF(QPointF(rect.width() / 2 + rect.x(), rect.y() + (rect.height() * 5 / 6)),
+                           QPointF(rect.x() + (rect.width() * 2 / 3) + 1, rect.y() + (rect.height() / 4) + 2))
                 ])
             painter.restore()

@@ -20,6 +20,7 @@ import traceback
 import tempfile
 import webbrowser
 import time
+import shlex
 
 import random
 import logging
@@ -295,16 +296,13 @@ class AnimatedStackedWidget(QStackedWidget):
         
         def func1():
             super(AnimatedStackedWidget, self).setCurrentWidget(w)
-            try:
+            if hasattr(self.currentWidget(), "changeAnimation"):
                 self.currentWidget().changeAnimation("in", None)
-            except AttributeError:
-                raise
         
-        try:
+        if hasattr(self.currentWidget(), "changeAnimation"):
             self.currentWidget().changeAnimation("out", func1)
-        except AttributeError:
+        else:
             func1()
-            raise
 
 
 class LoadingAnimation(QFrame):
@@ -321,8 +319,7 @@ class LoadingAnimation(QFrame):
         
         def update_opacity(self, value):
             colour = value
-            self.parent().setStyleSheet(
-                f"background: rgba({str(getBackgroundColour(is_tuple=True)).strip('()')}, {colour / 255})")
+            self.parent().setProperty("backgroundOpacity", value)
     
     class SizingAnimation(QVariantAnimation):
         def __init__(self, parent=None, variant="in"):
@@ -356,14 +353,14 @@ class LoadingAnimation(QFrame):
                 0.0,
                 self.adjustRed(
                     getBorderColour(is_highlight=True),
-                    50 if self.error else 0
+                    self.parent().property("beingRed")
                 )
             )
             gradient.setColorAt(
                 1.0,
                 self.adjustRed(
                     getBackgroundColour(is_highlight=True),
-                    50 if self.error else 0
+                    self.parent().property("beingRed")
                 )
             )
             painter.setPen(Qt.GlobalColor.transparent)
@@ -372,6 +369,8 @@ class LoadingAnimation(QFrame):
         
         @staticmethod
         def adjustRed(colour, percent=25):
+            if not percent:
+                return colour
             percent /= 100
             percent = max(0, min(percent, 1))
             r, g, b = Colour(colour)
@@ -441,6 +440,10 @@ class LoadingAnimation(QFrame):
         self.__counter = 0
         self.hide()
         app.registerRetranslateFunction(self.retranslateUI)
+        
+        self.setProperty("beingRed", 0)
+        self.setProperty("backgroundOpacity", 255)
+        self.setProperty("backgroundPath", None)
     
     def retranslateUI(self):
         if not self.__reloadTextChanged:
@@ -482,14 +485,20 @@ class LoadingAnimation(QFrame):
         return super().event(e)
     
     def paintEvent(self, a0):
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        if not self.__centreAnimation.error:
-            self.setStyleSheet(
-                f"background: rgb{str(getBackgroundColour(is_tuple=True))};")
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        if self.property("backgroundPath"):
+            painter.setPen(Colour(*self.__centreAnimation.adjustRed(getBackgroundColour(), self.property("beingRed")),
+                                  self.property("backgroundOpacity")))
+            painter.setBrush(Colour(*self.__centreAnimation.adjustRed(getBackgroundColour(), self.property("beingRed")),
+                                    self.property("backgroundOpacity")))
+            painter.drawPath(self.property("backgroundPath"))
         else:
-            self.setStyleSheet(
-                f"background: rgb{str(tuple(self.__centreAnimation.adjustRed(getBackgroundColour(), 50)))};")
-        return super().paintEvent(a0)
+            painter.fillRect(self.rect(),
+                             Colour(*self.__centreAnimation.adjustRed(getBackgroundColour(), self.property("beingRed")),
+                                    self.property("backgroundOpacity")))
     
     def __updateText(self):
         self.__counter += 1
@@ -502,15 +511,17 @@ class LoadingAnimation(QFrame):
         self.__reloadButton.hide()
         self.__reloadButton.setDown(False)
         if ani:
-            self.setStyleSheet("background: transparent")
             self.TransparencyAnimation(self, "in").start()
             self.SizingAnimation(self.__centreAnimation, "in").start()
-        else:
-            self.setStyleSheet(
-                f"background: rgb{str(getBackgroundColour(is_tuple=True))};")
         self.__counter = 0
         self.__loadingTimer.start(1000)
         self.show()
+        if self.property("beingRed"):
+            ani = QPropertyAnimation(self, b"beingRed", self)
+            ani.setStartValue(self.property("beingRed"))
+            ani.setEndValue(0)
+            ani.setDuration(500)
+            ani.start()
     
     def finish(self, ani=True, failed=False):
         try:
@@ -525,11 +536,14 @@ class LoadingAnimation(QFrame):
                     self.hide()
                 self.__statusLabel.setText(self.tr("LoadingAnimation.Status.LoadingSuccess.Text"))
             else:
-                self.setStyleSheet(
-                    f"background: rgb{str(tuple(self.__centreAnimation.adjustRed(getBackgroundColour(), 50)))};")
                 self.__statusLabel.setText(self.tr("LoadingAnimation.Status.Failure.Text"))
                 self.__reloadButton.show()
                 self.__centreAnimation.setError()
+                ani = QPropertyAnimation(self, b"beingRed", self)
+                ani.setStartValue(self.property("beingRed"))
+                ani.setEndValue(50)
+                ani.setDuration(500)
+                ani.start()
         except RuntimeError:
             pass
     
@@ -539,6 +553,9 @@ class LoadingAnimation(QFrame):
     def setReloadText(self, text):
         self.__reloadButton.setText(text)
         self.__reloadTextChanged = True
+    
+    def setBackgroundPath(self, backgroundPath):
+        self.setProperty("backgroundPath", backgroundPath)
     
     def hideEvent(self, *args, **kwargs):
         try:
@@ -636,8 +653,327 @@ class HomePage(QFrame):
         minecraft_path_changed = pyqtSignal()
         
         class VersionInfoPage(AcrylicBackground):
-            def __init__(self, parent):
+            class RightPanel(AnimatedStackedWidget, Panel):
+                pass
+            
+            class GeneralPage(QFrame):
+                def __init__(self, parent, version):
+                    super().__init__(parent)
+                    self.version = version
+                    
+                    versionConfig = Path(minecraft_path / "versions" / version / "version.cfg")
+                    if versionConfig.exists():
+                        self.cfg = yaml.safe_load(Path(versionConfig).read_text(encoding="utf-8"))
+                    else:
+                        createVersionConfigFile(minecraft_path / "versions" / version, self.version,
+                                                self.version, ":/missingno.png")
+                        self.cfg = yaml.safe_load(Path(versionConfig).read_text(encoding="utf-8"))
+                    
+                    self.versionName = self.cfg["Version"]
+                    self.versionAlias = self.cfg["VersionAlias"]
+                    if self.versionName == self.versionAlias:
+                        self.versionAlias = None
+                    
+                    self.mainLayout = QVBoxLayout(self)
+                    
+                    self.scrollArea = ScrollArea(self)
+                    self.mainLayout.addWidget(self.scrollArea)
+                    
+                    self.scrollAreaWidgetContents = QWidget()
+                    
+                    self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
+                    
+                    self.versionInfoCard = Panel(self.scrollAreaWidgetContents)
+                    self.verticalLayout.addWidget(self.versionInfoCard)
+                    
+                    self.horizontalLayout = QHBoxLayout(self.versionInfoCard)
+                    
+                    self.iconWidget = ImageWidget(self.versionInfoCard)
+                    self.iconWidget.setFixedSize(QSize(64, 64))
+                    self.iconWidget.setImage(QImage(self.cfg["Personalisation"]["Icon"]))
+                    self.horizontalLayout.addWidget(self.iconWidget)
+                    
+                    self.versionInfoLabel = Label(self.versionInfoCard)
+                    self.horizontalLayout.addWidget(self.versionInfoLabel)
+                    
+                    self.versionPersonalisation = None
+                    
+                    self.versionShortcuts = GroupBox(self.scrollAreaWidgetContents)
+                    self.verticalLayout.addWidget(self.versionShortcuts)
+                    
+                    self.gridLayout = QGridLayout(self.versionShortcuts)
+                    
+                    self.openVersionInstallationDir = CommandLinkButton(self.versionShortcuts)
+                    self.openVersionInstallationDir.pressed.connect(self.doOpenVersionInstallationDir)
+                    self.gridLayout.addWidget(self.openVersionInstallationDir)
+                    
+                    self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+                    self.verticalLayout.addItem(self.verticalSpacer)
+                    
+                    self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+                    self.scrollArea.setWidgetResizable(True)
+                    
+                    app.registerRetranslateFunction(self.retranslateUI)
+                    self.retranslateUI()
+                
+                def retranslateUI(self):
+                    versionNameDisplay = self.versionName
+                    if self.versionAlias:
+                        versionNameDisplay = f"{self.versionAlisa} ({self.versionName})"
+                    self.versionInfoLabel.setText(f"{versionNameDisplay}")
+                    self.versionShortcuts.setTitle("版本快捷方式")
+                    self.openVersionInstallationDir.setText("打开版本下载文件夹")
+                    self.openVersionInstallationDir.setToolTip("如果你开启了版本隔离，这也是游戏的运行目录。")
+                
+                def doOpenVersionInstallationDir(self):
+                    if platform.system().lower() == "windows":
+                        os.startfile(str((minecraft_path / 'versions' / self.version).absolute()))
+                    elif platform.system().lower() == "linux":
+                        os.system(
+                            f"xdg-open {shlex.quote(str((minecraft_path / 'versions' / self.version).absolute()))}")
+                
+                def changeAnimation(self, variant, function):
+                    if variant == "in":
+                        self.changeAnimationIn()
+                    else:
+                        QTimer.singleShot(300, function)
+                        self.changeAnimationOut()
+                
+                def changeAnimationIn(self):
+                    ani1 = QPropertyAnimation(self.versionInfoCard, b"pos", self)
+                    pos1 = self.versionInfoCard.pos()
+                    ani1.setStartValue(pos1 + QPoint(100, 0))
+                    ani1.setEndValue(pos1)
+                    ani1.setDuration(500)
+                    ani1.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani1.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    ani11 = OpacityAnimation(self.versionInfoCard)
+                    ani11.setStartValue(0)
+                    ani11.setEndValue(100)
+                    ani11.setDuration(500)
+                    ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    QTimer.singleShot(50, lambda: self.versionInfoCard.show())
+                    # ani2 = QPropertyAnimation(self.versionInfoCard, b"pos", self)
+                    # pos2 = self.versionInfoCard.pos()
+                    # ani2.setStartValue(pos1 + QPoint(100, 0))
+                    # ani2.setEndValue(pos1)
+                    # ani2.setDuration(500)
+                    # ani2.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # QTimer.singleShot(100, lambda: ani2.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    # ani22 = OpacityAnimation(self.versionInfoCard)
+                    # ani22.setStartValue(0)
+                    # ani22.setEndValue(100)
+                    # ani22.setDuration(500)
+                    # ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    # QTimer.singleShot(150, lambda: self.versionInfoCard.show())
+                    ani3 = QPropertyAnimation(self.versionShortcuts, b"pos", self)
+                    pos3 = self.versionShortcuts.pos()
+                    ani3.setStartValue(pos3 + QPoint(100, 0))
+                    ani3.setEndValue(pos3)
+                    ani3.setDuration(500)
+                    ani3.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    QTimer.singleShot(200, lambda: ani3.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    ani33 = OpacityAnimation(self.versionShortcuts)
+                    ani33.setStartValue(0)
+                    ani33.setEndValue(100)
+                    ani33.setDuration(500)
+                    ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    QTimer.singleShot(200, lambda: ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    QTimer.singleShot(250, lambda: self.versionShortcuts.show())
+                
+                def changeAnimationOut(self):
+                    ani11 = OpacityAnimation(self.versionInfoCard)
+                    ani11.setStartValue(100)
+                    ani11.setEndValue(0)
+                    ani11.setDuration(500)
+                    ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    ani11.finished.connect(lambda: self.versionInfoCard.hide())
+                    # ani11 = OpacityAnimation(self.versionInfoCard)
+                    # ani11.setStartValue(100)
+                    # ani11.setEndValue(0)
+                    # ani11.setDuration(500)
+                    # ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    # ani11.finished.connect(lambda: self.versionInfoCard.hide())
+                    ani33 = OpacityAnimation(self.versionShortcuts)
+                    ani33.setStartValue(100)
+                    ani33.setEndValue(0)
+                    ani33.setDuration(500)
+                    ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    ani33.finished.connect(lambda: self.versionShortcuts.hide())
+            
+            class VerSettingsPage(QFrame):
+                def __init__(self, parent, version):
+                    super().__init__(parent)
+                    self.version = version
+                
+                def changeAnimation(self, variant, function):
+                    if variant == "in":
+                        self.changeAnimationIn()
+                    else:
+                        QTimer.singleShot(300, function)
+                        self.changeAnimationOut()
+                
+                def changeAnimationIn(self):
+                    pass
+                    # ani1 = QPropertyAnimation(self.versionInfoCard, b"pos", self)
+                    # pos1 = self.versionInfoCard.pos()
+                    # ani1.setStartValue(pos1 + QPoint(100, 0))
+                    # ani1.setEndValue(pos1)
+                    # ani1.setDuration(500)
+                    # ani1.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # ani1.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    # ani11 = OpacityAnimation(self.versionInfoCard)
+                    # ani11.setStartValue(0)
+                    # ani11.setEndValue(100)
+                    # ani11.setDuration(500)
+                    # ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    # QTimer.singleShot(50, lambda: self.versionInfoCard.show())
+                    # # ani2 = QPropertyAnimation(self.versionInfoCard, b"pos", self)
+                    # # pos2 = self.versionInfoCard.pos()
+                    # # ani2.setStartValue(pos1 + QPoint(100, 0))
+                    # # ani2.setEndValue(pos1)
+                    # # ani2.setDuration(500)
+                    # # ani2.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # # QTimer.singleShot(100, lambda: ani2.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    # # ani22 = OpacityAnimation(self.versionInfoCard)
+                    # # ani22.setStartValue(0)
+                    # # ani22.setEndValue(100)
+                    # # ani22.setDuration(500)
+                    # # ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # # QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    # # QTimer.singleShot(150, lambda: self.versionInfoCard.show())
+                    # ani3 = QPropertyAnimation(self.versionShortcuts, b"pos", self)
+                    # pos3 = self.versionShortcuts.pos()
+                    # ani3.setStartValue(pos3 + QPoint(100, 0))
+                    # ani3.setEndValue(pos3)
+                    # ani3.setDuration(500)
+                    # ani3.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # QTimer.singleShot(200, lambda: ani3.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    # ani33 = OpacityAnimation(self.versionShortcuts)
+                    # ani33.setStartValue(0)
+                    # ani33.setEndValue(100)
+                    # ani33.setDuration(500)
+                    # ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # QTimer.singleShot(200, lambda: ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    # QTimer.singleShot(250, lambda: self.versionShortcuts.show())
+                
+                def changeAnimationOut(self):
+                    pass
+                    # ani11 = OpacityAnimation(self.versionInfoCard)
+                    # ani11.setStartValue(100)
+                    # ani11.setEndValue(0)
+                    # ani11.setDuration(500)
+                    # ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    # ani11.finished.connect(lambda: self.versionInfoCard.hide())
+                    # # ani11 = OpacityAnimation(self.versionInfoCard)
+                    # # ani11.setStartValue(100)
+                    # # ani11.setEndValue(0)
+                    # # ani11.setDuration(500)
+                    # # ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # # ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    # # ani11.finished.connect(lambda: self.versionInfoCard.hide())
+                    # ani33 = OpacityAnimation(self.versionShortcuts)
+                    # ani33.setStartValue(100)
+                    # ani33.setEndValue(0)
+                    # ani33.setDuration(500)
+                    # ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    # ani33.finished.connect(lambda: self.versionShortcuts.hide())
+            
+            def __init__(self, parent, version):
                 super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
+                self.setMouseTracking(True)
+                self.version = version
+                
+                self.closeButton = CloseButton(self)
+                self.closeButton.hide()
+                self.closeButton.pressed.connect(self.parent().closeVersionInfoPage)
+                self.setProperty("closeButtonOpacity", 0.0)
+                
+                self.horizontalLayout = QHBoxLayout(self)
+                
+                self.leftPanel = Panel(self)
+                self.horizontalLayout.addWidget(self.leftPanel)
+                
+                self.verticalLayout = QVBoxLayout(self.leftPanel)
+                
+                self.generalPage = PushButton(self.leftPanel)
+                self.generalPage.setWidgetAttribute("outlinedButton")
+                self.generalPage.setCheckable(True)
+                self.generalPage.setChecked(True)
+                self.generalPage.setAutoExclusive(True)
+                self.generalPage.released.connect(lambda: self.setCurrentPage(0))
+                self.verticalLayout.addWidget(self.generalPage)
+                
+                self.verSettingsPage = PushButton(self.leftPanel)
+                self.verSettingsPage.setWidgetAttribute("outlinedButton")
+                self.verSettingsPage.setCheckable(True)
+                self.verSettingsPage.setAutoExclusive(True)
+                self.verSettingsPage.released.connect(lambda: self.setCurrentPage(1))
+                self.verticalLayout.addWidget(self.verSettingsPage)
+                
+                self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+                self.verticalLayout.addItem(self.verticalSpacer)
+                
+                self.rightPanel = self.RightPanel(self)
+                self.horizontalLayout.addWidget(self.rightPanel, 1)
+                
+                self.generalPageFrame = self.GeneralPage(self.rightPanel, self.version)
+                self.rightPanel.addWidget(self.generalPageFrame)
+                
+                self.verSettingsPageFrame = self.VerSettingsPage(self.rightPanel, self.version)
+                self.rightPanel.addWidget(self.verSettingsPageFrame)
+                
+                app.registerRetranslateFunction(self.retranslateUI)
+                self.retranslateUI()
+            
+            def retranslateUI(self):
+                self.generalPage.setText("基本信息")
+                self.verSettingsPage.setText("版本独立设置")
+            
+            def setCurrentPage(self, page_id=-1):
+                page_seq = (self.generalPage, self.verSettingsPage)
+                page_frame_dict = {
+                    self.generalPage: self.generalPageFrame,
+                    self.verSettingsPage: self.verSettingsPageFrame
+                }
+                if -1 < page_id < len(page_seq):
+                    page = page_seq[page_id]
+                    page_frame = page_frame_dict[page]
+                    page.setChecked(True)
+                    self.rightPanel.setCurrentWidget(page_frame)
+            
+            def mouseMoveEvent(self, a0):
+                super().mouseMoveEvent(a0)
+                
+                if self.closeButton.rect().contains(self.mapFromGlobal(QCursor().pos())):
+                    if not self.property("closeButtonOpacity"):
+                        ani = OpacityAnimation(self.closeButton)
+                        ani.setStartValue(0)
+                        ani.setEndValue(100)
+                        ani.setDuration(500)
+                        ani.setEasingCurve(QEasingCurve.Type.OutQuint)
+                        ani.valueChanged.connect(lambda value: self.setProperty("closeButtonOpacity", value / 100))
+                        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                        self.closeButton.show()
+                    self.closeButton.raise_()
+                else:
+                    if self.property("closeButtonOpacity") >= 1.0:
+                        ani = OpacityAnimation(self.closeButton)
+                        ani.setStartValue(100)
+                        ani.setEndValue(0)
+                        ani.setDuration(500)
+                        ani.setEasingCurve(QEasingCurve.Type.OutQuint)
+                        ani.valueChanged.connect(lambda value: self.setProperty("closeButtonOpacity", value / 100))
+                        ani.finished.connect(lambda: self.closeButton.hide())
+                        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
         
         def __init__(self, parent, isVersionsShown=True):
             super().__init__(parent)
@@ -686,10 +1022,13 @@ class HomePage(QFrame):
             self.verticalLayout_2.addWidget(self.currentDir)
             
             self.listWidget = ListWidget(self.versionsPanel)
+            self.listWidget.itemDoubleClicked.connect(lambda x: self.openVersionInfoPage(x.text()))
             self.verticalLayout_2.addWidget(self.listWidget)
             
             self.versionAliasConv = {}
             self.updateVersionsList()
+            
+            self.versionInfoPage = None
             
             app.registerRetranslateFunction(self.retranslateUI)
             self.retranslateUI()
@@ -753,6 +1092,43 @@ class HomePage(QFrame):
                     item = QListWidgetItem(versionName, self.listWidget)
                     item.setSizeHint(QSize(0, 32))
                     self.listWidget.addItem(item)
+        
+        def openVersionInfoPage(self, version):
+            self.versionInfoPage = self.VersionInfoPage(self, version)
+            rect = self.rect().adjusted(1, 1, -1, -1)
+            self.versionInfoPage.setGeometry(rect)
+            self.versionInfoPage.grabBehind()
+            self.versionInfoPage.move(QPoint(0, self.height()))
+            ani = QPropertyAnimation(self.versionInfoPage, b"pos", self)
+            ani.setStartValue(QPoint(0, self.height()))
+            ani.setEndValue(QPoint(0, 0))
+            ani.setKeyValueAt(0.8, QPoint(0, 50))
+            ani.setDuration(500)
+            ani.setEasingCurve(QEasingCurve.Type.OutQuad)
+            ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            self.versionInfoPage.show()
+        
+        def closeVersionInfoPage(self):
+            if not self.versionInfoPage:
+                return
+            ani = QPropertyAnimation(self.versionInfoPage, b"pos", self)
+            ani.setStartValue(QPoint(0, 0))
+            ani.setEndValue(QPoint(0, self.height()))
+            ani.setKeyValueAt(0.8, QPoint(0, self.height() - 50))
+            ani.setDuration(500)
+            ani.setEasingCurve(QEasingCurve.Type.OutQuad)
+            ani.finished.connect(self.closingFinished)
+            ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+        
+        def closingFinished(self):
+            self.versionInfoPage.close()
+            self.versionInfoPage.deleteLater()
+            self.versionInfoPage = None
+        
+        def resizeEvent(self, a0):
+            super().resizeEvent(a0)
+            if self.versionInfoPage:
+                self.versionInfoPage.resize(self.size())
     
     class LaunchThread(QThread):
         launchFinished = pyqtSignal(tuple)
@@ -769,7 +1145,7 @@ class HomePage(QFrame):
                 version_path = Path(self.jar_path).parent
                 cfg_path = Path(version_path / "version.cfg")
                 if not cfg_path.exists():
-                    createVersionConfigFile(cfg_path, self.version)
+                    createVersionConfigFile(cfg_path, self.version, self.version, ":/missingno.png")
                 cfg = json.loads(Path(cfg_path).read_text(encoding="utf-8"))
                 syncWithDefault = cfg["LaunchConfig"]["SyncWithDefault"]
             
@@ -949,6 +1325,7 @@ class HomePage(QFrame):
     def updateVersionList(self):
         menu = QMenu(self.selectVersionButton)
         menu.setStyleSheet("background: transparent;")
+        menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         listWidget = ListWidget(menu)
         listWidget.itemDoubleClicked.connect(lambda x: (self.selectVersion(x.text()), menu.close()))
         menu.addAction(QAction(""))
@@ -1152,6 +1529,7 @@ class HomePage(QFrame):
         QTimer.singleShot(500, lambda: self.versionsManageButton.setChecked(False))
         QTimer.singleShot(500,
                           lambda: (self.stopMinecraftProcess.show(), self.stopMinecraftProcess.setGraphicsEffect(None)))
+        self.versionsManagementPage.closeVersionInfoPage()
     
     def changeAnimation(self, variant, function):
         if variant == "in":
@@ -1262,13 +1640,15 @@ class DownloadPage(QFrame):
             
             class DownloadVersionThread(QThread):
                 def __init__(self, parent, minecraft_pth=minecraft_path, version=None,
-                             neoforge_loader=None, fabric_loader=None, fabric_api=None):
+                             neoforge_loader=None, fabric_loader=None, fabric_api=None,
+                             icon_path=":/missingno.png"):
                     super().__init__(parent)
                     self.minecraft_path = minecraft_pth
                     self.version = version
                     self.neoforge_loader = neoforge_loader
                     self.fabric_loader = fabric_loader
                     self.fabric_api = fabric_api
+                    self.icon_path = icon_path
                 
                 def run(self):
                     DownloadMinecraft(self.minecraft_path, self.version, self.version,
@@ -1276,7 +1656,8 @@ class DownloadPage(QFrame):
                                           "DownloadThreadsCount"],
                                       chunk_size=settings["LauncherSettings"]["DownloadSettings"][
                                                      "DownloadChunkSize"] * 8 * 1024)
-                    createVersionConfigFile(self.minecraft_path / "versions" / self.version, self.version, self.version)
+                    createVersionConfigFile(self.minecraft_path / "versions" / self.version, self.version, self.version,
+                                            self.icon_path)
                     if self.neoforge_loader:
                         DownloadNeoForgeFull(self.version, self.neoforge_loader, self.minecraft_path,
                                              vanilla_download=False)
@@ -1300,9 +1681,10 @@ class DownloadPage(QFrame):
                     self.label.setText(
                         f"确定下载 {self.version} 吗？\n这会覆盖当前的下载，如果你不想覆盖当前的下载，可以改一下版本文件夹名")
             
-            def __init__(self, parent, version=None):
+            def __init__(self, parent, version=None, icon_path=":/missingno.png"):
                 super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
                 self.version = version
+                self.icon_path = icon_path
                 
                 self.mainLayout = QVBoxLayout(self)
                 
@@ -1363,6 +1745,7 @@ class DownloadPage(QFrame):
                 self.form_1.setWidget(0, QFormLayout.ItemRole.LabelRole, self.form_1_Label)
                 
                 self.form_1_PushButton = PushButton(self.groupBox)
+                self.form_1_PushButton.setIcon(QIcon(self.icon_path))
                 self.form_1.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_1_PushButton)
                 
                 # self.form_2_Label = Label(self.groupBox)
@@ -1456,28 +1839,30 @@ class DownloadPage(QFrame):
                 self.mainLayout.addWidget(self.startDownloadBtn)
                 
                 self.fetchModLoadersThread = self.FetchModLoadersThread(self)
-                self.fetchModLoadersThread.fetched.connect(self.displayModLoaders)
+                self.fetchModLoadersThread.fetched.connect(self.modLoadersFetched)
                 self.fetchModLoadersThread.start()
                 
                 self.updateModLoadersAvailability()
+                
+                self.loaders = None
                 
                 app.registerRetranslateFunction(self.retranslateUI)
                 self.retranslateUI()
             
             def retranslateUI(self):
-                self.groupBox1Btn.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title"))  # 版本
+                self.groupBox1Btn.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title"))
                 self.groupBox4Btn.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox4.Title"))  # 模组加载器
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox4.Title"))
                 self.groupBox2Btn.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title"))  # 下载设置
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title"))
                 self.groupBox3Btn.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox3.Title"))  # 其他链接
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox3.Title"))
                 self.groupBox.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title"))
                 self.form_1_Label.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.1.Label.Text"))  # 下载版本
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.1.Label.Text"))
                 self.form_1_PushButton.setText(
                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.1.PushButton.Text").format(
-                        self.version))  # {}（单击重新选择版本）
+                        self.version))
                 # self.form_2_Label.setText(
                 #     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.Label.Text"))  # 模组加载器
                 # self.form_2_PushButton.setText(
@@ -1489,7 +1874,7 @@ class DownloadPage(QFrame):
                 self.updateModLoadersAvailability()
                 self.groupBox_2.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title"))
                 self.form_3_Label.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.3.Label.Text"))  # 下载路径
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.3.Label.Text"))
                 self.form_3_LineEdit.setToolTip("""注意：这不是版本 jar 文件的下载路径。
 比如说你填的是：
 ① G:\\.minecraft
@@ -1499,17 +1884,22 @@ jar 下载位置在：
 ② /home/mc/.minecraft/versions/{当前版本}/{当前版本}.jar
 若存在与下载版本同名的文件夹，启动器会在下载前询问是否继续下载。""")
                 self.form_4_Label.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.4.Label.Text"))  # 版本文件夹名
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.4.Label.Text"))
                 self.form_4_LineEdit.setToolTip(
                     "默认是当前下载的版本，如果遇到版本已存在可以尝试修改此项。\n该选项不影响模组加载器依赖的原版版本的文件夹名。")
                 self.groupBox_3.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox3.Title"))
                 self.wikiVersionPage.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.OpenWiki"))  # 在 Minecraft Wiki 上查看该版本
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.OpenWiki"))
                 self.clientJarURL.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.DownloadClient"))  # Minecraft 客户端 .jar 文件下载链接
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.DownloadClient"))
                 self.serverJarURL.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.DownloadServer"))  # Minecraft 服务端 .jar 文件下载链接
-                self.startDownloadBtn.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Download"))  # 下载
+                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.DownloadServer"))
+                self.startDownloadBtn.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Download"))
+                
+                if self.loaders:
+                    self.displayModLoaders()
+                
+                self.updateModLoadersAvailability()
             
             def updateTopSelections(self, value):
                 if value + self.scrollArea.verticalScrollBar().pageStep() >= self.groupBox_3.y():
@@ -1535,11 +1925,17 @@ jar 下载位置在：
                     self.version,
                     self.form_5_ComboBox.currentData(),
                     self.form_6_ComboBox.currentData(),
-                    self.form_7_ComboBox.currentData()
+                    self.form_7_ComboBox.currentData(),
+                    self.icon_path
                 )
                 thread.start()
             
-            def displayModLoaders(self, loaders):
+            def modLoadersFetched(self, loaders):
+                self.loaders = loaders
+                self.displayModLoaders()
+            
+            def displayModLoaders(self):
+                loaders = self.loaders
                 for version in reversed(loaders["NeoForge"]["versions"]):
                     display_version = version
                     display_version = "NeoForge " + display_version
@@ -1548,8 +1944,12 @@ jar 下载位置在：
                 for loader in loaders["Fabric"]:
                     version = loader["version"]
                     version = "Fabric " + version.split(":")[-1]
-                    self.form_6_ComboBox.addItem(f"{version}（{'稳定版' if loader['stable'] else '测试版'}）",
-                                                 loader["version"])
+                    self.form_6_ComboBox.addItem(
+                        "{} ({})".format(version,
+                                         self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Loader.Stable") if
+                                         loader["stable"] else self.tr(
+                                             "DownloadPage.DownloadVanilla.DownloadOptions.Loader.Beta")),
+                        loader["version"])
                 for api in loaders["FabricAPI"]:
                     if self.version in api["game_versions"]:
                         version_number = api["version_number"]
@@ -1562,8 +1962,11 @@ jar 下载位置在：
                     self.form_7_ComboBox.setDisabled(True)
                     self.form_6_ComboBox.setCurrentIndex(0)
                     self.form_7_ComboBox.setCurrentIndex(0)
-                    self.form_6_ComboBox.setItemText(0, "与 NeoForge 不兼容")
-                    self.form_7_ComboBox.setItemText(0, "与 NeoForge 不兼容")
+                    self.form_6_ComboBox.setItemText(0, self.tr(
+                        "DownloadPage.DownloadVanilla.DownloadOptions.State.Incompatible").format(
+                        "NeoForge"))
+                    self.form_7_ComboBox.setItemText(0, self.tr(
+                        "DownloadPage.DownloadVanilla.DownloadOptions.State.Incompatible").format("NeoForge"))
                 else:
                     self.form_6_ComboBox.setEnabled(True)
                     self.form_6_ComboBox.setItemText(0, self.tr(
@@ -1571,7 +1974,8 @@ jar 下载位置在：
                     if self.form_6_ComboBox.currentIndex() > 0:
                         self.form_5_ComboBox.setDisabled(True)
                         self.form_5_ComboBox.setCurrentIndex(0)
-                        self.form_5_ComboBox.setItemText(0, "与 Fabric 不兼容")
+                        self.form_5_ComboBox.setItemText(0, self.tr(
+                            "DownloadPage.DownloadVanilla.DownloadOptions.State.Incompatible").format("Fabric"))
                         self.form_7_ComboBox.setEnabled(True)
                         self.form_7_ComboBox.setItemText(0, self.tr(
                             "DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload"))
@@ -1580,7 +1984,8 @@ jar 下载位置在：
                         self.form_5_ComboBox.setItemText(0, self.tr(
                             "DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload"))
                         self.form_7_ComboBox.setCurrentIndex(0)
-                        self.form_7_ComboBox.setItemText(0, "请先选择一个 Fabric 版本")
+                        self.form_7_ComboBox.setItemText(0, self.tr(
+                            "DownloadPage.DownloadVanilla.DownloadOptions.State.SelectFabricFirst"))  # 请先选择一个 Fabric 版本
                         self.form_7_ComboBox.setDisabled(True)
             
             def openWiki(self):
@@ -1638,18 +2043,23 @@ jar 下载位置在：
             self.verticalLayout.addWidget(self.versionDisplayTable, 1)
             
             self.loader = LoadingAnimation(self)
+            pp = QPainterPath()
+            pp.addRoundedRect(self.rect().toRectF(), 10, 10)
+            self.loader.setBackgroundPath(pp)
             self.loader.addReloadFunction(self.startLoad)
             self.getThread = None
             
             self.downloadOptions = None
             
+            self.versionToDataMap = {}
+            
             app.registerRetranslateFunction(self.retranslateUI)
             self.retranslateUI()
         
         def retranslateUI(self):
-            self.topSearchPanel.setTitle(self.tr("DownloadPage.DownloadVanilla.TopSearchPanel.Title"))  # 搜索版本
+            self.topSearchPanel.setTitle(self.tr("DownloadPage.DownloadVanilla.TopSearchPanel.Title"))
             self.searchInput.setPlaceholderText(
-                self.tr("DownloadPage.DownloadVanilla.SearchInput.Placeholder"))  # 输入版本、类型、日期
+                self.tr("DownloadPage.DownloadVanilla.SearchInput.Placeholder"))
             self.searchInput.setToolTip("""◉ 输入版本：查询版本；
 ◉ 输入类型：筛选版本类型；
   ◎ release：正式版（如 1.21.8）；
@@ -1670,6 +2080,8 @@ jar 下载位置在：
 ◉ \"(old_alpha|old_beta|classic|pre_classic)\"（版本类型）；
 ◉ \"2024-05-28 .+\"（发布日期）等。
 更多正则表达式语法请上网查询，这里不讲述太多。""".format("%Y-%m-%d %H:%M:%S"))
+            if self.versionData:
+                self.searchVersions(self.searchInput.text())
             self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布日期"])
         
         def showEvent(self, a0):
@@ -1687,6 +2099,11 @@ jar 下载位置在：
             super().resizeEvent(a0)
             if self.downloadOptions:
                 self.downloadOptions.resize(self.size())
+            
+            if self.loader:
+                pp = QPainterPath()
+                pp.addRoundedRect(self.rect().toRectF(), 10, 10)
+                self.loader.setBackgroundPath(pp)
         
         @staticmethod
         def normaliseVersionData(data):
@@ -1710,19 +2127,19 @@ jar 下载位置在：
         def localiseType(self, versionType):
             match versionType:
                 case "release":
-                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.Release")  # 正式版
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.Release")
                 case "snapshot":
-                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.Snapshot")  # 快照
-                case "old_beta":  # In Chinese community, versions earier than 1.0.0 are called "远古版"
-                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.OldBeta")  # 远古版
-                case "old_alpha":  # In case of requiring this.
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.Snapshot")
+                case "old_beta":
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.OldBeta")
+                case "old_alpha":
                     versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.OldAlpha")
                 case "april_fool":
-                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.AprilFool")  # 愚人节版
-                case "classic":  # Same as above
-                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.Classic")  # 远古版
-                case "pre_classic":  # Same as above
-                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.PreClassic")  # 远古版
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.AprilFool")
+                case "classic":
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.Classic")
+                case "pre_classic":
+                    versionType = self.tr("DownloadPage.DownloadVanilla.VersionType.PreClassic")
             return versionType
         
         def displayVersions(self, data):
@@ -1737,18 +2154,9 @@ jar 下载位置在：
                 completer.setModel(model)
                 self.searchInput.setCompleter(completer)
                 
-                self.versionModel.clear()
                 row = 0
                 for version in self.versionData["versions"]:
-                    if version["type"] == "release":
-                        pixmap = QPixmap(":/grass_block.png")
-                    else:
-                        pixmap = QPixmap(":/dirt_block.png")
-                    self.versionModel.setItem(row, 0, QStandardItem(QIcon(pixmap), version["id"]))
-                    self.versionModel.setItem(row, 1, QStandardItem(self.localiseType(version["type"])))
-                    self.versionModel.setItem(row, 2, QStandardItem(
-                        version["releaseTime"].astimezone().strftime("%Y-%m-%d %H:%M:%S")
-                    ))
+                    self.versionToDataMap[version["id"]] = version
                     model.setItem(row, 0, QStandardItem(version["id"]))
                     row += 1
                 self.retranslateUI()
@@ -1834,12 +2242,20 @@ jar 下载位置在：
             except re.error:
                 self.versionModel.clear()
                 row = 0
-            self.retranslateUI()
         
         def openDownloadOptions(self, item):
             match item.column():
                 case 0:
-                    self.downloadOptions = self.DownloadOptions(self, self.versionModel.item(item.row(), 0).text())
+                    versionName = self.versionModel.item(item.row(), 0).text()
+                    versionType = self.versionToDataMap[versionName]["type"]
+                    
+                    if versionType == "release":
+                        path = ":/grass_block.png"
+                    else:
+                        path = ":/dirt_block.png"
+                    
+                    self.downloadOptions = self.DownloadOptions(self, self.versionModel.item(item.row(), 0).text(),
+                                                                path)
                     self.downloadOptions.frameClosed.connect(self.closeDownloadOptions)
                     rect = self.rect().adjusted(1, 1, -1, -1)
                     self.downloadOptions.setGeometry(rect)
@@ -1855,11 +2271,7 @@ jar 下载位置在：
                     self.downloadOptions.show()
                 case 1:
                     versionName = self.versionModel.item(item.row(), 0).text()
-                    versionType = None
-                    for version in self.versionData["versions"]:
-                        if version["id"] == versionName:
-                            versionType = version["type"]
-                            break
+                    versionType = self.versionToDataMap[versionName]["type"]
                     
                     if versionType:
                         self.searchInput.setText(versionType)
@@ -2120,15 +2532,13 @@ jar 下载位置在：
             def retranslateUI(self):
                 self.modName.setText(self.mod_name)
                 self.modDescription.setText(self.mod_description)
-                # self.toolBox.setItemText(self.toolBox.indexOf(self.modInfoContainer), "模组信息")
-                # self.toolBox.setItemText(self.toolBox.indexOf(self.modVersions), "模组版本")
-                self.page1Btn.setText(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModInfo.Title"))  # 模组信息
-                self.page2Btn.setText(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModVersions.Title"))  # 模组版本
+                self.page1Btn.setText(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModInfo.Title"))
+                self.page2Btn.setText(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModVersions.Title"))
                 self.modInfo.setTitle(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModInfo.Title"))
                 self.modVersions.setTitle(self.tr("DownloadPage.DownloadMods.ModInfoPage.ModVersions.Title"))
                 if self.modAction_issues:
                     self.modAction_issues.setText(
-                        self.tr("DownloadPage.DownloadMods.ModInfoPage.Actions.Issues"))  # 汇报漏洞
+                        self.tr("DownloadPage.DownloadMods.ModInfoPage.Actions.Issues"))
             
             def updateIcon(self, icon):
                 try:
@@ -2147,7 +2557,6 @@ jar 下载位置在：
                     self.listWidget.addItem(f"{version['name']}")
             
             def startDownloadMod(self, version):
-                # 选择模组下载路径
                 download_path = QFileDialog.getExistingDirectory(self, self.tr(
                     "DownloadPage.DownloadMods.ModInfoPage.AskDownloadPath.Title"), str(Path(".").absolute()))
                 if download_path:
@@ -2272,12 +2681,12 @@ jar 下载位置在：
             self.currentPage = 1
         
         def retranslateUI(self):
-            self.filterPanel.setTitle(self.tr("DownloadPage.DownloadMods.FilterPanel.Title"))  # 搜索
+            self.filterPanel.setTitle(self.tr("DownloadPage.DownloadMods.FilterPanel.Title"))
             self.searchLineEdit.setPlaceholderText(
-                self.tr("DownloadPage.DownloadMods.SearchLineEdit.Placeholder"))  # 搜索模组名称
+                self.tr("DownloadPage.DownloadMods.SearchLineEdit.Placeholder"))
             # self.searchLineEdit.setToolTip("")
-            self.previousButton.setText(self.tr("DownloadPage.DownloadMods.Actions.PrevPage"))  # 上一页
-            self.nextButton.setText(self.tr("DownloadPage.DownloadMods.Actions.NextPage"))  # 下一页
+            self.previousButton.setText(self.tr("DownloadPage.DownloadMods.Actions.PrevPage"))
+            self.nextButton.setText(self.tr("DownloadPage.DownloadMods.Actions.NextPage"))
             self.model.setHorizontalHeaderLabels(["模组名称", "模组作者", "最后修改时间"])
         
         def previousPage(self):
@@ -4325,6 +4734,7 @@ class PlayerPage(QFrame):
         self.updateIcon()
         
         self.updatePlayerList()
+        self.actionsPanel.raise_()
     
     def retranslateUI(self):
         self.selectPlayerButton.setText("选择玩家")
@@ -4357,24 +4767,23 @@ class PlayerPage(QFrame):
         elif not self.isLoggingIn and self.playerList:
             currentPlayer = self.playerList[self.currentIndex]
             playerType = playerTypes[currentPlayer.player_accountType[
-                1]] if currentPlayer.player_accountType[2] != "offline" else playerTypes["offline"]
+                1]] if currentPlayer.player_accountType[0] != "offline" else playerTypes["offline"]
             self.middleButton.setText(
                 f"{currentPlayer.player_playerName}\n{playerType}\n{'已购买 Minecraft' if currentPlayer.player_hasMC else '未购买 Minecraft'}")
         else:
             self.middleButton.setText("\n正在登录中\n")
         
         self.tableWidget.clear()
-        self.tableWidget.setHorizontalHeaderLabels(["玩家名称", "玩家账户类型", "是否购买 Minecraft"])
+        self.tableWidget.setHorizontalHeaderLabels(["玩家名称", "玩家账户类型", "是否拥有 Minecraft"])
         self.tableWidget.setColumnCount(3)
         
         self.tableWidget.setRowCount(len(self.playerList))
         for i, player in enumerate(self.playerList):
             self.tableWidget.setItem(i, 0, QTableWidgetItem(player.player_playerName))
-            self.tableWidget.setItem(i, 0, QTableWidgetItem(player.player_playerName))
-            playerType = (playerTypes[player.player_accountType[1]] if player.player_accountType[2] != "offline" else \
+            playerType = (playerTypes[player.player_accountType[1]] if player.player_accountType[0] != "offline" else \
                               playerTypes["offline"])
             self.tableWidget.setItem(i, 1, QTableWidgetItem(playerType))
-            self.tableWidget.setItem(i, 2, QTableWidgetItem("是" if player.player_hasMC else "否"))
+            self.tableWidget.setItem(i, 2, QTableWidgetItem("已购买" if player.player_hasMC else "未购买"))
     
     def setLoggingIn(self, state):
         self.isLoggingIn = bool(state)
@@ -4434,13 +4843,13 @@ class PlayerPage(QFrame):
                     break
         
         menu = QMenu(self.selectPlayerButton)
+        menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         menu.addAction("")
         
         listWidget = ListWidget(menu)
         listWidget.itemDoubleClicked.connect(lambda x: (parseName(x.text()), menu.close()))
         for player in self.playerList:
             item = QListWidgetItem(player.player_playerName, listWidget)
-            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             item.setSizeHint(QSize(0, 24))
             listWidget.addItem(item)
         
@@ -4591,15 +5000,19 @@ class UpdateLogDialogue(MaskedDialogue):
         super().__init__(parent)
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setContentsMargins(5, 32, 5, 5)
+        self.scrollArea = ScrollArea(self)
+        self.scrollArea.setStyleSheet("background: transparent; border: none;")
         self.label = Label(self)
-        self.verticalLayout.addWidget(self.label)
+        self.scrollArea.setWidget(self.label)
+        self.scrollArea.setWidgetResizable(True)
+        self.verticalLayout.addWidget(self.scrollArea)
         self.retranslateUI()
     
     def retranslateUI(self):
         self.label.setText(
             f'''<!DOCTYPE html><html><head><style>code {{ font-family: \"Consolas\" }}</style></head><body>{markdown2.markdown("""<h1 align="center">Common Minecraft Launcher</h1>
-<h2 align="center">Version AlphaDev-26001</h2>
-这是 2026 年的第一个版本！
+<h2 align="center">Version AlphaDev-26001 on 2026.2.17</h2>
+这是 2026 年的第一个版本！祝大家**新年快乐**！
 
 ### 添加
 - 下载模组加载器功能；
@@ -4608,7 +5021,14 @@ class UpdateLogDialogue(MaskedDialogue):
   - 自动下载 Fabric API；
 - 支持隔离模组加载器和其他版本；
 - 添加“启动器可见性”设置；
-- 其他内容。
+- 版本管理添加“版本信息”页面；
+  - 显示版本信息；
+  - 设置版本独立设置；
+  - 以及其他……
+- 启动设置添加“内存分配”部分；
+- 在启动器的“下载选项”和“版本信息”页面添加了版本图标；
+  - 未设定默认为 `:/missingno.png`；
+- 其他内容和小细节。
 
 #### 底层代码
 - 引入 Cache（缓存），目前还未推广使用；
@@ -4624,6 +5044,11 @@ class UpdateLogDialogue(MaskedDialogue):
 ### 修复
 - 无法启动游戏 `.json` 文件带有 `inheritsFrom` 键的游戏实例。
 - 修复启动器启动时处理版本隔离代码的一处笔误（`parents` 错拼成 `parent` 造成无法启动）
+
+### 已知 bug
+- 启动器弹出对话框（无边框窗口的子控件调用 `self.winId()`）会导致窗口显示出现问题；
+  - 复现方法：把这个窗口关闭即可复现；
+  - 目前暂未想到解决办法。
 
 ### 启动器仓库
 [CMCL-Launcher](https://www.github.com/chengwm123456/CMCL-Launcher)
@@ -4896,6 +5321,7 @@ class MainLauncherWindow(MainWindow):
             self.centralwidget.setGeometry(QRect(35, 35, self.width() - 70, self.height() - 70))
     
     def paintEvent(self, a0):
+        self.setWindowBorderAccentColour(getBorderColour(is_highlight=True))
         super().paintEvent(a0)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)

@@ -30,6 +30,8 @@ class TextEdit(QTextEdit, Widget):
         self.setProperty("cursorOpacity", 0.0)
         self.setProperty("cursorPos", QPoint(0, 0))
         
+        self.setWidgetAttribute("smoothCursorAnimations", True)
+        
         self.cursorPositionChanged.connect(self.__cursorPosChanged)
     
     def paintEvent(self, e):
@@ -98,7 +100,7 @@ class TextEdit(QTextEdit, Widget):
             painter.setBrush(getForegroundColour())
             painter.translate(-self.horizontalScrollBar().value(), -self.verticalScrollBar().value())
             rect = QRect(self.property("cursorPos"), self.cursorRect().size())
-            painter.drawRoundedRect(rect, 1, 1)
+            painter.drawRoundedRect(rect, self.cursorRect().size().width(), self.cursorRect().size().width())
         painter.restore()
     
     def contextMenuEvent(self, e):
@@ -116,25 +118,39 @@ class TextEdit(QTextEdit, Widget):
         if not self.isEnabled() or self.isReadOnly():
             return
         
-        def func(ani):
-            if self.hasFocus() and self.isEnabled():
-                ani.setDuration(QApplication.instance().cursorFlashTime())
-                ani.start()
-        
-        ani = QPropertyAnimation(self, b"cursorOpacity", self)
-        ani.setStartValue(0.0)
-        ani.setKeyValueAt(0.5, 1.0)
-        ani.setEndValue(0.0)
-        ani.setDuration(QApplication.instance().cursorFlashTime())
-        ani.finished.connect(lambda: func(ani))
-        ani.start()
+        if self.widgetAttribute("smoothCursorAnimations"):
+            def func(ani):
+                if self.hasFocus() and self.isEnabled():
+                    ani.setDuration(QApplication.instance().cursorFlashTime())
+                    ani.start()
+            
+            ani = QPropertyAnimation(self, b"cursorOpacity", self)
+            ani.setStartValue(0.0)
+            ani.setKeyValueAt(0.5, 1.0)
+            ani.setEndValue(0.0)
+            ani.setDuration(QApplication.instance().cursorFlashTime())
+            ani.finished.connect(lambda: func(ani))
+            ani.start()
+        else:
+            def func(timer):
+                if self.hasFocus() and self.isEnabled():
+                    timer.setInterval(QApplication.instance().cursorFlashTime())
+                    self.setProperty("cursorOpacity", float(not self.property("cursorOpacity")))
+                else:
+                    timer.stop()
+                    timer.destroy()
+            
+            timer = QTimer(self)
+            timer.setInterval(QApplication.instance().cursorFlashTime())
+            timer.timeout.connect(func)
+            timer.start()
     
     def focusOutEvent(self, a0):
         super().focusOutEvent(a0)
         ani = QPropertyAnimation(self, b"cursorOpacity", self)
         ani.setStartValue(self.property("cursorOpacity"))
         ani.setEndValue(0.0)
-        ani.setDuration(1000)
+        ani.setDuration(500)
         ani.start()
     
     def resizeEvent(self, a0):
@@ -146,14 +162,17 @@ class TextEdit(QTextEdit, Widget):
     def __cursorPosChanged(self):
         pos = self.cursorRect().topLeft() - QPoint(-self.horizontalScrollBar().value(),
                                                    -self.verticalScrollBar().value())
-        ani = QPropertyAnimation(self, b"cursorPos", self)
-        ani.setStartValue(self.property("cursorPos"))
-        ani.setEndValue(pos)
-        ani.setDuration(250)
-        ani.setEasingCurve(QEasingCurve.Type.OutQuint)
-        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
-        if self.isEnabled and not self.isReadOnly():
-            ani.valueChanged.connect(lambda: self.setProperty("cursorOpacity", 1.0))
+        if self.widgetAttribute("smoothCursorAnimations"):
+            ani = QPropertyAnimation(self, b"cursorPos", self)
+            ani.setStartValue(self.property("cursorPos"))
+            ani.setEndValue(pos)
+            ani.setDuration(250)
+            ani.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            if self.isEnabled() and not self.isReadOnly():
+                ani.valueChanged.connect(lambda: self.setProperty("cursorOpacity", 1.0))
+        else:
+            self.setProperty("cursorPos", pos)
 
 
 class PlainTextEdit(QPlainTextEdit, Widget):
@@ -176,6 +195,8 @@ class PlainTextEdit(QPlainTextEdit, Widget):
         self.setProperty("cursorOpacity", 0.0)
         self.setProperty("cursorPos", QPoint(0, 0))
         
+        self.setWidgetAttribute("smoothCursorAnimations", True)
+        
         self.cursorPositionChanged.connect(self.__cursorPosChanged)
     
     def paintEvent(self, e):
@@ -244,7 +265,7 @@ class PlainTextEdit(QPlainTextEdit, Widget):
             painter.setBrush(getForegroundColour())
             painter.translate(-self.horizontalScrollBar().value(), -self.verticalScrollBar().value())
             rect = QRect(self.property("cursorPos"), self.cursorRect().size())
-            painter.drawRoundedRect(rect, 1, 1)
+            painter.drawRoundedRect(rect, self.cursorRect().size().width(), self.cursorRect().size().width())
         painter.restore()
     
     def contextMenuEvent(self, e):
@@ -262,25 +283,39 @@ class PlainTextEdit(QPlainTextEdit, Widget):
         if not self.isEnabled() or self.isReadOnly():
             return
         
-        def func(ani):
-            if self.hasFocus() and self.isEnabled():
-                ani.setDuration(QApplication.instance().cursorFlashTime())
-                ani.start()
-        
-        ani = QPropertyAnimation(self, b"cursorOpacity", self)
-        ani.setStartValue(0.0)
-        ani.setKeyValueAt(0.5, 1.0)
-        ani.setEndValue(0.0)
-        ani.setDuration(QApplication.instance().cursorFlashTime())
-        ani.finished.connect(lambda: func(ani))
-        ani.start()
+        if self.widgetAttribute("smoothCursorAnimations"):
+            def func(ani):
+                if self.hasFocus() and self.isEnabled():
+                    ani.setDuration(QApplication.instance().cursorFlashTime())
+                    ani.start()
+            
+            ani = QPropertyAnimation(self, b"cursorOpacity", self)
+            ani.setStartValue(0.0)
+            ani.setKeyValueAt(0.5, 1.0)
+            ani.setEndValue(0.0)
+            ani.setDuration(QApplication.instance().cursorFlashTime())
+            ani.finished.connect(lambda: func(ani))
+            ani.start()
+        else:
+            def func(timer):
+                if self.hasFocus() and self.isEnabled():
+                    timer.setInterval(QApplication.instance().cursorFlashTime())
+                    self.setProperty("cursorOpacity", float(not self.property("cursorOpacity")))
+                else:
+                    timer.stop()
+                    timer.destroy()
+            
+            timer = QTimer(self)
+            timer.setInterval(QApplication.instance().cursorFlashTime())
+            timer.timeout.connect(func)
+            timer.start()
     
     def focusOutEvent(self, a0):
         super().focusOutEvent(a0)
         ani = QPropertyAnimation(self, b"cursorOpacity", self)
         ani.setStartValue(self.property("cursorOpacity"))
         ani.setEndValue(0.0)
-        ani.setDuration(1000)
+        ani.setDuration(500)
         ani.start()
     
     def resizeEvent(self, a0):
@@ -292,11 +327,14 @@ class PlainTextEdit(QPlainTextEdit, Widget):
     def __cursorPosChanged(self):
         pos = self.cursorRect().topLeft() - QPoint(-self.horizontalScrollBar().value(),
                                                    -self.verticalScrollBar().value())
-        ani = QPropertyAnimation(self, b"cursorPos", self)
-        ani.setStartValue(self.property("cursorPos"))
-        ani.setEndValue(pos)
-        ani.setDuration(250)
-        ani.setEasingCurve(QEasingCurve.Type.OutQuint)
-        ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
-        if self.isEnabled and not self.isReadOnly():
-            ani.valueChanged.connect(lambda: self.setProperty("cursorOpacity", 1.0))
+        if self.widgetAttribute("smoothCursorAnimations"):
+            ani = QPropertyAnimation(self, b"cursorPos", self)
+            ani.setStartValue(self.property("cursorPos"))
+            ani.setEndValue(pos)
+            ani.setDuration(250)
+            ani.setEasingCurve(QEasingCurve.Type.OutQuint)
+            ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+            if self.isEnabled() and not self.isReadOnly():
+                ani.valueChanged.connect(lambda: self.setProperty("cursorOpacity", 1.0))
+        else:
+            self.setProperty("cursorPos", pos)

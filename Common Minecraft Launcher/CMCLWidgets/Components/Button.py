@@ -423,7 +423,6 @@ class CheckBox(QCheckBox, Widget):
         painter.drawRoundedRect(rect, 16, 16)
         painter.restore()
         if self.property("frameOpacity"):
-            rect = self.style().subElementRect(QStyle.SubElement.SE_CheckBoxIndicator, op).adjusted(1, 1, -1, -1)
             painter.save()
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour(is_highlight=True))
@@ -443,16 +442,18 @@ class CheckBox(QCheckBox, Widget):
                     self.property("baseOpacity") + (
                             self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))
                 painter.drawLines([
-                    QLine(QPoint(4 + rect.x(), rect.y() + 8), QPoint(rect.width() // 2 + rect.x(), rect.y() + 10)),
-                    QLine(QPoint(rect.width() // 2 + rect.x(), rect.y() + 10), QPoint(9 + rect.x(), rect.y() + 4))
+                    QLineF(QPointF(rect.x() + (rect.width() / 3), rect.y() + (rect.height() * 2 / 3)),
+                           QPointF(rect.width() / 2 + rect.x(), rect.y() + (rect.height() * 5 / 6))),
+                    QLineF(QPointF(rect.width() / 2 + rect.x(), rect.y() + (rect.height() * 5 / 6)),
+                           QPointF(rect.x() + (rect.width() * 2 / 3) + 1, rect.y() + (rect.height() / 4) + 2))
                 ])
             case Qt.CheckState.PartiallyChecked:
                 painter.setOpacity(
                     self.property("baseOpacity") + (
                             self.property("frameOpacity") * (1.0 - self.property("baseOpacity"))))
-                painter.drawLine(QLine(
-                    QPoint(4 + rect.x(), rect.y() + rect.height() // 2),
-                    QPoint(rect.x() + rect.width() - 4, rect.y() + rect.height() // 2)
+                painter.drawLine(QLineF(
+                    QPointF(rect.x() + (rect.width() / 4), rect.y() + rect.height() / 2),
+                    QPointF(rect.x() + (rect.width() * 3 / 4), rect.y() + rect.height() / 2)
                 ))
         painter.restore()
         painter.save()

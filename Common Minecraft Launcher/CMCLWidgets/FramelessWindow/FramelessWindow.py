@@ -5,6 +5,8 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
+from ..ThemeController.ThemeControlClasses import Colour
+
 if platform.system().lower() == "windows":
     from .WindowsFunctions import *
     from .WindowsStructures import *
@@ -13,7 +15,6 @@ if platform.system().lower() == "windows":
 class FramelessWindow(QWidget):
     def __init__(self, *__args):
         super().__init__(*__args)
-        super().setWindowFlag(Qt.WindowType.Window)
         self.__platform = __import__("platform")
         self.__ctypes = None
         self.__wintypes = None
@@ -56,7 +57,6 @@ class FramelessWindow(QWidget):
         self.__updateWindowFrameless()
     
     def __updateWindowFrameless(self):
-        super().setWindowFlag(Qt.WindowType.Window)
         match self.__platform.system().lower():
             case "windows":
                 self.__updateWin32Frameless()
@@ -65,7 +65,8 @@ class FramelessWindow(QWidget):
             case "linux":
                 self.__updateLinuxWindowFrameless()
         self.__updateShadow()
-        self.windowHandle().screenChanged.connect(self.__onScreenChanged)
+        if self.windowHandle():
+            self.windowHandle().screenChanged.connect(self.__onScreenChanged)
     
     def __updateShadow(self):
         match self.__platform.system().lower():
@@ -102,12 +103,6 @@ class FramelessWindow(QWidget):
                 windowStyle &= ~self.__win32con.WS_MAXIMIZEBOX
             self.__win32gui.SetWindowLong(
                 int(self.winId()), self.__win32con.GWL_STYLE, windowStyle
-            )
-            self.__dwmapi.DwmSetWindowAttribute(
-                int(self.winId()),
-                DWMWINDOWATTRIBUTE.DWMWA_NCRENDERING_POLICY.value,
-                byref(c_int(DWMNCRENDERINGPOLICY.DWMNCRP_ENABLED.value)),
-                4,
             )
             self.update()
             self.updateGeometry()
@@ -186,9 +181,7 @@ class FramelessWindow(QWidget):
     
     def __updateLinuxWindowFrameless(self):
         super().setWindowFlag(Qt.WindowType.FramelessWindowHint)
-        super().setWindowFlag(
-            Qt.WindowType.WindowMinMaxButtonsHint
-        )
+        super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint)
     
     def __onScreenChanged(self):
         match self.__platform.system().lower():
@@ -237,7 +230,7 @@ class FramelessWindow(QWidget):
                     case self.__win32con.WM_SETFOCUS:
                         if self.property("borderAccentColourEnabled"):
                             colour = self.windowBorderAccentColour()
-                            colourref = DWORD(
+                            colourref = self.__wintypes.DWORD(
                                 colour.red()
                                 | (colour.green() << 8)
                                 | (colour.blue() << 16)
@@ -250,7 +243,7 @@ class FramelessWindow(QWidget):
                                 4,
                             )
                         else:
-                            colourref = DWORD(0xFFFFFFFF)
+                            colourref = self.__wintypes.DWORD(0xFFFFFFFF)
                             self.__dwmapi.DwmSetWindowAttribute(
                                 int(winMsg.hWnd),
                                 DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR.value,
@@ -259,7 +252,7 @@ class FramelessWindow(QWidget):
                             )
                         return True, 0
                     case self.__win32con.WM_KILLFOCUS:
-                        colourref = DWORD(0xFFFFFFFF)
+                        colourref = self.__wintypes.DWORD(0xFFFFFFFF)
                         self.__dwmapi.DwmSetWindowAttribute(
                             int(winMsg.hWnd),
                             DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR.value,
@@ -394,13 +387,62 @@ class FramelessWindow(QWidget):
         return self.property("windowBorderAccentColour")
     
     def setWindowBorderAccentColour(self, colour):
-        self.setProperty("windowBorderAccentColour", colour)
+        if self.__platform.system().lower() != "windows":
+            return
+        if self.property("windowBorderAccentColour") != colour:
+            self.setProperty("windowBorderAccentColour", Colour(colour))
+            if self.property("borderAccentColourEnabled"):
+                colour = self.windowBorderAccentColour()
+                colourref = DWORD(
+                    colour.red()
+                    | (colour.green() << 8)
+                    | (colour.blue() << 16)
+                    | (colour.alpha() << 32)
+                )
+                self.__dwmapi.DwmSetWindowAttribute(
+                    int(self.winId()),
+                    DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR.value,
+                    self.__ctypes.byref(colourref),
+                    4,
+                )
+            else:
+                colourref = DWORD(0xFFFFFFFF)
+                self.__dwmapi.DwmSetWindowAttribute(
+                    int(self.winId()),
+                    DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR.value,
+                    self.__ctypes.byref(colourref),
+                    4,
+                )
     
     def borderAccentColourEnabled(self):
         return self.property("borderAccentColourEnabled")
     
     def setBorderAccentColourEnabled(self, enabled):
+        if self.__platform.system().lower() != "windows":
+            return
         self.setProperty("borderAccentColourEnabled", enabled)
+        if self.property("borderAccentColourEnabled"):
+            colour = self.windowBorderAccentColour()
+            colourref = DWORD(
+                colour.red()
+                | (colour.green() << 8)
+                | (colour.blue() << 16)
+                | (colour.alpha() << 32)
+            )
+            self.__dwmapi.DwmSetWindowAttribute(
+                int(self.winId()),
+                DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR.value,
+                self.__ctypes.byref(colourref),
+                4,
+            )
+        else:
+            colourref = DWORD(0xFFFFFFFF)
+            self.__dwmapi.DwmSetWindowAttribute(
+                int(self.winId()),
+                DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR.value,
+                self.__ctypes.byref(colourref),
+                4,
+            )
 
 
 class FramelessMainWindow(QMainWindow, FramelessWindow):

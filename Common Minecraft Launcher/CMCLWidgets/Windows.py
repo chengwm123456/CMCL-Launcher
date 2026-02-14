@@ -394,7 +394,7 @@ class RoundedDialogue(QDialog, Window):
 
 class MaskedDialogue(RoundedDialogue):
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent)
         self.dialogueMask = DialogueMask(parent)
         
         pos = self.parent().mapToGlobal(QPoint(0, 0)) if self.parent() else QPoint(0, 0)
@@ -449,7 +449,6 @@ class RoundedMenu(QMenu):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.updateQSS()
     
     def updateQSS(self, name=None):

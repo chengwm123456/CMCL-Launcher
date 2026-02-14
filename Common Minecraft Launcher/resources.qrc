@@ -38,5 +38,6 @@
         <file>mcdaotian_avatar.png</file>
         <file>dirt_block.png</file>
         <file>grass_block.png</file>
+        <file>missingno.png</file>
     </qresource>
 </RCC>
