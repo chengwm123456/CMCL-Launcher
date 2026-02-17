@@ -443,7 +443,7 @@ class LoadingAnimation(QFrame):
         
         self.setProperty("beingRed", 0)
         self.setProperty("backgroundOpacity", 255)
-        self.setProperty("backgroundPath", None)
+        self.setProperty("backgroundClipPath", None)
     
     def retranslateUI(self):
         if not self.__reloadTextChanged:
@@ -489,12 +489,12 @@ class LoadingAnimation(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        if self.property("backgroundPath"):
+        if self.property("backgroundClipPath"):
             painter.setPen(Colour(*self.__centreAnimation.adjustRed(getBackgroundColour(), self.property("beingRed")),
                                   self.property("backgroundOpacity")))
             painter.setBrush(Colour(*self.__centreAnimation.adjustRed(getBackgroundColour(), self.property("beingRed")),
                                     self.property("backgroundOpacity")))
-            painter.drawPath(self.property("backgroundPath"))
+            painter.drawPath(self.property("backgroundClipPath"))
         else:
             painter.fillRect(self.rect(),
                              Colour(*self.__centreAnimation.adjustRed(getBackgroundColour(), self.property("beingRed")),
@@ -554,8 +554,8 @@ class LoadingAnimation(QFrame):
         self.__reloadButton.setText(text)
         self.__reloadTextChanged = True
     
-    def setBackgroundPath(self, backgroundPath):
-        self.setProperty("backgroundPath", backgroundPath)
+    def setBackgroundClipPath(self, backgroundClipPath):
+        self.setProperty("backgroundClipPath", backgroundClipPath)
     
     def hideEvent(self, *args, **kwargs):
         try:
@@ -1195,11 +1195,14 @@ class HomePage(QFrame):
                     if separationMode == 1:
                         (curVerDir / "saves").mkdir(parents=True, exist_ok=True)
                         
+                        versionType = jsonFile["type"]
                         if versionType == "release":
                             savesDir = (minecraft_path / f"saves")
                         else:
                             savesDir = (minecraft_path / f".{versionType}.saves")
                         for save in savesDir.iterdir():
+                            if not save.is_dir():
+                                continue
                             version = str(nbtlib.load(save / "level.dat")["Data"].get("Version", {}).get("Name"))
                             versionName = jsonFile["id"]
                             if version == versionName:
@@ -1391,7 +1394,6 @@ class HomePage(QFrame):
     
     def postLaunch(self, result):
         self.launchButton.setEnabled(True)
-        print(result)
         if not result[0]:
             self.versionsPopen[result[1]] = self.version
             tip = PopupTip(window)
@@ -2045,7 +2047,7 @@ jar 下载位置在：
             self.loader = LoadingAnimation(self)
             pp = QPainterPath()
             pp.addRoundedRect(self.rect().toRectF(), 10, 10)
-            self.loader.setBackgroundPath(pp)
+            self.loader.setBackgroundClipPath(pp)
             self.loader.addReloadFunction(self.startLoad)
             self.getThread = None
             
@@ -2103,7 +2105,7 @@ jar 下载位置在：
             if self.loader:
                 pp = QPainterPath()
                 pp.addRoundedRect(self.rect().toRectF(), 10, 10)
-                self.loader.setBackgroundPath(pp)
+                self.loader.setBackgroundClipPath(pp)
         
         @staticmethod
         def normaliseVersionData(data):
@@ -2502,14 +2504,6 @@ jar 下载位置在：
                 self.modBody.document().setBaseUrl(QUrl("https://cdn.modrinth.com/"))
                 self.verticalLayout_2.addWidget(self.modBody, 1)
                 
-                # qDebug(self.modBody.toHtml())
-                
-                print(self.mod_body)
-                
-                # self.modInfoContainer = ScrollArea(self.toolBox)
-                # self.modInfoContainer.setWidget(self.modInfo)
-                # self.modInfoContainer.setWidgetResizable(True)
-                
                 self.verticalLayout.addWidget(self.modInfo)
                 
                 self.modVersions = GroupBox(self.scrollAreaWidgetContents)
@@ -2720,12 +2714,20 @@ jar 下载位置在：
                 self.getModThread.gotMod.connect(lambda data: self.displayMods(data, self.currentPage))
                 self.getModThread.start()
                 self.loadingAnimation = LoadingAnimation(self)
+                pp = QPainterPath()
+                pp.addRoundedRect(self.rect().toRectF(), 10, 10)
+                self.loadingAnimation.setBackgroundClipPath(pp)
                 self.startAnimation(True)
         
         def resizeEvent(self, a0):
             super().resizeEvent(a0)
             if self.modInfoPage:
                 self.modInfoPage.resize(self.size())
+            
+            if self.loadingAnimation:
+                pp = QPainterPath()
+                pp.addRoundedRect(self.rect().toRectF(), 10, 10)
+                self.loadingAnimation.setBackgroundClipPath(pp)
         
         def showEvent(self, a0):
             super().showEvent(a0)
@@ -2736,6 +2738,9 @@ jar 下载位置在：
                 self.getModThread.gotMod.connect(self.displayMods)
                 self.getModThread.start()
                 self.loadingAnimation = LoadingAnimation(self)
+                pp = QPainterPath()
+                pp.addRoundedRect(self.rect().toRectF(), 10, 10)
+                self.loadingAnimation.setBackgroundClipPath(pp)
                 self.startAnimation(False)
         
         def hideEvent(self, a0):
@@ -2816,7 +2821,6 @@ jar 下载位置在：
         
         def modInfoPageOpen(self, value):
             data = self.contentTable.model().item(value.row(), 0).text()
-            print(data)
             hit_data = None
             for page in self.mods.values():
                 for hit in page["hits"]:
@@ -4404,9 +4408,9 @@ class AboutPage(QFrame):
             "本产品非 Minecraft 官方产品。\n未经 Mojang Studios 或 Microsoft 批准，亦与 Mojang Studios 或 Microsoft 无任何从属关系。\nMinecraft 官方网站请见：https://www.minecraft.net/")
         
         self.groupBox_lawInformation.setTitle("法律信息")
-        self.lawInformation.setText("""Copyright (C) 2023-2026 chengwm123456
-本程序为自由软件，在 Free Software Foundation 发布的 GNU General Public License 的约束下，你可以对其进行再发布及修改。协议版本为第三版。
-我们希望发布的这款程序有用，但不确定，甚至不保证它有经济价值和适合特定用途。详情参见 GNU General Public License。""")
+        self.lawInformation.setText("""Copyright (C) 2023-2026 chengwm
+本程序是自由软件：你可以根据自由软件基金会发布的 GNU AGPL 的条款，即许可证的第 3 版重新发布它和/或修改它。
+本程序的发布是希望它能起到作用。但没有任何保证；甚至没有隐含的保证。本程序的分发是希望它是有用的，但没有任何保证，甚至没有隐含的适销对路或适合某一特定目的的保证。 参见 GNU AGPL 了解更多细节。""")
     
     def changeAnimation(self, variant, function):
         if variant == "in":
@@ -4646,7 +4650,6 @@ class ChangePlayerNameDialogue(MaskedDialogue):
             self.OKButton.setDisabled(True)
             self.OKButton.setToolTip("无法访问 Mojang API，请重试")
             return
-        print(is_allowed, availability)
         if is_allowed and availability == "AVAILABLE":
             self.OKButton.setEnabled(True)
             self.OKButton.setToolTip("该玩家名合法")

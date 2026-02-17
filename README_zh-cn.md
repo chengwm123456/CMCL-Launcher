@@ -80,7 +80,7 @@
 
 Copyright (C) 2023-2026 chengwm123456
 
-本启动器使用 GNU General Public License 第三版授权，详见 [
+本启动器使用 GNU Affero General Public License 第三版授权，详见 [
 `LICENSE.md`](https://github.com/chengwm123456/CMCL-Launcher/blob/CMCLMain/LICENSE.md)。
 
 （仅英文版本，许可证文件不予翻译）

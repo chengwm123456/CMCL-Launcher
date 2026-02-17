@@ -85,7 +85,7 @@ chengwm).
 
 Copyright (C) 2023-2026 chengwm123456
 
-Licensed under the GNU General Public License version 3, for further details please refer [
+Licensed under the GNU Affero General Public License version 3, for further details please refer [
 `LICENSE.md`](https://github.com/chengwm123456/CMCL-Launcher/blob/CMCLMain/LICENSE.md).
 
 <h5><span style="color: red">DISCLAIMER</span></h5>
