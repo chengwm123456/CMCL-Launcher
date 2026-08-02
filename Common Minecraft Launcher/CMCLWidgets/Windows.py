@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import platform
 from PyQt6.QtCore import *
+from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from .ThemeController.ThemeControl import *
 from .FramelessWindow import *
@@ -449,45 +450,182 @@ class RoundedMenu(QMenu):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setWindowFlags(
+            self.windowFlags() | Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
         self.updateQSS()
+    
+    def paintEvent(self, a0):
+        painter = QPainter(self)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
+        
+        rect = self.rect()
+        baseOpacity = 0.95
+        
+        # 多层柔和阴影效果 (CSS box-shadow 风格)
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.7)
+        
+        shadowColor1 = QColor(0, 0, 0, int(12 * baseOpacity))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(shadowColor1)
+        shadowRect1 = rect.adjusted(6, 6, -6, -6)
+        painter.drawRoundedRect(shadowRect1, 18, 18)
+        
+        shadowColor2 = QColor(0, 0, 0, int(8 * baseOpacity))
+        painter.setBrush(shadowColor2)
+        shadowRect2 = rect.adjusted(4, 4, -4, -4)
+        painter.drawRoundedRect(shadowRect2, 16, 16)
+        
+        shadowColor3 = QColor(0, 0, 0, int(5 * baseOpacity))
+        painter.setBrush(shadowColor3)
+        shadowRect3 = rect.adjusted(2, 2, -2, -2)
+        painter.drawRoundedRect(shadowRect3, 14, 14)
+        painter.restore()
+        
+        # 绘制毛玻璃背景 (Glassmorphism 风格)
+        painter.save()
+        painter.setOpacity(baseOpacity)
+        
+        bgGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomRight()))
+        bgColor = getBackgroundColour()
+        
+        bgColorLight = QColor(
+            min(255, bgColor.red() + 20),
+            min(255, bgColor.green() + 20),
+            min(255, bgColor.blue() + 20)
+        )
+        bgColorMid = QColor(
+            min(255, bgColor.red() + 10),
+            min(255, bgColor.green() + 10),
+            min(255, bgColor.blue() + 10)
+        )
+        
+        bgGradient.setColorAt(0.0, bgColorLight)
+        bgGradient.setColorAt(0.3, bgColorMid)
+        bgGradient.setColorAt(0.7, bgColorMid)
+        bgGradient.setColorAt(1.0, bgColor)
+        
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(bgGradient)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), self.BORDER_RADIUS, self.BORDER_RADIUS)
+        painter.restore()
+        
+        # 内发光效果 (Inner Glow - CSS box-shadow inset)
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.3)
+        
+        glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
+        painter.setPen(QPen(glowColor, 1.5))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), self.BORDER_RADIUS - 2, self.BORDER_RADIUS - 2)
+        painter.restore()
+        
+        # 边框渐变效果
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.9)
+        
+        borderGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomLeft()))
+        borderColor = getBorderColour()
+        borderColorDarker = QColor(
+            max(0, borderColor.red() - 20),
+            max(0, borderColor.green() - 20),
+            max(0, borderColor.blue() - 20)
+        )
+        
+        borderGradient.setColorAt(0.0, borderColorDarker)
+        borderGradient.setColorAt(0.5, borderColor)
+        borderGradient.setColorAt(1.0, borderColor)
+        
+        penBorder = QPen(borderGradient, 1.0)
+        painter.setPen(penBorder)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), self.BORDER_RADIUS, self.BORDER_RADIUS)
+        painter.restore()
+        painter.end()
+        
+        # 让 QMenu 绘制菜单项（QSS 已设 background: transparent，只渲染 item/separator 等）
+        super().paintEvent(a0)
     
     def updateQSS(self, name=None):
         if not name:
             name = self.__class__.__name__
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setWindowFlags(
-            self.windowFlags() | Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
-        self.setStyleSheet(f"""{name}{{
-            background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});
-            color: rgb({str(getForegroundColour(is_tuple=True)).strip('()')});
-            border: 1px solid rgb({str(getBorderColour(is_tuple=True)).strip('()')});
-            border-radius: {self.BORDER_RADIUS}px;
-            margin-bottom: 3px;
-            margin-right: 3px;
-            min-height: 32px;
-        }}
-        {name}::item {{
-            border: 1px solid transparent;
-            border-radius: 10px;
-        }}
-        {name}::item:selected{{
-            background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});
-        }}
-        {name}::item:selected, {name}::item:pressed{{
-            border: 1px solid rgb({str(getBorderColour(is_highlight=True, is_tuple=True)).strip('()')});
-            color: rgb({str(getForegroundColour(is_tuple=True)).strip('()')});
-        }}
-        {name}::item:pressed{{
-            background: rgb({str(getBackgroundColour(is_highlight=True, is_tuple=True)).strip('()')});
-        }}
-        {name}::item:disabled{{
-            color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, 0.3);
-        }}
-        {name}::separator{{
-            height: 1px;
-            background: rgb({str(getBorderColour(is_tuple=True)).strip('()')});
-        }}
-        """)
+        
+        if isinstance(self, RoundedMenu):
+            # RoundedMenu 实例：背景由 paintEvent 绘制，QSS 仅处理项目和分隔线
+            self.setStyleSheet(f"""{name}{{
+    background: transparent;
+    color: rgb({str(getForegroundColour(is_tuple=True)).strip('()')});
+    border: none;
+    margin: 6px;
+    min-height: 32px;
+}}
+{name}::item {{
+    border: 1px solid transparent;
+    border-radius: 8px;
+    min-height: 20px;
+    padding: 4px 16px;
+}}
+{name}::item:selected{{
+    background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});
+}}
+{name}::item:selected, {name}::item:pressed{{
+    border: 1px solid rgb({str(getBorderColour(is_highlight=True, is_tuple=True)).strip('()')});
+    color: rgb({str(getForegroundColour(is_tuple=True)).strip('()')});
+}}
+{name}::item:pressed{{
+    background: rgb({str(getBackgroundColour(is_highlight=True, is_tuple=True)).strip('()')});
+}}
+{name}::item:disabled{{
+    border: none;
+    background: transparent;
+    color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, 0.3);
+}}
+{name}::separator{{
+    height: 1px;
+    background: rgb({str(getBorderColour(is_tuple=True)).strip('()')});
+    margin: 4px 8px;
+}}
+            """)
+        else:
+            # 外部普通 QMenu：保留完整 QSS（含背景和边框）
+            self.setStyleSheet(f"""{name}{{
+    background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});
+    color: rgb({str(getForegroundColour(is_tuple=True)).strip('()')});
+    border: 1px solid rgb({str(getBorderColour(is_tuple=True)).strip('()')});
+    border-radius: 16px;
+    margin: 3px;
+    min-height: 32px;
+}}
+{name}::item {{
+    border: 1px solid transparent;
+    border-radius: 10px;
+    min-height: 20px;
+    padding: 4px 12px;
+}}
+{name}::item:selected{{
+    background: rgb({str(getBackgroundColour(is_tuple=True)).strip('()')});
+}}
+{name}::item:selected, {name}::item:pressed{{
+    border: 1px solid rgb({str(getBorderColour(is_highlight=True, is_tuple=True)).strip('()')});
+    color: rgb({str(getForegroundColour(is_tuple=True)).strip('()')});
+}}
+{name}::item:pressed{{
+    background: rgb({str(getBackgroundColour(is_highlight=True, is_tuple=True)).strip('()')});
+}}
+{name}::item:disabled{{
+    border: none;
+    background: transparent;
+    color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, 0.3);
+}}
+{name}::separator{{
+    height: 1px;
+    background: rgb({str(getBorderColour(is_tuple=True)).strip('()')});
+}}
+            """)
+            self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            self.setWindowFlags(
+                self.windowFlags() | Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
     
     def showEvent(self, a0):
         super().showEvent(a0)

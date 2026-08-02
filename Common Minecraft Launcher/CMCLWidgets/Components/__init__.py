@@ -5,7 +5,7 @@ from .ComboBox import ComboBox
 from .GroupBox import GroupBox
 from .ImageWidget import ImageWidget
 from .ItemView import ItemDelegate, ItemView
-from .Label import Label, StrongLabel, TitleLabel
+from .Label import Label
 from .LineEdit import LineEdit
 from .ListView import ListView, ListWidget
 from .Panel import Panel

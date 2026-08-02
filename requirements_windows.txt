@@ -19,7 +19,5 @@ python-dateutil==2.9.0.post0
 PyYAML==6.0.3
 requests==2.32.4
 six==1.17.0
-urllib3==2.5.0
+urllib3==2.6.3
 zstandard==0.25.0
-
-pywin32==311

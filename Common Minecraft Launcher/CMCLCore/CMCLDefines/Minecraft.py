@@ -23,12 +23,12 @@ class Minecraft:
     def __init__(
             self,
             mc_gameVersion: Union[str, LiteralString] = "",
-            mc_gameWorkDir: Union[str, os.PathLike[str], Path, LiteralString] = "",
-            mc_gameJarFile: Union[str, os.PathLike[str], Path, LiteralString] = "",
-            mc_gameJsonFile: Union[str, os.PathLike[str], Path, LiteralString] = "",
-            mc_gameNativesDir: Union[str, os.PathLike[str], Path, LiteralString] = "",
-            mc_gameAssetsDir: Union[str, os.PathLike[str], Path, LiteralString] = "",
-            mc_gameLibrariesDir: Union[str, os.PathLike[str], Path, LiteralString] = "",
+            mc_gameWorkDir: Union[str, os.PathLike[str], LiteralString] = "",
+            mc_gameJarFile: Union[str, os.PathLike[str], LiteralString] = "",
+            mc_gameJsonFile: Union[str, os.PathLike[str], LiteralString] = "",
+            mc_gameNativesDir: Union[str, os.PathLike[str], LiteralString] = "",
+            mc_gameAssetsDir: Union[str, os.PathLike[str], LiteralString] = "",
+            mc_gameLibrariesDir: Union[str, os.PathLike[str], LiteralString] = "",
             mc_gameSeparation: bool = False
     ):
         self.__mc_gameVersion = str(mc_gameVersion)
@@ -53,6 +53,12 @@ class Minecraft:
              and self.mc_gameJarFile and self.mc_gameJsonFile
              and self.mc_gameNativesDir and self.mc_gameAssetsDir and self.mc_gameLibrariesDir)
         )
+    
+    def __str__(self) -> str:
+        return f"Minecraft(version={self.version}, inheritsFrom={self.inheritsFrom})"
+    
+    def __repr__(self) -> str:
+        return self.__str__()
     
     @property
     def mc_gameVersion(self) -> str:

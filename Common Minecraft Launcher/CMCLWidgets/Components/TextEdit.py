@@ -40,19 +40,58 @@ class TextEdit(QTextEdit, Widget):
         painter = QPainter(self.viewport())
         painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
+        rect = self.viewport().rect()
+        baseOpacity = self.viewport().property("baseOpacity") or 0.85
+        frameOpacity = self.viewport().property("frameOpacity") or 0.0
+        
+        # 柔和的阴影效果
         painter.save()
-        painter.setOpacity(self.viewport().property("baseOpacity"))
-        painter.setPen(getBorderColour(is_highlight=self.hasFocus() and self.isEnabled()))
-        painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
-        painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
+        shadowOpacity = baseOpacity * 0.5
+        shadowColor = QColor(0, 0, 0, int(12 * shadowOpacity))
+        painter.setOpacity(shadowOpacity)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(shadowColor)
+        shadowRect = rect.adjusted(2, 2, -2, -2)
+        painter.drawRoundedRect(shadowRect, 14, 14)
         painter.restore()
         
-        if self.viewport().property("frameOpacity"):
+        # 绘制渐变背景
+        painter.save()
+        painter.setOpacity(baseOpacity)
+        
+        bgColor = getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled())
+        bgGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomLeft()))
+        bgColorLighter = QColor(
+            min(255, bgColor.red() + 12),
+            min(255, bgColor.green() + 12),
+            min(255, bgColor.blue() + 12)
+        )
+        bgGradient.setColorAt(0.0, bgColorLighter)
+        bgGradient.setColorAt(1.0, bgColor)
+        
+        painter.setPen(getBorderColour(is_highlight=self.hasFocus() and self.isEnabled()))
+        painter.setBrush(bgGradient)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
+        painter.restore()
+        
+        # Hover/Focus 状态效果
+        if frameOpacity > 0.1:
             painter.save()
-            painter.setOpacity(self.viewport().property("frameOpacity"))
-            painter.setPen(getBorderColour(is_highlight=True))
-            painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
-            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
+            painter.setOpacity(frameOpacity)
+            
+            # 外发光环
+            glowColor = getBorderColour(is_highlight=True)
+            glowAlpha = int(80 * frameOpacity)
+            glowPen = QPen(QColor(glowColor.red(), glowColor.green(), glowColor.blue(), glowAlpha), 1.5)
+            painter.setPen(glowPen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 14, 14)
+            
+            # 内边框高亮
+            highlightPen = QPen(getBorderColour(is_highlight=True), 1.0)
+            painter.setPen(highlightPen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 14, 14)
             painter.restore()
         
         painter.save()
@@ -75,12 +114,8 @@ class TextEdit(QTextEdit, Widget):
         context.selections = [selection]
         self.document().documentLayout().draw(painter, context)
         if not self.toPlainText() and self.placeholderText():
-            placeholderDocument = QTextDocument()
+            placeholderDocument = self.document().clone()
             placeholderDocument.setDefaultStyleSheet(f"body {{ color: rgb{getForegroundColour(is_tuple=True)}; }}")
-            placeholderDocument.setTextWidth(self.document().textWidth())
-            placeholderDocument.setDocumentMargin(self.document().documentMargin())
-            placeholderDocument.setDefaultFont(self.document().defaultFont())
-            placeholderDocument.setLayoutEnabled(self.document().isLayoutEnabled())
             placeholderDocument.setPlainText(self.placeholderText())
             placeholderDocument.setHtml(placeholderDocument.toHtml())
             painter.save()
@@ -108,7 +143,6 @@ class TextEdit(QTextEdit, Widget):
         menus = self.findChildren(QMenu)
         if menus:
             menu = menus[0]
-            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
             RoundedMenu.updateQSS(menu)
             menu.popup(QCursor.pos())
     
@@ -158,6 +192,10 @@ class TextEdit(QTextEdit, Widget):
         pos = self.cursorRect().topLeft() - QPoint(-self.horizontalScrollBar().value(),
                                                    -self.verticalScrollBar().value())
         self.setProperty("cursorPos", pos)
+    
+    def inputMethodEvent(self, a0):
+        super().inputMethodEvent(a0)
+        self.__cursorPosChanged()
     
     def __cursorPosChanged(self):
         pos = self.cursorRect().topLeft() - QPoint(-self.horizontalScrollBar().value(),
@@ -205,19 +243,58 @@ class PlainTextEdit(QPlainTextEdit, Widget):
         painter = QPainter(self.viewport())
         painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
+        rect = self.viewport().rect()
+        baseOpacity = self.viewport().property("baseOpacity") or 0.85
+        frameOpacity = self.viewport().property("frameOpacity") or 0.0
+        
+        # 柔和的阴影效果
         painter.save()
-        painter.setOpacity(self.viewport().property("baseOpacity"))
-        painter.setPen(getBorderColour(is_highlight=self.hasFocus() and self.isEnabled()))
-        painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
-        painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
+        shadowOpacity = baseOpacity * 0.5
+        shadowColor = QColor(0, 0, 0, int(12 * shadowOpacity))
+        painter.setOpacity(shadowOpacity)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(shadowColor)
+        shadowRect = rect.adjusted(2, 2, -2, -2)
+        painter.drawRoundedRect(shadowRect, 14, 14)
         painter.restore()
         
-        if self.viewport().property("frameOpacity"):
+        # 绘制渐变背景
+        painter.save()
+        painter.setOpacity(baseOpacity)
+        
+        bgColor = getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled())
+        bgGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomLeft()))
+        bgColorLighter = QColor(
+            min(255, bgColor.red() + 12),
+            min(255, bgColor.green() + 12),
+            min(255, bgColor.blue() + 12)
+        )
+        bgGradient.setColorAt(0.0, bgColorLighter)
+        bgGradient.setColorAt(1.0, bgColor)
+        
+        painter.setPen(getBorderColour(is_highlight=self.hasFocus() and self.isEnabled()))
+        painter.setBrush(bgGradient)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
+        painter.restore()
+        
+        # Hover/Focus 状态效果
+        if frameOpacity > 0.1:
             painter.save()
-            painter.setOpacity(self.viewport().property("frameOpacity"))
-            painter.setPen(getBorderColour(is_highlight=True))
-            painter.setBrush(getBackgroundColour(is_highlight=self.hasFocus() and self.isEnabled()))
-            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
+            painter.setOpacity(frameOpacity)
+            
+            # 外发光环
+            glowColor = getBorderColour(is_highlight=True)
+            glowAlpha = int(80 * frameOpacity)
+            glowPen = QPen(QColor(glowColor.red(), glowColor.green(), glowColor.blue(), glowAlpha), 1.5)
+            painter.setPen(glowPen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 14, 14)
+            
+            # 内边框高亮
+            highlightPen = QPen(getBorderColour(is_highlight=True), 1.0)
+            painter.setPen(highlightPen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 14, 14)
             painter.restore()
         
         painter.save()
@@ -240,12 +317,8 @@ class PlainTextEdit(QPlainTextEdit, Widget):
         context.selections = [selection]
         self.document().documentLayout().draw(painter, context)
         if not self.toPlainText() and self.placeholderText():
-            placeholderDocument = QTextDocument()
+            placeholderDocument = self.document().clone()
             placeholderDocument.setDefaultStyleSheet(f"body {{ color: rgb{getForegroundColour(is_tuple=True)}; }}")
-            placeholderDocument.setTextWidth(self.document().textWidth())
-            placeholderDocument.setDocumentMargin(self.document().documentMargin())
-            placeholderDocument.setDefaultFont(self.document().defaultFont())
-            placeholderDocument.setLayoutEnabled(self.document().isLayoutEnabled())
             placeholderDocument.setPlainText(self.placeholderText())
             placeholderDocument.setHtml(placeholderDocument.toHtml())
             painter.save()
@@ -273,7 +346,6 @@ class PlainTextEdit(QPlainTextEdit, Widget):
         menus = self.findChildren(QMenu)
         if menus:
             menu = menus[0]
-            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
             RoundedMenu.updateQSS(menu)
             menu.popup(QCursor.pos())
     
@@ -323,6 +395,10 @@ class PlainTextEdit(QPlainTextEdit, Widget):
         pos = self.cursorRect().topLeft() - QPoint(-self.horizontalScrollBar().value(),
                                                    -self.verticalScrollBar().value())
         self.setProperty("cursorPos", pos)
+    
+    def inputMethodEvent(self, a0):
+        super().inputMethodEvent(a0)
+        self.__cursorPosChanged()
     
     def __cursorPosChanged(self):
         pos = self.cursorRect().topLeft() - QPoint(-self.horizontalScrollBar().value(),

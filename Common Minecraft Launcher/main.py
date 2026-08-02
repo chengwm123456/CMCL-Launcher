@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 "Common Minecraft Launcher" started time: 1693310591 (folder created time)
@@ -21,6 +22,7 @@ import tempfile
 import webbrowser
 import time
 import shlex
+import math
 
 import random
 import logging
@@ -48,7 +50,7 @@ from CMCLModding.GetForge import GetNeoForgeVersions
 from CMCLModding.DownloadMods import DownloadMod
 from CMCLModding.DownloadFabric import DownloadFabricFull
 from CMCLModding.DownloadForge import DownloadNeoForgeFull
-from CMCLModding.ModManagement import GetLoaderType
+from CMCLModding.ModManagement import GetLoader, GetLoaderType, ListMods
 
 from CMCLSaveEditing.LevelDat import LoadData
 import nbtlib
@@ -62,7 +64,7 @@ import json
 
 import markdown2
 
-CMCLVersion = ("AlphaDev-26001", "Alpha Development-26001")
+CMCLVersion = ("AlphaDev-26002", "Alpha Development-26002")
 minecraft_path = Path(".")
 
 #                -------------------- Monospace --------------------  ---- Fallback ----
@@ -84,8 +86,8 @@ themeColourDefines = {
                     True: (163, 213, 255)
                 },
                 True: {
-                    False: (181, 213, 255),
-                    True: (193, 224, 255)
+                    False: (203, 234, 255),
+                    True: (223, 248, 255)
                 }
             },
             ColourRole.Border: {
@@ -104,8 +106,8 @@ themeColourDefines = {
                     True: (80, 146, 255),
                 },
                 True: {
-                    False: (76, 126, 219),
-                    True: (84, 146, 255),
+                    False: (87, 126, 219),
+                    True: (94, 146, 255),
                 }
             },
             ColourRole.Border: {
@@ -166,11 +168,19 @@ themeColourDefines = {
             ColourRole.Background: {
                 False: {
                     True: (190, 150, 255)
+                },
+                True: {
+                    False: (232, 165, 255),
+                    True: (243, 175, 255)
                 }
             },
             ColourRole.Border: {
                 False: {
                     True: (163, 143, 255)
+                },
+                True: {
+                    False: (195, 153, 255),
+                    True: (207, 163, 255)
                 }
             }
         },
@@ -305,7 +315,7 @@ class AnimatedStackedWidget(QStackedWidget):
             func1()
 
 
-class LoadingAnimation(QFrame):
+class LoadingAnimation(QWidget):
     class TransparencyAnimation(QVariantAnimation):
         def __init__(self, parent=None, variant="in"):
             super().__init__(parent)
@@ -707,6 +717,12 @@ class HomePage(QFrame):
                     self.openVersionInstallationDir.pressed.connect(self.doOpenVersionInstallationDir)
                     self.gridLayout.addWidget(self.openVersionInstallationDir)
                     
+                    self.openMinecraftDirectory = CommandLinkButton(self.versionShortcuts)
+                    self.gridLayout.addWidget(self.openMinecraftDirectory)
+                    
+                    self.openSettingsFile = CommandLinkButton(self.versionShortcuts)
+                    self.gridLayout.addWidget(self.openSettingsFile)
+                    
                     self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
                     self.verticalLayout.addItem(self.verticalSpacer)
                     
@@ -721,9 +737,20 @@ class HomePage(QFrame):
                     if self.versionAlias:
                         versionNameDisplay = f"{self.versionAlisa} ({self.versionName})"
                     self.versionInfoLabel.setText(f"{versionNameDisplay}")
-                    self.versionShortcuts.setTitle("版本快捷方式")
-                    self.openVersionInstallationDir.setText("打开版本下载文件夹")
-                    self.openVersionInstallationDir.setToolTip("如果你开启了版本隔离，这也是游戏的运行目录。")
+                    self.versionShortcuts.setTitle(self.tr(
+                        "HomePage.VersionManagementPage.VersionInfoPage.GeneralPage.VersionShortcuts.Title"))  # 版本快捷方式
+                    self.openVersionInstallationDir.setText(self.tr(
+                        "HomePage.VersionManagementPage.VersionInfoPage.GeneralPage.VersionShortcuts.OpenVersionInstallationDir.Text"))  # 打开版本下载文件夹
+                    self.openVersionInstallationDir.setToolTip(self.tr(
+                        "HomePage.VersionManagementPage.VersionInfoPage.GeneralPage.VersionShortcuts.OpenVersionInstallationDir.ToolTip"))  # 如果你开启了版本隔离，这也是游戏的运行目录。
+                    self.openMinecraftDirectory.setText("打开游戏主文件夹")
+                    self.openMinecraftDirectory.setToolTip(
+                        "这个文件夹有版本文件夹 <code>versions/...</code>。<br>"
+                        "如果没有开启版本隔离的话，这个文件夹里面还会有存档文件夹 <code>saves</code>，资源包文件夹 <code>resourcepacks</code> ")
+                    self.openSettingsFile.setText("打开设置文件")
+                    self.openSettingsFile.setToolTip(
+                        "如果想要修改设置，除了打开游戏，还可以编辑 <code>options.txt</code> 文件。<br>"
+                        "如果看不懂什么意思，请自行上网查资料。")
                 
                 def doOpenVersionInstallationDir(self):
                     if platform.system().lower() == "windows":
@@ -887,12 +914,312 @@ class HomePage(QFrame):
                     # ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                     # ani33.finished.connect(lambda: self.versionShortcuts.hide())
             
+            class ModConfigPage(QFrame):
+                def __init__(self, parent, version):
+                    super().__init__(parent)
+                    self.version = version
+                    self.loader = GetLoader(minecraft_path, version)
+                    
+                    self.verticalLayout = QVBoxLayout(self)
+                    
+                    self.topPanel = Panel(self)
+                    self.verticalLayout.addWidget(self.topPanel)
+                    
+                    self.verticalLayout_2 = QVBoxLayout(self.topPanel)
+                    
+                    self.modCount = Label(self.topPanel)
+                    self.verticalLayout_2.addWidget(self.modCount)
+                    
+                    self.horizontalLayout = QHBoxLayout()
+                    self.verticalLayout_2.addLayout(self.horizontalLayout)
+                    
+                    self.enableAll = PushButton(self.topPanel)
+                    self.enableAll.pressed.connect(lambda: self.enableSelectedMods(-1))
+                    self.horizontalLayout.addWidget(self.enableAll)
+                    
+                    self.disableAll = PushButton(self.topPanel)
+                    self.disableAll.pressed.connect(lambda: self.disableSelectedMods(-1))
+                    self.horizontalLayout.addWidget(self.disableAll)
+                    
+                    self.updateAll = PushButton(self.topPanel)
+                    self.updateAll.setDisabled(True)  # Since we haven't already written this function.
+                    self.horizontalLayout.addWidget(self.updateAll)
+                    
+                    self.selectAll = PushButton(self.topPanel)
+                    self.selectAll.pressed.connect(self.selectAllMods)
+                    self.horizontalLayout.addWidget(self.selectAll)
+                    
+                    self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding,
+                                                        QSizePolicy.Policy.Preferred)
+                    self.horizontalLayout.addItem(self.horizontalSpacer)
+                    
+                    self.listWidget = ListWidget(self)
+                    self.listWidget.setSelectionMode(ListWidget.SelectionMode.MultiSelection)
+                    self.listWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
+                    self.verticalLayout.addWidget(self.listWidget, 1)
+                    
+                    self.bottomPanel = Panel(self)
+                    self.verticalLayout_3 = QVBoxLayout(self.bottomPanel)
+                    
+                    self.selectedModCount = Label(self.bottomPanel)
+                    self.verticalLayout_3.addWidget(self.selectedModCount)
+                    
+                    self.horizontalLayout_2 = QHBoxLayout()
+                    self.verticalLayout_3.addLayout(self.horizontalLayout_2)
+                    
+                    self.enableSelected = PushButton(self.bottomPanel)
+                    self.enableSelected.pressed.connect(lambda: self.enableSelectedMods(0))
+                    self.horizontalLayout_2.addWidget(self.enableSelected)
+                    
+                    self.disableSelected = PushButton(self.bottomPanel)
+                    self.disableSelected.pressed.connect(lambda: self.disableSelectedMods(0))
+                    self.horizontalLayout_2.addWidget(self.disableSelected)
+                    
+                    self.bottomPanel.adjustSize()
+                    self.bottomPanel.move(0, self.height() + self.bottomPanel.height() + 10)
+                    
+                    self.bottomPanelAnimation = None
+                    
+                    self.enabledModsCount = 0
+                    self.disabledModsCount = 0
+                    self.selectedModsCount = 0
+                    self.mods = []
+                    
+                    if not self.loader:
+                        self.topPanel.hide()
+                        self.listWidget.hide()
+                        self.noLoader = Label(self)
+                        self.noLoader.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                    else:
+                        self.noLoader = None
+                        self.loadModList()
+                    
+                    app.registerRetranslateFunction(self.retranslateUI)
+                    self.retranslateUI()
+                    
+                    self.displayMods()
+                
+                def retranslateUI(self):
+                    selectedItems = self.listWidget.selectedItems()
+                    self.modCount.setText(
+                        f'共 <span style="color: skyblue">{len(self.mods)}</span> 个模组，启用：<span style="color: green">{self.enabledModsCount}</span> / 禁用：<span style="color: red">{self.disabledModsCount}</span>')
+                    self.enableAll.setText("启用全部")
+                    self.disableAll.setText("禁用全部")
+                    self.updateAll.setText("全部升级（暂未支持）")
+                    self.selectAll.setText("全选" if len(selectedItems) != self.listWidget.count() else "全不选")
+                    self.selectedModCount.setText(
+                        f"已选择 <span style=\"color: skyblue\">{len(selectedItems)}</span> 个模组")
+                    self.enableSelected.setText("启用选中")
+                    self.disableSelected.setText("禁用选中")
+                    if self.noLoader:
+                        self.noLoader.setText(
+                            "<span style='color: red; font-size: 20px'>未安装模组加载器</span><br>该版本为原版。请先前往下载页面，安装模组加载器。<br>如果你确信是启动器检测模组加载器的问题，可以提交 Issue。")
+                
+                def displayMods(self):
+                    if not self.loader:
+                        return
+                    for mod in self.mods:
+                        name = mod.getModInfo()['name']
+                        version = mod.getModInfo()['version']
+                        displayName = f"{name}\n{version}"
+                        if not mod.isEnabled:
+                            displayName = f"（已禁用）{displayName}"
+                        item = QListWidgetItem(displayName)
+                        item.setData(1, mod)
+                        self.listWidget.addItem(item)
+                    self.retranslateUI()
+                
+                def loadModList(self):
+                    if not self.loader:
+                        return
+                    self.mods = []
+                    for mod in ListMods(minecraft_path):
+                        self.mods.append(mod)
+                        if mod.isEnabled:
+                            self.enabledModsCount += 1
+                        else:
+                            self.disabledModsCount += 1
+                    self.retranslateUI()
+                
+                def selectAllMods(self):
+                    selected = len(self.listWidget.selectedItems()) != self.listWidget.count()
+                    for i in range(self.listWidget.count()):
+                        item = self.listWidget.item(i)
+                        item.setSelected(selected)
+                
+                def deselectAll(self):
+                    for i in range(self.listWidget.count()):
+                        item = self.listWidget.item(i)
+                        item.setSelected(False)
+                
+                def itemSelectionChanged(self):
+                    selectedItems = self.listWidget.selectedItems()
+                    if len(selectedItems) and self.bottomPanel.y() > self.height():
+                        self.bottomPanelPopup()
+                    elif not len(selectedItems) and self.bottomPanel.y() <= self.height():
+                        self.bottomPanelClose()
+                    self.retranslateUI()
+                
+                def enableSelectedMods(self, items=-1):
+                    if items == 0:
+                        items = self.listWidget.selectedItems()
+                    elif items == -1:
+                        items = [self.listWidget.item(item) for item in range(self.listWidget.count())]
+                    for item in items:
+                        mod = item.data(1)
+                        mod.isEnabled = True
+                        modFile = mod.modFile
+                        if modFile.suffixes[-2:] == [".jar", ".disabled"]:
+                            newModFile = modFile.parent / modFile.stem  # remove the last suffix `.disabled`
+                            modFile.rename(newModFile)
+                            mod.modFile = newModFile
+                        self.disabledModsCount = max(0, self.disabledModsCount - 1)
+                        self.enabledModsCount = min(self.listWidget.count(), self.enabledModsCount + 1)
+                    self.deselectAll()
+                    self.displayMods()
+                
+                def disableSelectedMods(self, items=-1):
+                    if items == 0:
+                        items = self.listWidget.selectedItems()
+                    elif items == -1:
+                        items = [self.listWidget.item(item) for item in range(self.listWidget.count())]
+                    for item in items:
+                        mod = item.data(1)
+                        mod.isEnabled = False
+                        modFile = mod.modFile
+                        if modFile.suffix == ".jar":
+                            newModFile = modFile.with_suffix(".jar.disabled")
+                            modFile.rename(newModFile)
+                            mod.modFile = newModFile
+                        self.enabledModsCount = max(0, self.enabledModsCount - 1)
+                        self.disabledModsCount = min(self.listWidget.count(), self.disabledModsCount + 1)
+                    self.deselectAll()
+                    self.displayMods()
+                
+                def resizeEvent(self, event):
+                    super().resizeEvent(event)
+                    if hasattr(self, "noLoader") and self.noLoader:
+                        self.noLoader.setFixedWidth(self.width())
+                        self.noLoader.setFixedHeight(self.height())
+                    self.bottomPanel.adjustSize()
+                    self.bottomPanel.move(self.width() // 2 - self.bottomPanel.width() // 2,
+                                          self.height() + self.bottomPanel.height() + 10)
+                
+                def bottomPanelPopup(self):
+                    if self.bottomPanelAnimation:
+                        self.bottomPanelAnimation.stop()
+                        self.bottomPanelAnimation.deleteLater()
+                        del self.bottomPanelAnimation
+                    self.bottomPanelAnimation = QPropertyAnimation(self.bottomPanel, b"pos", self)
+                    self.bottomPanelAnimation.setStartValue(self.bottomPanel.pos())
+                    self.bottomPanelAnimation.setEndValue(
+                        QPoint(self.bottomPanel.x(), self.height() - self.bottomPanel.height() - 10))
+                    self.bottomPanelAnimation.setDuration(100)
+                    self.bottomPanelAnimation.setEasingCurve(QEasingCurve.Type.OutQuad)
+                    self.bottomPanelAnimation.start()
+                
+                def bottomPanelClose(self):
+                    if self.bottomPanelAnimation:
+                        self.bottomPanelAnimation.stop()
+                        self.bottomPanelAnimation.deleteLater()
+                        del self.bottomPanelAnimation
+                    self.bottomPanelAnimation = QPropertyAnimation(self.bottomPanel, b"pos", self)
+                    self.bottomPanelAnimation.setStartValue(self.bottomPanel.pos())
+                    self.bottomPanelAnimation.setEndValue(
+                        QPoint(self.bottomPanel.x(), self.height() + self.bottomPanel.height() + 10))
+                    self.bottomPanelAnimation.setDuration(100)
+                    self.bottomPanelAnimation.setEasingCurve(QEasingCurve.Type.OutQuad)
+                    self.bottomPanelAnimation.start()
+                
+                def changeAnimation(self, variant, function):
+                    if not self.loader:
+                        if function:
+                            function()
+                        return
+                    if variant == "in":
+                        self.changeAnimationIn()
+                    else:
+                        QTimer.singleShot(300, function)
+                        self.changeAnimationOut()
+                
+                def changeAnimationIn(self):
+                    if not self.loader:
+                        return
+                    ani1 = QPropertyAnimation(self.topPanel, b"pos", self)
+                    pos1 = self.topPanel.pos()
+                    ani1.setStartValue(pos1 + QPoint(100, 0))
+                    ani1.setEndValue(pos1)
+                    ani1.setDuration(500)
+                    ani1.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani1.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    ani11 = OpacityAnimation(self.topPanel)
+                    ani11.setStartValue(0)
+                    ani11.setEndValue(100)
+                    ani11.setDuration(500)
+                    ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    QTimer.singleShot(50, lambda: self.topPanel.show())
+                    ani2 = QPropertyAnimation(self.listWidget, b"pos", self)
+                    pos2 = self.listWidget.pos()
+                    ani2.setStartValue(pos2 + QPoint(100, 0))
+                    ani2.setEndValue(pos2)
+                    ani2.setDuration(500)
+                    ani2.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    QTimer.singleShot(100, lambda: ani2.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    ani22 = OpacityAnimation(self.listWidget)
+                    ani22.setStartValue(0)
+                    ani22.setEndValue(100)
+                    ani22.setDuration(500)
+                    ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    QTimer.singleShot(100, lambda: ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    QTimer.singleShot(150, lambda: self.listWidget.show())
+                    # ani3 = QPropertyAnimation(self.versionShortcuts, b"pos", self)
+                    # pos3 = self.versionShortcuts.pos()
+                    # ani3.setStartValue(pos3 + QPoint(100, 0))
+                    # ani3.setEndValue(pos3)
+                    # ani3.setDuration(500)
+                    # ani3.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # QTimer.singleShot(200, lambda: ani3.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    # ani33 = OpacityAnimation(self.versionShortcuts)
+                    # ani33.setStartValue(0)
+                    # ani33.setEndValue(100)
+                    # ani33.setDuration(500)
+                    # ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # QTimer.singleShot(200, lambda: ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped))
+                    # QTimer.singleShot(250, lambda: self.versionShortcuts.show())
+                
+                def changeAnimationOut(self):
+                    if not self.loader:
+                        return
+                    ani11 = OpacityAnimation(self.topPanel)
+                    ani11.setStartValue(100)
+                    ani11.setEndValue(0)
+                    ani11.setDuration(500)
+                    ani11.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani11.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    ani11.finished.connect(lambda: self.topPanel.hide())
+                    ani22 = OpacityAnimation(self.listWidget)
+                    ani22.setStartValue(100)
+                    ani22.setEndValue(0)
+                    ani22.setDuration(500)
+                    ani22.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani22.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    ani22.finished.connect(lambda: self.listWidget.hide())
+                    # ani33 = OpacityAnimation(self.versionShortcuts)
+                    # ani33.setStartValue(100)
+                    # ani33.setEndValue(0)
+                    # ani33.setDuration(500)
+                    # ani33.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    # ani33.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    # ani33.finished.connect(lambda: self.versionShortcuts.hide())
+            
             def __init__(self, parent, version):
                 super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
                 self.setMouseTracking(True)
                 self.version = version
                 
                 self.closeButton = CloseButton(self)
+                self.closeButton.move(QPoint(3, 3))
                 self.closeButton.hide()
                 self.closeButton.pressed.connect(self.parent().closeVersionInfoPage)
                 self.setProperty("closeButtonOpacity", 0.0)
@@ -919,6 +1246,13 @@ class HomePage(QFrame):
                 self.verSettingsPage.released.connect(lambda: self.setCurrentPage(1))
                 self.verticalLayout.addWidget(self.verSettingsPage)
                 
+                self.modConfigPage = PushButton(self.leftPanel)
+                self.modConfigPage.setWidgetAttribute("outlinedButton")
+                self.modConfigPage.setCheckable(True)
+                self.modConfigPage.setAutoExclusive(True)
+                self.modConfigPage.released.connect(lambda: self.setCurrentPage(2))
+                self.verticalLayout.addWidget(self.modConfigPage)
+                
                 self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
                 self.verticalLayout.addItem(self.verticalSpacer)
                 
@@ -931,18 +1265,25 @@ class HomePage(QFrame):
                 self.verSettingsPageFrame = self.VerSettingsPage(self.rightPanel, self.version)
                 self.rightPanel.addWidget(self.verSettingsPageFrame)
                 
+                self.modConfigPageFrame = self.ModConfigPage(self.rightPanel, self.version)
+                self.rightPanel.addWidget(self.modConfigPageFrame)
+                
                 app.registerRetranslateFunction(self.retranslateUI)
                 self.retranslateUI()
             
             def retranslateUI(self):
-                self.generalPage.setText("基本信息")
-                self.verSettingsPage.setText("版本独立设置")
+                self.generalPage.setText(
+                    self.tr("HomePage.VersionManagementPage.VersionInfoPage.GeneralPage.Title"))
+                self.verSettingsPage.setText(
+                    self.tr("HomePage.VersionManagementPage.VersionInfoPage.VerSettingsPage.Title"))
+                self.modConfigPage.setText("⚙️模组管理")
             
             def setCurrentPage(self, page_id=-1):
-                page_seq = (self.generalPage, self.verSettingsPage)
+                page_seq = (self.generalPage, self.verSettingsPage, self.modConfigPage)
                 page_frame_dict = {
                     self.generalPage: self.generalPageFrame,
-                    self.verSettingsPage: self.verSettingsPageFrame
+                    self.verSettingsPage: self.verSettingsPageFrame,
+                    self.modConfigPage: self.modConfigPageFrame
                 }
                 if -1 < page_id < len(page_seq):
                     page = page_seq[page_id]
@@ -1022,7 +1363,8 @@ class HomePage(QFrame):
             self.verticalLayout_2.addWidget(self.currentDir)
             
             self.listWidget = ListWidget(self.versionsPanel)
-            self.listWidget.itemDoubleClicked.connect(lambda x: self.openVersionInfoPage(x.text()))
+            self.listWidget.itemDoubleClicked.connect(
+                lambda x: self.openVersionInfoPage(x.data(Qt.ItemDataRole.UserRole)))
             self.verticalLayout_2.addWidget(self.listWidget)
             
             self.versionAliasConv = {}
@@ -1086,10 +1428,10 @@ class HomePage(QFrame):
                     versionConfig = Path(version[1] / "version.cfg")
                     versionName = version[0]
                     if versionConfig.exists():
-                        cfg = yaml.safe_load(Path(versionConfig).read_text(encoding="utf-8"))
+                        cfg = loadVersionConfig(minecraft_path, version[0])
                         versionName = cfg["VersionAlias"]
-                        self.versionAliasConv[versionName] = version[0]
                     item = QListWidgetItem(versionName, self.listWidget)
+                    item.setData(Qt.ItemDataRole.UserRole, version[0])
                     item.setSizeHint(QSize(0, 32))
                     self.listWidget.addItem(item)
         
@@ -1123,6 +1465,7 @@ class HomePage(QFrame):
         def closingFinished(self):
             self.versionInfoPage.close()
             self.versionInfoPage.deleteLater()
+            del self.versionInfoPage
             self.versionInfoPage = None
         
         def resizeEvent(self, a0):
@@ -1157,7 +1500,7 @@ class HomePage(QFrame):
             jsonFile = json.loads(
                 Path(curVerDir / f"{self.version}.json").read_text(encoding="utf-8"))
             
-            separationMode = settings["LaunchSettings"]["VersionSeparation"]
+            separationMode = getVersionConfig(minecraft_path, curVerDir, settings, "LaunchSettings.VersionSeparation")
             match separationMode:
                 case 0:
                     separationRequired = False
@@ -1167,10 +1510,7 @@ class HomePage(QFrame):
                     separationRequired = GetLoaderType(minecraft_path, self.version) is not None
                 case 3:
                     versionType = jsonFile["type"]
-                    if versionType == "release":
-                        separationRequired = False
-                    else:
-                        separationRequired = True
+                    separationRequired = versionType != "release"
                 case _:
                     separationRequired = False
             
@@ -1253,6 +1593,18 @@ class HomePage(QFrame):
             )
             self.launchFinished.emit(result)
     
+    class UntilProcessExitedThread(QThread):
+        processExited = pyqtSignal(int)
+        
+        def __init__(self, parent, process):
+            super().__init__(parent)
+            self.process = process
+        
+        def run(self):
+            while self.process.poll() is None:
+                pass
+            self.processExited.emit(self.process.returncode)
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.topPanel = Panel(self)
@@ -1327,7 +1679,6 @@ class HomePage(QFrame):
     
     def updateVersionList(self):
         menu = QMenu(self.selectVersionButton)
-        menu.setStyleSheet("background: transparent;")
         menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         listWidget = ListWidget(menu)
         listWidget.itemDoubleClicked.connect(lambda x: (self.selectVersion(x.text()), menu.close()))
@@ -1346,6 +1697,7 @@ class HomePage(QFrame):
                     versionName = cfg["VersionAlias"]
                     self.versionAliasConv[versionName] = version[0]
                 item = QListWidgetItem(versionName, listWidget)
+                item.setData(Qt.ItemDataRole.UserRole, version[0])
                 item.setSizeHint(QSize(0, 24))
                 listWidget.addItem(item)
             if not self.version:
@@ -1398,9 +1750,13 @@ class HomePage(QFrame):
             self.versionsPopen[result[1]] = self.version
             tip = PopupTip(window)
             label = Label(tip)
-            label.setText("启动成功，请等待游戏窗口显示")
+            label.setText(self.tr("HomePage.launchSuccess"))  # 启动成功，请等待游戏窗口显示
             tip.setCentralWidget(label)
             tip.tip(duration=1000, topMargin=32)
+            thread = self.UntilProcessExitedThread(self, result[1])
+            thread.processExited.connect(
+                lambda code: self.afterGameExited(code, result[1], settings["LaunchSettings"]["LauncherVisibility"]))
+            thread.start()
             match settings["LaunchSettings"]["LauncherVisibility"]:
                 case 0:
                     pass
@@ -1411,42 +1767,51 @@ class HomePage(QFrame):
                     self.window().close()
                 case 3:
                     self.window().hide()
-                    # after game finished: self.window().show()
+                    self.window().systemTrayIcon.show()
                 case 4:
                     self.window().hide()
-                    # after game finished: self.window().close()
         else:
             tip = PopupTip(window)
             label = Label(tip)
             match result[1]:
                 case 1:
-                    label.setText("未选择版本，请选择版本后再启动")
+                    label.setText(self.tr("HomePage.launchFailed.1"))
                 case 2:
-                    label.setText("缺失版本 JSON 文件，请重新下载该版本")
+                    label.setText(self.tr("HomePage.launchFailed.2"))
                 case 3:
-                    label.setText(
-                        "本电脑没有 Java，请尝试手动指定，或者下载一个 Java。\nhttps://www.oracle.com/java/technologies/downloads/")
+                    label.setText(self.tr("HomePage.launchFailed.3"))
                     label.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
                 case 4:
-                    label.setText(
-                        "当前指定的 Java 版本太低，请重新选择，或者下载一个合适的 Java。\nhttps://www.oracle.com/java/technologies/downloads/")
+                    label.setText(self.tr("HomePage.launchFailed.4"))
                     label.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
                     window.centralwidget.setCurrentWidget(window.settingsPageFrame)
                     window.settingsPageFrame.page1.setChecked(True)
                     window.settingsPageFrame.stackedWidget.setCurrentWidget(window.settingsPageFrame.page1Frame)
                     window.settingsPage.setChecked(True)
                 case 5:
-                    label.setText("用户未登录，触发登录中……")
                     if window.playerPageFrame.isLoggingIn:
-                        pass
+                        label.setText(self.tr("HomePage.launchFailed.5.1"))
                     else:
+                        label.setText(self.tr("HomePage.launchFailed.5.2"))
                         window.centralwidget.setCurrentWidget(window.playerPageFrame)
                         window.playerPage.setChecked(True)
                         window.playerPageFrame.loginMicrosoft()
                 case _:
-                    label.setText("启动失败")
+                    label.setText(self.tr("HomePage.launchFailed"))
             tip.setCentralWidget(label)
             tip.tip(duration=1000, topMargin=32)
+    
+    def afterGameExited(self, returncode, process, visibility):
+        if not visibility:
+            return
+        if not returncode:
+            # The game's probably crashed.
+            return
+        match visibility:
+            case 3:
+                self.window().show()
+            case 4:
+                self.window().close()
     
     def selectNewMinecraftDir(self):
         if not self.versionsManagementPage.isVisible():
@@ -1689,83 +2054,133 @@ class DownloadPage(QFrame):
                 self.icon_path = icon_path
                 
                 self.mainLayout = QVBoxLayout(self)
+                self.mainLayout.setSpacing(8)
+                self.mainLayout.setContentsMargins(12, 12, 12, 12)
                 
                 self.topPanel = Panel(self)
                 self.mainLayout.addWidget(self.topPanel)
                 
                 self.horizontalLayout = QHBoxLayout(self.topPanel)
+                self.horizontalLayout.setContentsMargins(8, 8, 8, 8)
+                self.horizontalLayout.setSpacing(8)
                 
                 self.exitButton = CloseButton(self.topPanel)
                 self.exitButton.setFixedSize(QSize(32, 32))
                 self.exitButton.pressed.connect(self.closeFrame)
                 self.horizontalLayout.addWidget(self.exitButton)
                 
-                self.groupBox1Btn = PushButton(self)
-                self.groupBox1Btn.setCheckable(True)
-                self.groupBox1Btn.setChecked(True)
-                self.groupBox1Btn.setAutoExclusive(True)
-                self.groupBox1Btn.setWidgetAttribute("outlinedButton")
-                self.groupBox1Btn.pressed.connect(lambda: self.indexTo(0))
-                self.horizontalLayout.addWidget(self.groupBox1Btn)
-                
                 self.groupBox4Btn = PushButton(self)
                 self.groupBox4Btn.setCheckable(True)
+                self.groupBox4Btn.setChecked(True)
                 self.groupBox4Btn.setAutoExclusive(True)
                 self.groupBox4Btn.setWidgetAttribute("outlinedButton")
-                self.groupBox4Btn.pressed.connect(lambda: self.indexTo(1))
+                self.groupBox4Btn.pressed.connect(lambda: self.indexTo(0))
                 self.horizontalLayout.addWidget(self.groupBox4Btn)
                 
                 self.groupBox2Btn = PushButton(self)
                 self.groupBox2Btn.setCheckable(True)
                 self.groupBox2Btn.setAutoExclusive(True)
                 self.groupBox2Btn.setWidgetAttribute("outlinedButton")
-                self.groupBox2Btn.pressed.connect(lambda: self.indexTo(2))
+                self.groupBox2Btn.pressed.connect(lambda: self.indexTo(1))
                 self.horizontalLayout.addWidget(self.groupBox2Btn)
                 
                 self.groupBox3Btn = PushButton(self)
                 self.groupBox3Btn.setCheckable(True)
                 self.groupBox3Btn.setAutoExclusive(True)
                 self.groupBox3Btn.setWidgetAttribute("outlinedButton")
-                self.groupBox3Btn.pressed.connect(lambda: self.indexTo(3))
+                self.groupBox3Btn.pressed.connect(lambda: self.indexTo(2))
                 self.horizontalLayout.addWidget(self.groupBox3Btn)
                 
                 self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 self.horizontalLayout.addItem(self.horizontalSpacer)
                 
-                self.scrollArea = ScrollArea(self)
-                self.mainLayout.addWidget(self.scrollArea, 1)
+                self.horizontalLayout_2 = QHBoxLayout()
+                self.horizontalLayout_2.setSpacing(12)
+                
+                self.groupBox = Panel(self)
+                self.groupBox.setMinimumWidth(140)
+                self.groupBox.setMaximumWidth(160)
+                self.groupBox.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+                self.horizontalLayout_2.addWidget(self.groupBox)
+                
+                self.verticalLayout_2 = QVBoxLayout(self.groupBox)
+                self.verticalLayout_2.setContentsMargins(8, 16, 8, 16)
+                self.verticalLayout_2.setSpacing(12)
+                
+                self.versionIcon = ImageWidget(self.groupBox)
+                self.versionIcon.setFixedHeight(96)
+                self.versionIcon.setImageAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
+                self.versionIcon.setImageScaleMode(ImageWidget.ImageScaleMode.AspectRatio)
+                self.versionIcon.setImage(QImage(self.icon_path))
+                
+                self.verticalLayout_2.addWidget(self.versionIcon)
+                
+                self.versionName = Label(self.groupBox)
+                self.versionName.setText(self.version)
+                self.versionName.setWordWrap(True)
+                font = self.versionName.font()
+                font.setBold(True)
+                font.setPointSize(font.pointSize() + 1)
+                self.versionName.setFont(font)
+                self.versionName.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+                self.verticalLayout_2.addWidget(self.versionName)
+                
+                self.versionSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+                self.verticalLayout_2.addItem(self.versionSpacer)
+                
+                self.rightArea = QWidget()
+                self.rightLayout = QVBoxLayout(self.rightArea)
+                self.rightLayout.setContentsMargins(0, 0, 0, 0)
+                self.rightLayout.setSpacing(12)
+                
+                self.scrollArea = ScrollArea(self.rightArea)
+                self.scrollArea.setWidgetResizable(True)
+                self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
+                self.scrollArea.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+                self.rightLayout.addWidget(self.scrollArea, 1)
+                
+                self.buttonContainer = QWidget(self.rightArea)
+                self.buttonLayout = QHBoxLayout(self.buttonContainer)
+                self.buttonLayout.setContentsMargins(0, 0, 0, 0)
+                self.buttonLayout.setSpacing(8)
+                
+                self.buttonSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+                self.buttonLayout.addItem(self.buttonSpacer)
+                
+                self.startDownloadBtn = PushButton(self.buttonContainer)
+                self.startDownloadBtn.setMinimumHeight(40)
+                self.startDownloadBtn.setMinimumWidth(120)
+                self.startDownloadBtn.pressed.connect(self.downloadVersion)
+                self.startDownloadBtn.pressed.connect(self.closeFrame)
+                self.startDownloadBtn.setWidgetAttribute("primaryButton")
+                self.buttonLayout.addWidget(self.startDownloadBtn)
+                
+                self.rightLayout.addWidget(self.buttonContainer)
+                
+                self.horizontalLayout_2.addWidget(self.rightArea, 1)
+                
+                self.mainLayout.addLayout(self.horizontalLayout_2, 1)
                 
                 self.scrollAreaWidgetContents = QWidget()
                 self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
+                self.verticalLayout.setSpacing(12)
+                self.verticalLayout.setContentsMargins(0, 0, 0, 8)
                 
-                self.groupBox = GroupBox(self)
-                self.verticalLayout.addWidget(self.groupBox)
-                
-                self.form_1 = QFormLayout(self.groupBox)
-                
-                self.form_1_Label = Label(self.groupBox)
-                self.form_1.setWidget(0, QFormLayout.ItemRole.LabelRole, self.form_1_Label)
-                
-                self.form_1_PushButton = PushButton(self.groupBox)
-                self.form_1_PushButton.setIcon(QIcon(self.icon_path))
-                self.form_1.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_1_PushButton)
-                
-                # self.form_2_Label = Label(self.groupBox)
-                # self.form_1.setWidget(1, QFormLayout.ItemRole.LabelRole, self.form_2_Label)
-                #
-                # self.form_2_PushButton = PushButton(self.groupBox)
-                # self.form_1.setWidget(1, QFormLayout.ItemRole.FieldRole, self.form_2_PushButton)
-                
-                self.groupBox_4 = GroupBox(self)
+                self.groupBox_4 = GroupBox(self.scrollAreaWidgetContents)
                 self.verticalLayout.addWidget(self.groupBox_4)
                 
                 self.form_3 = QFormLayout(self.groupBox_4)
+                self.form_3.setContentsMargins(12, 12, 12, 12)
+                self.form_3.setSpacing(8)
+                self.form_3.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                self.form_3.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
                 
                 # (Neo)Forge
                 self.form_5_Label = Label(self.groupBox_4)
                 self.form_3.setWidget(0, QFormLayout.ItemRole.LabelRole, self.form_5_Label)
                 
                 self.form_5_ComboBox = ComboBox(self.groupBox_4)
+                self.form_5_ComboBox.setMinimumHeight(32)
                 self.form_5_ComboBox.addItem(None, None)
                 self.form_5_ComboBox.currentIndexChanged.connect(self.updateModLoadersAvailability)
                 self.form_3.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_5_ComboBox)
@@ -1775,6 +2190,7 @@ class DownloadPage(QFrame):
                 self.form_3.setWidget(1, QFormLayout.ItemRole.LabelRole, self.form_6_Label)
                 
                 self.form_6_ComboBox = ComboBox(self.groupBox_4)
+                self.form_6_ComboBox.setMinimumHeight(32)
                 self.form_6_ComboBox.addItem(None, None)
                 self.form_6_ComboBox.currentIndexChanged.connect(self.updateModLoadersAvailability)
                 self.form_3.setWidget(1, QFormLayout.ItemRole.FieldRole, self.form_6_ComboBox)
@@ -1783,6 +2199,7 @@ class DownloadPage(QFrame):
                 self.form_3.setWidget(2, QFormLayout.ItemRole.LabelRole, self.form_7_Label)
                 
                 self.form_7_ComboBox = ComboBox(self.groupBox_4)
+                self.form_7_ComboBox.setMinimumHeight(32)
                 self.form_7_ComboBox.addItem(None, None)
                 self.form_7_ComboBox.setDisabled(True)
                 self.form_7_ComboBox.currentIndexChanged.connect(self.updateModLoadersAvailability)
@@ -1792,11 +2209,16 @@ class DownloadPage(QFrame):
                 self.verticalLayout.addWidget(self.groupBox_2)
                 
                 self.form_2 = QFormLayout(self.groupBox_2)
+                self.form_2.setContentsMargins(12, 12, 12, 12)
+                self.form_2.setSpacing(8)
+                self.form_2.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                self.form_2.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
                 
                 self.form_3_Label = Label(self.groupBox_2)
                 self.form_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.form_3_Label)
                 
                 self.form_3_LineEdit = LineEdit(self.groupBox_2)
+                self.form_3_LineEdit.setMinimumHeight(32)
                 self.form_3_LineEdit.setPlaceholderText(str(minecraft_path.absolute()))
                 self.form_3_LineEdit.setText(str(minecraft_path.absolute()))
                 self.form_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.form_3_LineEdit)
@@ -1805,24 +2227,30 @@ class DownloadPage(QFrame):
                 self.form_2.setWidget(1, QFormLayout.ItemRole.LabelRole, self.form_4_Label)
                 
                 self.form_4_LineEdit = LineEdit(self.groupBox_2)
+                self.form_4_LineEdit.setMinimumHeight(32)
                 self.form_4_LineEdit.setPlaceholderText(str(self.version))
                 self.form_4_LineEdit.setText(str(self.version))
                 self.form_2.setWidget(1, QFormLayout.ItemRole.FieldRole, self.form_4_LineEdit)
                 
-                self.groupBox_3 = GroupBox(self)
+                self.groupBox_3 = GroupBox(self.scrollAreaWidgetContents)
                 self.verticalLayout.addWidget(self.groupBox_3)
                 
                 self.gridLayout = QGridLayout(self.groupBox_3)
+                self.gridLayout.setContentsMargins(12, 12, 12, 12)
+                self.gridLayout.setSpacing(8)
                 
                 self.wikiVersionPage = CommandLinkButton(self.groupBox_3)
+                self.wikiVersionPage.setMinimumHeight(32)
                 self.wikiVersionPage.pressed.connect(self.openWiki)
                 self.gridLayout.addWidget(self.wikiVersionPage, 0, 0)
                 
                 self.clientJarURL = CommandLinkButton(self.groupBox_3)
+                self.clientJarURL.setMinimumHeight(32)
                 self.clientJarURL.pressed.connect(self.openClientURL)
                 self.gridLayout.addWidget(self.clientJarURL, 1, 0)
                 
                 self.serverJarURL = CommandLinkButton(self.groupBox_3)
+                self.serverJarURL.setMinimumHeight(32)
                 self.serverJarURL.pressed.connect(self.openServerURL)
                 self.gridLayout.addWidget(self.serverJarURL, 1, 1)
                 
@@ -1830,15 +2258,8 @@ class DownloadPage(QFrame):
                 self.verticalLayout.addItem(self.verticalSpacer)
                 
                 self.scrollArea.setWidget(self.scrollAreaWidgetContents)
-                self.scrollArea.setWidgetResizable(True)
                 
                 self.scrollArea.verticalScrollBar().valueChanged.connect(self.updateTopSelections)
-                
-                self.startDownloadBtn = PushButton(self.scrollAreaWidgetContents)
-                self.startDownloadBtn.pressed.connect(self.downloadVersion)
-                self.startDownloadBtn.pressed.connect(self.closeFrame)
-                self.startDownloadBtn.setWidgetAttribute("primaryButton")
-                self.mainLayout.addWidget(self.startDownloadBtn)
                 
                 self.fetchModLoadersThread = self.FetchModLoadersThread(self)
                 self.fetchModLoadersThread.fetched.connect(self.modLoadersFetched)
@@ -1852,23 +2273,12 @@ class DownloadPage(QFrame):
                 self.retranslateUI()
             
             def retranslateUI(self):
-                self.groupBox1Btn.setText(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title"))
                 self.groupBox4Btn.setText(
                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox4.Title"))
                 self.groupBox2Btn.setText(
                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox2.Title"))
                 self.groupBox3Btn.setText(
                     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox3.Title"))
-                self.groupBox.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox1.Title"))
-                self.form_1_Label.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.1.Label.Text"))
-                self.form_1_PushButton.setText(
-                    self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.1.PushButton.Text").format(
-                        self.version))
-                # self.form_2_Label.setText(
-                #     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.Label.Text"))  # 模组加载器
-                # self.form_2_PushButton.setText(
-                #     self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Form.2.PushButton.Text"))  # 点击选择模组加载器
                 self.groupBox_4.setTitle(self.tr("DownloadPage.DownloadVanilla.DownloadOptions.GroupBox4.Title"))
                 self.form_5_Label.setText("NeoForge")
                 self.form_6_Label.setText("Fabric")
@@ -1912,7 +2322,7 @@ jar 下载位置在：
                     self.groupBox1Btn.setChecked(True)
             
             def indexTo(self, index):
-                widget = (self.groupBox, self.groupBox_4, self.groupBox_2, self.groupBox_3)[index]
+                widget = (self.groupBox_4, self.groupBox_2, self.groupBox_3)[index]
                 animation = QPropertyAnimation(self.scrollArea.verticalScrollBar(), b"value", self)
                 animation.setStartValue(self.scrollArea.verticalScrollBar().value())
                 animation.setEndValue(widget.y())
@@ -2084,7 +2494,10 @@ jar 下载位置在：
 更多正则表达式语法请上网查询，这里不讲述太多。""".format("%Y-%m-%d %H:%M:%S"))
             if self.versionData:
                 self.searchVersions(self.searchInput.text())
-            self.versionModel.setHorizontalHeaderLabels(["版本", "类型", "发布日期"])
+            self.versionModel.setHorizontalHeaderLabels(
+                [self.tr("DownloadPage.DownloadVanilla.VersionTable.HeaderLabel.1"),
+                 self.tr("DownloadPage.DownloadVanilla.VersionTable.HeaderLabel.2"),
+                 self.tr("DownloadPage.DownloadVanilla.VersionTable.HeaderLabel.3")])  # 版本 类型 发布日期
         
         def showEvent(self, a0):
             super().showEvent(a0)
@@ -2190,11 +2603,17 @@ jar 下载位置在：
                                 pixmap = QPixmap(":/grass_block.png")
                             else:
                                 pixmap = QPixmap(":/dirt_block.png")
-                            self.versionModel.setItem(row, 0, QStandardItem(QIcon(pixmap), version["id"]))
-                            self.versionModel.setItem(row, 1, QStandardItem(self.localiseType(version["type"])))
-                            self.versionModel.setItem(row, 2, QStandardItem(
+                            versionIdItem = QStandardItem(QIcon(pixmap), version["id"])
+                            versionIdItem.setData(version, 3)
+                            versionTypeItem = QStandardItem(self.localiseType(version["type"]))
+                            versionTypeItem.setData(version["type"], 3)
+                            versionReleaseTimeItem = QStandardItem(
                                 version["releaseTime"].astimezone().strftime("%Y-%m-%d %H:%M:%S")
-                            ))
+                            )
+                            versionReleaseTimeItem.setData(version["releaseTime"], 3)
+                            self.versionModel.setItem(row, 0, versionIdItem)
+                            self.versionModel.setItem(row, 1, versionTypeItem)
+                            self.versionModel.setItem(row, 2, versionReleaseTimeItem)
                             row += 1
                         if version["type"] == "release" and not latest_release:
                             latest_release = True
@@ -2202,44 +2621,68 @@ jar 下载位置在：
                                 pixmap = QPixmap(":/grass_block.png")
                             else:
                                 pixmap = QPixmap(":/dirt_block.png")
-                            self.versionModel.setItem(row, 0, QStandardItem(QIcon(pixmap), version["id"]))
-                            self.versionModel.setItem(row, 1, QStandardItem(self.localiseType(version["type"])))
-                            self.versionModel.setItem(row, 2, QStandardItem(
+                            versionIdItem = QStandardItem(QIcon(pixmap), version["id"])
+                            versionIdItem.setData(version, 3)
+                            versionTypeItem = QStandardItem(self.localiseType(version["type"]))
+                            versionTypeItem.setData(version["type"], 3)
+                            versionReleaseTimeItem = QStandardItem(
                                 version["releaseTime"].astimezone().strftime("%Y-%m-%d %H:%M:%S")
-                            ))
+                            )
+                            versionReleaseTimeItem.setData(version["releaseTime"], 3)
+                            self.versionModel.setItem(row, 0, versionIdItem)
+                            self.versionModel.setItem(row, 1, versionTypeItem)
+                            self.versionModel.setItem(row, 2, versionReleaseTimeItem)
                             row += 1
                     elif re.match(text, version["id"], re.UNICODE):
                         if version["type"] == "release":
                             pixmap = QPixmap(":/grass_block.png")
                         else:
                             pixmap = QPixmap(":/dirt_block.png")
-                        self.versionModel.setItem(row, 0, QStandardItem(QIcon(pixmap), version["id"]))
-                        self.versionModel.setItem(row, 1, QStandardItem(self.localiseType(version["type"])))
-                        self.versionModel.setItem(row, 2, QStandardItem(
+                        versionIdItem = QStandardItem(QIcon(pixmap), version["id"])
+                        versionIdItem.setData(version, 3)
+                        versionTypeItem = QStandardItem(self.localiseType(version["type"]))
+                        versionTypeItem.setData(version["type"], 3)
+                        versionReleaseTimeItem = QStandardItem(
                             version["releaseTime"].astimezone().strftime("%Y-%m-%d %H:%M:%S")
-                        ))
+                        )
+                        versionReleaseTimeItem.setData(version["releaseTime"], 3)
+                        self.versionModel.setItem(row, 0, versionIdItem)
+                        self.versionModel.setItem(row, 1, versionTypeItem)
+                        self.versionModel.setItem(row, 2, versionReleaseTimeItem)
                         row += 1
                     elif re.match(text, version["type"], re.UNICODE):
                         if version["type"] == "release":
                             pixmap = QPixmap(":/grass_block.png")
                         else:
                             pixmap = QPixmap(":/dirt_block.png")
-                        self.versionModel.setItem(row, 0, QStandardItem(QIcon(pixmap), version["id"]))
-                        self.versionModel.setItem(row, 1, QStandardItem(self.localiseType(version["type"])))
-                        self.versionModel.setItem(row, 2, QStandardItem(
+                        versionIdItem = QStandardItem(QIcon(pixmap), version["id"])
+                        versionIdItem.setData(version, 3)
+                        versionTypeItem = QStandardItem(self.localiseType(version["type"]))
+                        versionTypeItem.setData(version["type"], 3)
+                        versionReleaseTimeItem = QStandardItem(
                             version["releaseTime"].astimezone().strftime("%Y-%m-%d %H:%M:%S")
-                        ))
+                        )
+                        versionReleaseTimeItem.setData(version["releaseTime"], 3)
+                        self.versionModel.setItem(row, 0, versionIdItem)
+                        self.versionModel.setItem(row, 1, versionTypeItem)
+                        self.versionModel.setItem(row, 2, versionReleaseTimeItem)
                         row += 1
                     elif re.match(text, version["releaseTime"].astimezone().strftime("%Y-%m-%d %H:%M:%S"), re.UNICODE):
                         if version["type"] == "release":
                             pixmap = QPixmap(":/grass_block.png")
                         else:
                             pixmap = QPixmap(":/dirt_block.png")
-                        self.versionModel.setItem(row, 0, QStandardItem(QIcon(pixmap), version["id"]))
-                        self.versionModel.setItem(row, 1, QStandardItem(self.localiseType(version["type"])))
-                        self.versionModel.setItem(row, 2, QStandardItem(
+                        versionIdItem = QStandardItem(QIcon(pixmap), version["id"])
+                        versionIdItem.setData(version, 3)
+                        versionTypeItem = QStandardItem(self.localiseType(version["type"]))
+                        versionTypeItem.setData(version["type"], 3)
+                        versionReleaseTimeItem = QStandardItem(
                             version["releaseTime"].astimezone().strftime("%Y-%m-%d %H:%M:%S")
-                        ))
+                        )
+                        versionReleaseTimeItem.setData(version["releaseTime"], 3)
+                        self.versionModel.setItem(row, 0, versionIdItem)
+                        self.versionModel.setItem(row, 1, versionTypeItem)
+                        self.versionModel.setItem(row, 2, versionReleaseTimeItem)
                         row += 1
             except re.error:
                 self.versionModel.clear()
@@ -2248,16 +2691,16 @@ jar 下载位置在：
         def openDownloadOptions(self, item):
             match item.column():
                 case 0:
-                    versionName = self.versionModel.item(item.row(), 0).text()
-                    versionType = self.versionToDataMap[versionName]["type"]
+                    versionData = self.versionModel.item(item.row(), 0).data(3)
+                    versionName = versionData["id"]
+                    versionType = versionData["type"]
                     
                     if versionType == "release":
                         path = ":/grass_block.png"
                     else:
                         path = ":/dirt_block.png"
                     
-                    self.downloadOptions = self.DownloadOptions(self, self.versionModel.item(item.row(), 0).text(),
-                                                                path)
+                    self.downloadOptions = self.DownloadOptions(self, versionName, path)
                     self.downloadOptions.frameClosed.connect(self.closeDownloadOptions)
                     rect = self.rect().adjusted(1, 1, -1, -1)
                     self.downloadOptions.setGeometry(rect)
@@ -2272,8 +2715,7 @@ jar 下载位置在：
                     ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
                     self.downloadOptions.show()
                 case 1:
-                    versionName = self.versionModel.item(item.row(), 0).text()
-                    versionType = self.versionToDataMap[versionName]["type"]
+                    versionType = self.versionModel.item(item.row(), 1).data(3)
                     
                     if versionType:
                         self.searchInput.setText(versionType)
@@ -2294,6 +2736,7 @@ jar 下载位置在：
         def closingFinished(self):
             self.downloadOptions.close()
             self.downloadOptions.deleteLater()
+            del self.downloadOptions
             self.downloadOptions = None
         
         def reloadVersions(self):
@@ -2353,6 +2796,70 @@ jar 下载位置在：
     
     class DownloadMods(QFrame):
         class ModInfoPage(AcrylicBackground):
+            class ModInfoPanel(QFrame):
+                def changeAnimation(self, variant, function):
+                    if variant == "in":
+                        self.changeAnimationIn()
+                    else:
+                        QTimer.singleShot(300, function)
+                        self.changeAnimationOut()
+                
+                def changeAnimationIn(self):
+                    ani = QPropertyAnimation(self, b"pos", self)
+                    ani.setStartValue(self.pos() + QPoint(100, 0))
+                    ani.setEndValue(self.pos())
+                    ani.setDuration(500)
+                    ani.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    aniOpacity = OpacityAnimation(self)
+                    aniOpacity.setStartValue(0)
+                    aniOpacity.setEndValue(100)
+                    aniOpacity.setDuration(500)
+                    aniOpacity.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    aniOpacity.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    QTimer.singleShot(50, lambda: self.show())
+                
+                def changeAnimationOut(self):
+                    aniOpacity = OpacityAnimation(self)
+                    aniOpacity.setStartValue(100)
+                    aniOpacity.setEndValue(0)
+                    aniOpacity.setDuration(500)
+                    aniOpacity.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    aniOpacity.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    aniOpacity.finished.connect(lambda: self.hide())
+            
+            class ModVersionsPanel(QFrame):
+                def changeAnimation(self, variant, function):
+                    if variant == "in":
+                        self.changeAnimationIn()
+                    else:
+                        QTimer.singleShot(300, function)
+                        self.changeAnimationOut()
+                
+                def changeAnimationIn(self):
+                    ani = QPropertyAnimation(self, b"pos", self)
+                    ani.setStartValue(self.pos() + QPoint(100, 0))
+                    ani.setEndValue(self.pos())
+                    ani.setDuration(500)
+                    ani.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    ani.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    aniOpacity = OpacityAnimation(self)
+                    aniOpacity.setStartValue(0)
+                    aniOpacity.setEndValue(100)
+                    aniOpacity.setDuration(500)
+                    aniOpacity.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    aniOpacity.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    QTimer.singleShot(50, lambda: self.show())
+                
+                def changeAnimationOut(self):
+                    aniOpacity = OpacityAnimation(self)
+                    aniOpacity.setStartValue(100)
+                    aniOpacity.setEndValue(0)
+                    aniOpacity.setDuration(500)
+                    aniOpacity.setEasingCurve(QEasingCurve.Type.OutQuint)
+                    aniOpacity.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
+                    aniOpacity.finished.connect(lambda: self.hide())
+            
             class GetVersionsThread(QThread):
                 requested = pyqtSignal(list)
                 
@@ -2415,11 +2922,15 @@ jar 下载位置在：
                 self.destroyed.connect(thread_2.terminate)
                 
                 self.mainLayout = QVBoxLayout(self)
+                self.mainLayout.setSpacing(8)
+                self.mainLayout.setContentsMargins(12, 12, 12, 12)
                 
                 self.topPanel = Panel(self)
                 self.mainLayout.addWidget(self.topPanel)
                 
                 self.horizontalLayout = QHBoxLayout(self.topPanel)
+                self.horizontalLayout.setContentsMargins(8, 8, 8, 8)
+                self.horizontalLayout.setSpacing(8)
                 
                 self.exitButton = CloseButton(self.topPanel)
                 self.exitButton.setFixedSize(QSize(32, 32))
@@ -2431,58 +2942,85 @@ jar 下载位置在：
                 self.page1Btn.setChecked(True)
                 self.page1Btn.setAutoExclusive(True)
                 self.page1Btn.setWidgetAttribute("outlinedButton")
-                self.page1Btn.pressed.connect(lambda: self.indexTo(0))
+                self.page1Btn.pressed.connect(lambda: self.setCurrentPage(0))
                 self.horizontalLayout.addWidget(self.page1Btn)
                 
                 self.page2Btn = PushButton(self)
                 self.page2Btn.setCheckable(True)
                 self.page2Btn.setAutoExclusive(True)
-                self.page2Btn.pressed.connect(lambda: self.indexTo(1))
                 self.page2Btn.setWidgetAttribute("outlinedButton")
+                self.page2Btn.pressed.connect(lambda: self.setCurrentPage(1))
                 self.horizontalLayout.addWidget(self.page2Btn)
                 
                 self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 self.horizontalLayout.addItem(self.horizontalSpacer)
                 
-                self.scrollArea = ScrollArea(self)
-                self.mainLayout.addWidget(self.scrollArea, 1)
+                self.horizontalLayout_2 = QHBoxLayout()
+                self.horizontalLayout_2.setSpacing(12)
                 
-                self.scrollAreaWidgetContents = QWidget()
+                self.groupBox = Panel(self)
+                self.groupBox.setMinimumWidth(140)
+                self.groupBox.setMaximumWidth(160)
+                self.groupBox.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+                self.horizontalLayout_2.addWidget(self.groupBox)
                 
-                self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
+                self.verticalLayout_2 = QVBoxLayout(self.groupBox)
+                self.verticalLayout_2.setContentsMargins(8, 16, 8, 16)
+                self.verticalLayout_2.setSpacing(12)
                 
-                self.modInfo = GroupBox(self.scrollAreaWidgetContents)
-                
-                self.verticalLayout_2 = QVBoxLayout(self.modInfo)
-                
-                self.modInfoCard = Panel(self.modInfo)
-                
-                self.horizontalLayout_2 = QHBoxLayout(self.modInfoCard)
-                
-                self.modIcon = ImageWidget(self.modInfoCard)
-                self.modIcon.setFixedSize(QSize(74, 74))
+                self.modIcon = ImageWidget(self.groupBox)
+                self.modIcon.setFixedHeight(96)
+                self.modIcon.setImageAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
+                self.modIcon.setImageScaleMode(ImageWidget.ImageScaleMode.AspectRatio)
                 self.modIcon.setBorderRadius(10)
+                self.verticalLayout_2.addWidget(self.modIcon)
                 
-                self.horizontalLayout_2.addWidget(self.modIcon)
+                self.modName = Label(self.groupBox)
+                self.modName.setText(self.mod_name)
+                self.modName.setWordWrap(True)
+                font = self.modName.font()
+                font.setBold(True)
+                font.setPointSize(font.pointSize() + 1)
+                self.modName.setFont(font)
+                self.modName.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+                self.verticalLayout_2.addWidget(self.modName)
                 
-                self.verticalLayout_3 = QVBoxLayout(self.modInfoCard)
-                
-                self.modName = Label(self.modInfoCard)
-                self.verticalLayout_3.addWidget(self.modName)
-                
-                self.modDescription = Label(self.modInfoCard)
-                self.modDescription.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+                self.modDescription = Label(self.groupBox)
+                self.modDescription.setText(self.mod_description)
                 self.modDescription.setWordWrap(True)
-                self.verticalLayout_3.addWidget(self.modDescription, 1)
+                self.modDescription.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+                self.modDescription.setStyleSheet("color: #999;")
+                self.verticalLayout_2.addWidget(self.modDescription)
                 
-                self.horizontalLayout_2.addLayout(self.verticalLayout_3)
+                self.versionSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+                self.verticalLayout_2.addItem(self.versionSpacer)
                 
-                self.verticalLayout_2.addWidget(self.modInfoCard)
+                self.rightArea = QWidget()
+                self.rightLayout = QVBoxLayout(self.rightArea)
+                self.rightLayout.setContentsMargins(0, 0, 0, 0)
+                self.rightLayout.setSpacing(12)
+                
+                self.stackedWidget = AnimatedStackedWidget(self.rightArea)
+                self.rightLayout.addWidget(self.stackedWidget, 1)
+                
+                self.modInfoPanel = self.ModInfoPanel(self.stackedWidget)
+                self.stackedWidget.addWidget(self.modInfoPanel)
+                
+                self.verticalLayout = QVBoxLayout(self.modInfoPanel)
+                self.verticalLayout.setSpacing(12)
+                
+                self.modInfo = GroupBox(self.modInfoPanel)
+                self.verticalLayout.addWidget(self.modInfo)
+                
+                self.verticalLayout_3 = QVBoxLayout(self.modInfo)
+                self.verticalLayout_3.setContentsMargins(12, 12, 12, 12)
+                self.verticalLayout_3.setSpacing(8)
                 
                 self.modLinks = Panel(self.modInfo)
-                self.verticalLayout_2.addWidget(self.modLinks)
+                self.verticalLayout_3.addWidget(self.modLinks)
                 
                 self.horizontalLayout_3 = QHBoxLayout(self.modLinks)
+                self.horizontalLayout_3.setSpacing(8)
                 
                 self.modAction_issues = None
                 
@@ -2502,24 +3040,29 @@ jar 下载位置在：
                     markdown2.markdown(self.mod_body,
                                        extras=['fenced-code-blocks', 'code-friendly', 'breaks-on-newline', 'table']))
                 self.modBody.document().setBaseUrl(QUrl("https://cdn.modrinth.com/"))
-                self.verticalLayout_2.addWidget(self.modBody, 1)
+                self.verticalLayout_3.addWidget(self.modBody, 1)
                 
-                self.verticalLayout.addWidget(self.modInfo)
+                self.modVersionsPanel = self.ModVersionsPanel(self.stackedWidget)
+                self.stackedWidget.addWidget(self.modVersionsPanel)
                 
-                self.modVersions = GroupBox(self.scrollAreaWidgetContents)
+                self.verticalLayout_4 = QVBoxLayout(self.modVersionsPanel)
+                self.verticalLayout_4.setContentsMargins(12, 12, 12, 12)
+                self.verticalLayout_4.setSpacing(8)
                 
-                self.verticalLayout_4 = QVBoxLayout(self.modVersions)
+                self.modVersions = GroupBox(self.modVersionsPanel)
+                self.verticalLayout_4.addWidget(self.modVersions)
+                
+                self.verticalLayout_5 = QVBoxLayout(self.modVersions)
+                self.verticalLayout_5.setContentsMargins(12, 12, 12, 12)
+                self.verticalLayout_5.setSpacing(8)
                 
                 self.listWidget = ListWidget(self.modVersions)
                 self.listWidget.doubleClicked.connect(self.startDownloadMod)
-                self.verticalLayout_4.addWidget(self.listWidget)
+                self.verticalLayout_5.addWidget(self.listWidget)
                 
-                self.verticalLayout.addWidget(self.modVersions)
+                self.horizontalLayout_2.addWidget(self.rightArea, 1)
                 
-                self.scrollArea.setWidget(self.scrollAreaWidgetContents)
-                self.scrollArea.setWidgetResizable(True)
-                
-                self.scrollArea.verticalScrollBar().valueChanged.connect(self.updateTopSelections)
+                self.mainLayout.addLayout(self.horizontalLayout_2, 1)
                 
                 self.retranslateUI()
             
@@ -2533,6 +3076,14 @@ jar 下载位置在：
                 if self.modAction_issues:
                     self.modAction_issues.setText(
                         self.tr("DownloadPage.DownloadMods.ModInfoPage.Actions.Issues"))
+            
+            def setCurrentPage(self, page_id=0):
+                if page_id == 0:
+                    self.page1Btn.setChecked(True)
+                    self.stackedWidget.setCurrentWidget(self.modInfoPanel)
+                else:
+                    self.page2Btn.setChecked(True)
+                    self.stackedWidget.setCurrentWidget(self.modVersionsPanel)
             
             def updateIcon(self, icon):
                 try:
@@ -2566,37 +3117,6 @@ jar 下载位置在：
                     Path(self.icon_temp.name).unlink(missing_ok=True)
                 self.closePage.emit()
             
-            def resizeEvent(self, a0):
-                super().resizeEvent(a0)
-                self.modBody.setMinimumHeight(
-                    (self.modBody.verticalScrollBar().maximum()
-                     - self.modBody.verticalScrollBar().minimum()
-                     + self.modBody.verticalScrollBar().pageStep()
-                     ) + 10)
-            
-            def showEvent(self, a0):
-                super().showEvent(a0)
-                self.modBody.setMinimumHeight(
-                    (self.modBody.verticalScrollBar().maximum()
-                     - self.modBody.verticalScrollBar().minimum()
-                     + self.modBody.verticalScrollBar().pageStep()
-                     ) + 10)
-            
-            def updateTopSelections(self, value):
-                if value + self.scrollArea.verticalScrollBar().pageStep() >= self.modVersions.y():
-                    self.page2Btn.setChecked(True)
-                else:
-                    self.page1Btn.setChecked(True)
-            
-            def indexTo(self, index):
-                widget = (self.modInfo, self.modVersions)[index]
-                animation = QPropertyAnimation(self.scrollArea.verticalScrollBar(), b"value", self)
-                animation.setStartValue(self.scrollArea.verticalScrollBar().value())
-                animation.setEndValue(widget.y())
-                animation.setDuration(500)
-                animation.setEasingCurve(QEasingCurve.Type.OutQuad)
-                animation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
-            
             def paintEvent(self, a0):
                 self.setTintColour(getBackgroundColour())
                 super().paintEvent(a0)
@@ -2614,10 +3134,16 @@ jar 下载位置在：
             def run(self):
                 try:
                     if self.search:
-                        response = SearchMods(query=self.query, limit=self.page_items,
-                                              offset=(self.page - 1) * self.page_items)
+                        response = SearchMods(
+                            query=self.query,
+                            limit=self.page_items,
+                            offset=(self.page - 1) * self.page_items
+                        )
                     else:
-                        response = GetMods(limit=self.page_items, offset=(self.page - 1) * self.page_items)
+                        response = GetMods(
+                            limit=self.page_items,
+                            offset=(self.page - 1) * self.page_items
+                        )
                     if response:
                         self.gotMod.emit({"status": "successfully", "result": response})
                     else:
@@ -2673,6 +3199,7 @@ jar 下载位置在：
             self.getModThread = None
             self.modInfoPage = None
             self.currentPage = 1
+            self.totalModsCount = 0
         
         def retranslateUI(self):
             self.filterPanel.setTitle(self.tr("DownloadPage.DownloadMods.FilterPanel.Title"))
@@ -2681,7 +3208,10 @@ jar 下载位置在：
             # self.searchLineEdit.setToolTip("")
             self.previousButton.setText(self.tr("DownloadPage.DownloadMods.Actions.PrevPage"))
             self.nextButton.setText(self.tr("DownloadPage.DownloadMods.Actions.NextPage"))
-            self.model.setHorizontalHeaderLabels(["模组名称", "模组作者", "最后修改时间"])
+            self.model.setHorizontalHeaderLabels([self.tr("DownloadPage.DownloadMods.ContentTable.HeaderLabel.1"),
+                                                  self.tr("DownloadPage.DownloadMods.ContentTable.HeaderLabel.2"),
+                                                  self.tr(
+                                                      "DownloadPage.DownloadMods.ContentTable.HeaderLabel.3")])  # 模组名称 模组作者 最后修改时间
         
         def previousPage(self):
             self.currentPage -= 1
@@ -2691,12 +3221,19 @@ jar 下载位置在：
         
         def nextPage(self):
             self.currentPage += 1
+            if self.totalModsCount:
+                self.currentPage = min(self.currentPage, math.ceil(self.totalModsCount / 10))
             self.updatePage()
             self.loadPage()
         
         def updatePage(self):
-            self.currentPageLabel.setText(str(self.currentPage))
+            pageText = str(self.currentPage)
+            if self.totalModsCount:
+                pageText += f" / {math.ceil(self.totalModsCount / 10)}"
+            self.currentPageLabel.setText(pageText)
             self.previousButton.setEnabled(self.currentPage > 1)
+            if self.totalModsCount:
+                self.nextButton.setEnabled(self.currentPage < math.ceil(self.totalModsCount / 10))
             if self.searchLineEdit.text():
                 self.nextButton.setEnabled(False)
             else:
@@ -2760,8 +3297,10 @@ jar 下载位置在：
         def displayMods(self, data, page=1):
             if not data or data["status"] == "successfully":
                 if data:
+                    print(data)
                     dat = data["result"]
                     self.mods[page] = dat
+                    self.totalModsCount = dat["total_hits"]
                     self.finishAnimation(True, True)
                 elif page in self.mods:
                     dat = self.mods[page]
@@ -2770,7 +3309,9 @@ jar 下载位置在：
                     return
                 self.model.clear()
                 for e, hit in enumerate(dat["hits"]):
-                    self.model.setItem(e, 0, QStandardItem(hit["title"]))
+                    titleItem = QStandardItem(hit["title"])
+                    titleItem.setData(hit, 3)
+                    self.model.setItem(e, 0, titleItem)
                     self.model.setItem(e, 1, QStandardItem(hit["author"]))
                     self.model.setItem(e, 2, QStandardItem(
                         datetime.datetime.fromisoformat(hit["date_modified"].split(".")[0]).astimezone().strftime(
@@ -2820,12 +3361,9 @@ jar 下载位置在：
             self.getModThread.start()
         
         def modInfoPageOpen(self, value):
-            data = self.contentTable.model().item(value.row(), 0).text()
-            hit_data = None
-            for page in self.mods.values():
-                for hit in page["hits"]:
-                    if hit["title"] == data:
-                        hit_data = hit
+            item = self.contentTable.model().item(value.row(), 0)
+            data = item.text()
+            hit_data = item.data(3)
             if hit_data:
                 self.modInfoPage = self.ModInfoPage(self, data, hit_data["slug"])
                 self.modInfoPage.closePage.connect(self.modInfoPageClose)
@@ -2855,6 +3393,7 @@ jar 下载位置在：
         def closingFinished(self):
             self.modInfoPage.close()
             self.modInfoPage.deleteLater()
+            del self.modInfoPage
             self.modInfoPage = None
         
         def changeAnimation(self, variant, function):
@@ -3351,14 +3890,16 @@ class SettingsPage(QFrame):
             self.form_4_CheckBox_2.setText(self.tr("SettingsPage.LaunchSettings.Form.4.CheckBox_2.Text"))  # 共用资源包
             self.form_4_CheckBox_2.setToolTip(
                 "所有版本使用同一个资源包文件夹\n注意：当前版本的资源包会被移动到全局资源包文件夹里。")
-            self.form_5_Label.setText("启动器可见性")
+            self.form_5_Label.setText(self.tr("SettingsPage.LaunchSettings.Form.5.Label.Text"))  # 启动器可见性
             index = settings["LaunchSettings"]["LauncherVisibility"]
             self.form_5_ComboBox.clear()
-            self.form_5_ComboBox.addItem("启动游戏后保持不变")
-            self.form_5_ComboBox.addItem("启动游戏后隐藏")
-            self.form_5_ComboBox.addItem("启动游戏后立即关闭")
-            self.form_5_ComboBox.addItem("启动游戏后隐藏，游戏结束后重新显示")
-            self.form_5_ComboBox.addItem("启动游戏后隐藏，游戏结束后关闭")
+            self.form_5_ComboBox.addItem(self.tr("SettingsPage.LaunchSettings.Form.5.ComboBox.Items.1"))  # 启动游戏后保持不变
+            self.form_5_ComboBox.addItem(self.tr("SettingsPage.LaunchSettings.Form.5.ComboBox.Items.2"))  # 启动游戏后隐藏
+            self.form_5_ComboBox.addItem(self.tr("SettingsPage.LaunchSettings.Form.5.ComboBox.Items.3"))  # 启动游戏后立即关闭
+            self.form_5_ComboBox.addItem(
+                self.tr("SettingsPage.LaunchSettings.Form.5.ComboBox.Items.4"))  # 启动游戏后隐藏，游戏结束后重新显示
+            self.form_5_ComboBox.addItem(
+                self.tr("SettingsPage.LaunchSettings.Form.5.ComboBox.Items.5"))  # 启动游戏后隐藏，游戏结束后关闭
             self.form_5_ComboBox.setCurrentIndex(index)
             self.form_5_ComboBox.setToolTip("""设置启动器启动后的可见性。
 ◉ 游戏启动后保持不变：启动器的窗口在启动后仍然保持显示；
@@ -3379,11 +3920,11 @@ class SettingsPage(QFrame):
 因技术原因，有的 Java 检测不出来。
 如果无法启动，请尝试取消该选项。""")
             self.form_1_PushButton_2.setText(self.tr("SettingsPage.LaunchSettings.Form.1.PushButton_2.Text"))  # 添加 Java
-            self.groupBox_Allocation.setTitle("内存分配")
-            self.radioButton.setText("自动分配")
-            self.radioButton_2.setText("手动分配")
-            self.form_6_Label.setText("初始内存")
-            self.form_7_Label.setText("最大内存")
+            self.groupBox_Allocation.setTitle(self.tr("SettingsPage.LaunchSettings.GroupBox_Allocation.Title"))  # 内存分配
+            self.radioButton.setText(self.tr("SettingsPage.LaunchSettings.RadioButton.Text"))  # 自动分配
+            self.radioButton_2.setText(self.tr("SettingsPage.LaunchSettings.RadioButton_2.Text"))  # 手动分配
+            self.form_6_Label.setText(self.tr("SettingsPage.LaunchSettings.Form.6.Label.Text"))  # 初始内存
+            self.form_7_Label.setText(self.tr("SettingsPage.LaunchSettings.Form.7.Label.Text"))  # 最大内存
             self.groupBox_Advanced.setTitle(
                 self.tr("SettingsPage.LaunchSettings.Form.1.GroupBox_Advanced.Text"))  # 高级启动设置
             self.form_2_Label.setText("JVM 启动参数头")
@@ -3393,17 +3934,21 @@ class SettingsPage(QFrame):
 无论前后有没有空格：
 “              -Dchengwm.CMCL.abc=true                                  ”
 JVM 参数就是：
-“\"{Java 路径}\" -Dchengwm.CMCL.abc=true {Minecraft 启动的其他 JVM 参数} -cp {一堆 jar 文件} {游戏参数}”。
-- 注明：实际除了设置的参数位置以外，后面的参数根据版本的不同有所差异。
+<code>\"{Java 路径}\" -Dchengwm.CMCL.abc=true {Minecraft 启动的其他 JVM 参数} -cp {一堆 jar 文件} {游戏参数}</code>。
 
-**奉劝你去看一下 JVM 参数的相关文档，任何因为修改 JVM 参数引发的启动问题均不在启动器作者的受理范围内**
-（前提是你拿其他启动器也搞不了，如果确实是本启动器的问题，请附上你的 JVM 参数，你的 Java 版本以及你的游戏版本）""")
+<blockquote>注明：实际除了设置的参数位置以外，后面的参数根据版本的不同有所差异。</blockquote>
+
+
+<strong>奉劝你去看一下 JVM 参数的相关文档，任何因为修改 JVM 参数引发的启动问题均不在启动器作者的受理范围内</strong>
+（前提是你拿其他启动器也搞不了，如果确实是本启动器的问题，请附上你的 JVM 参数，你的 Java 版本以及你的游戏版本）""".replace(
+                "\n", "<br>"))
             self.form_3_Label.setText("额外启动参数")
             self.form_3_TextEdit.setToolTip("""设置额外启动参数，加在游戏参数的末尾。
 比如说，如果你想启动时全屏（不是最大化），你可以这样设置：
-“-fullscreen”
+<code>-fullscreen</code>
 自动去除前后空格，设置错误不影响启动（但是影响游玩）
-同时，这是全局设置，请注意版本兼容性。""")
+同时，这是全局设置，请注意版本兼容性。""".replace(
+                "\n", "<br>"))
             self.updateChart()
         
         def updateJavaPathComboBox(self, state=True):
@@ -3558,7 +4103,7 @@ JVM 参数就是：
             
             max_memory = self.form_7_Slider.value() / 1024
             max_memory = min(max_memory, available)
-            available_percent = (available - max_memory) / total
+            available_percent = (available - max_memory) / total * 100
             
             self.chart.setTheme(
                 QChart.ChartTheme.ChartThemeDark if getTheme() == Theme.Dark else QChart.ChartTheme.ChartThemeLight)
@@ -3566,15 +4111,22 @@ JVM 参数就是：
             
             self.series.clear()
             
-            used_slice = self.series.append(f"已使用 {used:.2f}GB ({percent:.1f}%)", used)
-            allocable_slice = self.series.append(f"游戏分配 {max_memory:.2f}GB ({max_memory / total * 100:.1f}%)",
-                                                 max_memory)
+            used_slice = self.series.append(
+                self.tr("SettingsPage.LaunchSettings.UsedMemory").format(used, percent),
+                used
+            )  # 已使用 {:.2f}GB ({:.1f}%)
+            allocable_slice = self.series.append(
+                self.tr("SettingsPage.LaunchSettings.AllocableMemory").format(max_memory, max_memory / total * 100),
+                max_memory
+            )  # 游戏分配 {:.2f}GB ({:.1f}%)
             if available_percent > 0:
-                available_slice = self.series.append(f"可用 {available - max_memory:.2f}GB ({available_percent:.1f}%)",
-                                                     available - max_memory)
+                available_slice = self.series.append(
+                    self.tr("SettingsPage.LaunchSettings.AvailableMemory").format(available - max_memory,
+                                                                                  available_percent),
+                    available - max_memory)  # 可用 {:.2f}GB ({:.1f}%)
             used_slice.setLabelVisible(True)
             allocable_slice.setLabelVisible(True)
-            if available_percent > 0.01:
+            if available_percent > 3:
                 available_slice.setLabelVisible(True)
             
             used_slice.setColor(QColor(255, 99, 132))
@@ -3589,6 +4141,8 @@ JVM 参数就是：
             if not mode:
                 self.form_6_Slider.setEnabled(True)
                 self.form_7_Slider.setEnabled(True)
+                self.updateMaxMemory(self.form_7_Slider.value())
+                self.updateInitialMemory(self.form_6_Slider.value())
             else:
                 self.form_6_Slider.setEnabled(False)
                 self.form_7_Slider.setEnabled(False)
@@ -3762,9 +4316,9 @@ JVM 参数就是：
         def retranslateUI(self):
             self.groupBox.setTitle(self.tr("SettingsPage.LauncherSettings.GroupBox.Title"))  # 下载设置
             self.form_1_Label.setText(self.tr("SettingsPage.LauncherSettings.Form.1.Label.Text").format(
-                self.form_1_Slider.value()))  # 下载线程数：{:2}
+                self.form_1_Slider.value()))
             self.form_1_Slider.setToolTip(
-                f"设置下载游戏依赖库、资源以及多线程下载器下载时最多的线程数，默认为 {min(8, self.form_1_Slider.maximum())}。\n这个的取值范围为 1 ~ {self.form_1_Slider.maximum()}，其中 1 表示单线程，也就是仅一条线程。\n线程数拉的越高，理论上下载速度越快，但是线程数太高会造成**严重的卡顿**。")
+                f"设置下载游戏依赖库、资源以及多线程下载器下载时最多的线程数，默认为 {min(8, self.form_1_Slider.maximum())}。<br>这个的取值范围为 1 ~ {self.form_1_Slider.maximum()}，其中 1 表示单线程，也就是仅一条线程。<br>线程数拉的越高，理论上下载速度越快，但是线程数太高会造成<strong>严重的卡顿</strong>。")
             self.form_2_Label.setText(f"下载区块大小：{self.form_2_Slider.value():04}KB")
             self.form_2_Slider.setToolTip(
                 "设置多线程下载器下载时每一个下载区块的大小，范围为 1KB ~ 2MB（2048KB）。\n区块大小越大，使用的线程会变少，同时下载单个区块的时间可能会变长，反之亦然。\n需要自行平衡，这里默认值为 1MB。")
@@ -3893,11 +4447,13 @@ JVM 参数就是：
             
             self.verticalLayout_2 = QVBoxLayout(self.groupBox_2)
             
-            self.horizontalLayout = QHBoxLayout()
-            self.verticalLayout_2.addLayout(self.horizontalLayout)
+            self.form_2 = QFormLayout()
+            self.verticalLayout_2.addLayout(self.form_2)
             
             self.groupBox_2_Label = Label()
-            self.horizontalLayout.addWidget(self.groupBox_2_Label)
+            self.form_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.groupBox_2_Label)
+            
+            self.horizontalLayout = QHBoxLayout()
             
             colour = Colour(*settings["LauncherSettings"]["Personalisation"]["BackgroundColour"])
             
@@ -3922,8 +4478,7 @@ JVM 参数就是：
                 lambda value: self.setBackgroundColour(False, False, True, value))
             self.horizontalLayout.addWidget(self.groupBox_2_SpinBox_3)
             
-            # self.horizontalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-            # self.horizontalLayout.addItem(self.horizontalSpacer)
+            self.form_2.setLayout(0, QFormLayout.ItemRole.FieldRole, self.horizontalLayout)
             
             self.groupBox_3 = GroupBox(self.scrollAreaWidgetContents)
             self.verticalLayout.addWidget(self.groupBox_3)
@@ -3985,6 +4540,7 @@ JVM 参数就是：
                     for role in define[theme]:
                         for primary in define[theme][role]:
                             for highlight in define[theme][role][primary]:
+                                continue
                                 setThemeColour(
                                     role,
                                     highlight,
@@ -4169,9 +4725,9 @@ JVM 参数就是：
         self.retranslateUI()
     
     def retranslateUI(self):
-        self.page1.setText("启动设置")
-        self.page2.setText("启动器设置")
-        self.page3.setText("个性化")
+        self.page1.setText(self.tr("SettingsPage.Page.1.Name"))  # 启动设置
+        self.page2.setText(self.tr("SettingsPage.Page.2.Name"))  # 启动器设置
+        self.page3.setText(self.tr("SettingsPage.Page.3.Name"))  # 个性化
     
     def setCurrentPage(self, page_id=-1):
         page_seq = (self.page1, self.page2, self.page3)
@@ -4328,6 +4884,7 @@ class AboutPage(QFrame):
         self.horizontalLayout_acks_1.addWidget(self.acks_avatar_1)
         
         self.acks_intro1 = Label(self.acks_card_1)
+        self.acks_intro1.setWordWrap(True)
         self.horizontalLayout_acks_1.addWidget(self.acks_intro1, 1)
         
         self.acks_card_2 = Panel(self)  # 以防有人不知道 ack 取自 acknowledgement 的前三个字母
@@ -4341,6 +4898,7 @@ class AboutPage(QFrame):
         self.horizontalLayout_acks_2.addWidget(self.acks_avatar_2)
         
         self.acks_intro2 = Label(self.acks_card_2)
+        self.acks_intro2.setWordWrap(True)
         self.horizontalLayout_acks_2.addWidget(self.acks_intro2, 2)
         
         self.acks_card_3 = Panel(self)  # 以防有人不知道 ack 取自 acknowledgement 的前三个字母
@@ -4354,6 +4912,7 @@ class AboutPage(QFrame):
         self.horizontalLayout_acks_3.addWidget(self.acks_avatar_3)
         
         self.acks_intro3 = Label(self.acks_card_3)
+        self.acks_intro3.setWordWrap(True)
         self.horizontalLayout_acks_3.addWidget(self.acks_intro3, 2)
         
         self.groupBox_disclaimer = GroupBox(self.scrollAreaWidgetContent)
@@ -4375,6 +4934,7 @@ class AboutPage(QFrame):
         self.verticalLayout_5 = QVBoxLayout(self.groupBox_lawInformation)
         
         self.lawInformation = Label(self.groupBox_lawInformation)
+        self.lawInformation.setWordWrap(True)
         self.verticalLayout_5.addWidget(self.lawInformation)
         
         self.verticalSpacer = QSpacerItem(0, 0, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
@@ -4393,15 +4953,17 @@ class AboutPage(QFrame):
             self.tr("AboutPage.CMCLVersionLabel.Text").format(CMCLVersion[0], CMCLVersion[1],
                                                               languagesCodeMapping[currentLanguage], currentLanguage))
         self.groupBox_authors.setTitle("关于开发组")
-        self.intro1.setText("chengwm (chengwm123456)\n启动器的作者！也是造成启动器彩蛋非常多的罪魁祸首。")
-        self.intro2.setText("mcdaotian / Minecraft_稻田\n启动器的策划！可谓是为启动器一起提供了许多改进！")
+        self.intro1.setText(
+            "<strong>chengwm (chengwm123456)</strong><br>启动器的作者！也是造成启动器彩蛋非常多的罪魁祸首。")
+        self.intro2.setText(
+            "<strong>mcdaotian / Minecraft_稻田</strong><br>启动器的策划！可谓是为启动器一起提供了许多改进！")
         self.groupBox_thanks.setTitle("致谢")
         
         # 致谢文本翻译 / Acknowledgements text translations
-        self.acks_intro1.setText("Minecraft Wiki\n启动器编写时资料参考处！（仅作为参考，位于中文 MCW）")
+        self.acks_intro1.setText("<strong>Minecraft Wiki</strong><br>启动器编写时资料参考处！（仅作为参考，位于中文 MCW）")
         self.acks_intro2.setText(
-            "龙腾猫跃 (LTCat)\n据野史（并非）记载，启动器作者在自主编写启动部分时，使用了某不知名启动器生成的命令作为标准命令。")
-        self.acks_intro3.setText("bangbang93\n提供 BMCLAPI！https://bmclapidoc.bangbang93.com/")
+            "<strong>龙腾猫跃 (LTCat)</strong><br>据野史（并非）记载，启动器作者在自主编写启动部分时，使用了某不知名启动器生成的命令作为标准命令。")
+        self.acks_intro3.setText("<strong>bangbang93</strong><br>提供 BMCLAPI！https://bmclapidoc.bangbang93.com/")
         
         self.groupBox_disclaimer.setTitle("免责声明")
         self.disclaimer.setText(
@@ -4563,6 +5125,7 @@ class OfflinePlayerCreationDialogue(MaskedDialogue):
         self.verticalLayout.setContentsMargins(5, 32, 5, 5)
         
         self.playerNameInput = LineEdit(self)
+        self.playerNameInput.textChanged.connect(self.updateOKButtonAvailability)
         self.playerNameInput.setValidator(QRegularExpressionValidator(QRegularExpression(r"\w+"), self.playerNameInput))
         self.playerNameInput.setClearButtonEnabled(True)
         self.playerNameInput.returnPressed.connect(self.generatePlayer)
@@ -4571,6 +5134,7 @@ class OfflinePlayerCreationDialogue(MaskedDialogue):
         self.horizontalLayout = QHBoxLayout()
         
         self.OKButton = PushButton(self)
+        self.OKButton.setDisabled(True)
         self.OKButton.pressed.connect(self.generatePlayer)
         self.OKButton.setFocus()
         self.horizontalLayout.addWidget(self.OKButton)
@@ -4588,6 +5152,9 @@ class OfflinePlayerCreationDialogue(MaskedDialogue):
         self.playerNameInput.setPlaceholderText("请输入玩家名")
         self.OKButton.setText("确定")
         self.CancelButton.setText("取消")
+    
+    def updateOKButtonAvailability(self, text):
+        self.OKButton.setEnabled(bool(text))
     
     def generatePlayer(self):
         player = create_offline_player(self.playerNameInput.text(), currentPlayer.player_hasMC)
@@ -5006,6 +5573,7 @@ class UpdateLogDialogue(MaskedDialogue):
         self.scrollArea = ScrollArea(self)
         self.scrollArea.setStyleSheet("background: transparent; border: none;")
         self.label = Label(self)
+        self.label.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
         self.scrollArea.setWidget(self.label)
         self.scrollArea.setWidgetResizable(True)
         self.verticalLayout.addWidget(self.scrollArea)
@@ -5014,47 +5582,28 @@ class UpdateLogDialogue(MaskedDialogue):
     def retranslateUI(self):
         self.label.setText(
             f'''<!DOCTYPE html><html><head><style>code {{ font-family: \"Consolas\" }}</style></head><body>{markdown2.markdown("""<h1 align="center">Common Minecraft Launcher</h1>
-<h2 align="center">Version AlphaDev-26001 on 2026.2.17</h2>
-这是 2026 年的第一个版本！祝大家**新年快乐**！
-
+<h2 align="center">Version AlphaDev-26002</h2>
 ### 添加
-- 下载模组加载器功能；
-  - 可以展示 Neoforge、Fabric 及 Fabric API 所有版本；
-  - 全自动，无人工操作部分；
-  - 自动下载 Fabric API；
-- 支持隔离模组加载器和其他版本；
-- 添加“启动器可见性”设置；
-- 版本管理添加“版本信息”页面；
-  - 显示版本信息；
-  - 设置版本独立设置；
-  - 以及其他……
-- 启动设置添加“内存分配”部分；
-- 在启动器的“下载选项”和“版本信息”页面添加了版本图标；
-  - 未设定默认为 `:/missingno.png`；
-- 其他内容和小细节。
-
-#### 底层代码
-- 引入 Cache（缓存），目前还未推广使用；
-- 启动命令生成：
-  - 现在对于模板填充使用了新的方法；
-  - 启动逻辑优化。
+- 更多文本的翻译。
 
 ### 修改
-- 更新版权标识；
-- 优化下载游戏界面的模组下载器部分；
-- 修改启动器的导航按钮样式。
+- 优化部分文本的翻译；
+- 优化启动器缓存存储；
+- 修改启动器两个下载页面的布局。
 
 ### 修复
-- 无法启动游戏 `.json` 文件带有 `inheritsFrom` 键的游戏实例。
-- 修复启动器启动时处理版本隔离代码的一处笔误（`parents` 错拼成 `parent` 造成无法启动）
-
-### 已知 bug
-- 启动器弹出对话框（无边框窗口的子控件调用 `self.winId()`）会导致窗口显示出现问题；
-  - 复现方法：把这个窗口关闭即可复现；
-  - 目前暂未想到解决办法。
+- 启动器启动处对于版本隔离的几个问题；
+- 启动器“启动设置”中的“内存分配”中，图标的“可用”部分百分比显示的问题；
+- 启动器“内存分配”中手动分配的内存未保存的问题；
+- （有图形化界面的）Linux 上启动器创建的对话框可以被最大化的问题；
+- 可以创建名字为空的离线用户的问题。
 
 ### 启动器仓库
 [CMCL-Launcher](https://www.github.com/chengwm123456/CMCL-Launcher)
+
+[CMCL-Launcher（针对无法访问 github 提供的镜像）](https://www.bgithub.xyz/chengwm123456/CMCL-Launcher)
+
+启动器使用 AGPL-3.0 许可证开源，详情请参考启动器仓库下的 `LICENSE.md` 文件。
 
 <small>Copyright (C) 2023-2026 [chengwm123456](https://www.github.com/chengwm123456)</small>""", extras=["fenced-code-blocks"])}</body></html>''')
 
@@ -5204,6 +5753,7 @@ class MainLauncherWindow(MainWindow):
             if self.posAnimation:
                 self.posAnimation.stop()
                 self.posAnimation.deleteLater()
+                del self.posAnimation
             self.posAnimation = QPropertyAnimation(self.topNavigationPanel, b"pos", self)
             self.posAnimation.setStartValue(self.topNavigationPanel.pos())
             self.posAnimation.setEndValue(QPoint(30, self.height() + 10))
@@ -5279,6 +5829,7 @@ class MainLauncherWindow(MainWindow):
         if self.posAnimation:
             self.posAnimation.stop()
             self.posAnimation.deleteLater()
+            del self.posAnimation
         self.posAnimation = QPropertyAnimation(self.topNavigationPanel, b"pos", self)
         self.posAnimation.setStartValue(self.topNavigationPanel.pos())
         self.posAnimation.setEndValue(QPoint(30, self.height() + 10))
@@ -5299,6 +5850,7 @@ class MainLauncherWindow(MainWindow):
                 if self.posAnimation:
                     self.posAnimation.stop()
                     self.posAnimation.deleteLater()
+                    del self.posAnimation
                 self.posAnimation = QPropertyAnimation(self.topNavigationPanel, b"pos", self)
                 self.posAnimation.setStartValue(self.topNavigationPanel.pos())
                 self.posAnimation.setEndValue(QPoint(30, y))

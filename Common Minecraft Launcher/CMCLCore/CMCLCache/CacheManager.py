@@ -6,6 +6,7 @@ import time
 import json
 from dataclasses import dataclass
 from pathlib import Path
+import pickle
 
 
 class CacheManager:
@@ -14,24 +15,11 @@ class CacheManager:
         age: int = 0
         start: int = 0
         content: Any = None
-        
-        @classmethod
-        def fromJSON(cls, jsonData: dict):
-            return cls(**jsonData)
-        
-        def toJSON(self):
-            return {"age": self.age, "start": self.start, "content": self.content}
     
     def __init__(self, storeFile: Optional[Union[str, os.PathLike]] = None):
         self.caches = {}
         if storeFile and Path(storeFile).is_file():
-            tmpCache = {}
-            try:
-                tmpCache = json.loads(Path(storeFile).read_text(encoding="utf-8"))
-            except json.JSONDecodeError:
-                tmpCache = {}
-            for key in tmpCache:
-                self.caches[key] = self.Cache.fromJSON(tmpCache[key])
+            self.loadCache(storeFile)
     
     def getCache(self, key: Hashable):
         cache = self.caches.get(key)
@@ -52,15 +40,21 @@ class CacheManager:
         self.caches.clear()
     
     def storeCache(self, filename: Optional[Union[str, os.PathLike]] = None) -> Path:
-        result = {}
-        for cache in self.caches:
-            result[cache] = self.caches[cache].toJSON()
         if not filename:
             if os.name == "nt":
-                filename = Path(os.environ.get("TEMP")) / ".cache.json"
+                filename = Path(os.environ.get("TEMP")) / ".cache.bin"
             else:
-                filename = Path("/tmp/.cache.json")
-        Path(filename).write_text(json.dumps(result, indent=1), encoding="utf-8")
+                filename = Path("/tmp/.cache.bin")
+        Path(filename).write_bytes(pickle.dumps(self.caches))
+        return Path(filename)
+    
+    def loadCache(self, filename: Optional[Union[str, os.PathLike]] = None):
+        if not filename:
+            if os.name == "nt":
+                filename = Path(os.environ.get("TEMP")) / ".cache.bin"
+            else:
+                filename = Path("/tmp/.cache.bin")
+        self.caches = pickle.loads(filename.read_bytes())
         return Path(filename)
     
     def __getitem__(self, key: Hashable):
@@ -68,3 +62,13 @@ class CacheManager:
     
     def __setitem__(self, key: Hashable, value: Any):
         self.setCache(key, value)
+    
+    def __len__(self, key):
+        expired = 0
+        for value in self.caches.values():
+            if value.start + value.age <= time.time():
+                expired += 1
+        return len(self.caches) - expired
+    
+    def __contains__(self, key):
+        return key in self.caches and not (self.caches[key].start + self.caches[key].age <= time.time())

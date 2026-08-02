@@ -21,30 +21,37 @@ def setThemeColour(colour_role, is_highlight, is_primary, theme, colour, animati
 
 def initThemeColours():
     colourManager = ColourManager()
-    colourManager.setColour(ColourRole.Foreground, False, False, Theme.Light, Colour(0, 0, 0))
-    colourManager.setColour(ColourRole.Foreground, False, False, Theme.Dark, Colour(255, 255, 255))
-    colourManager.setColour(ColourRole.Foreground, True, False, Theme.Light, Colour(0, 0, 0))
-    colourManager.setColour(ColourRole.Foreground, True, False, Theme.Dark, Colour(255, 255, 255))
-    colourManager.setColour(ColourRole.Foreground, False, True, Theme.Light, Colour(0, 0, 0))
-    colourManager.setColour(ColourRole.Foreground, False, True, Theme.Dark, Colour(255, 255, 255))
-    colourManager.setColour(ColourRole.Foreground, True, True, Theme.Light, Colour(0, 0, 0))
-    colourManager.setColour(ColourRole.Foreground, True, True, Theme.Dark, Colour(255, 255, 255))
-    colourManager.setColour(ColourRole.Background, False, False, Theme.Light, Colour(253, 253, 253))
-    colourManager.setColour(ColourRole.Background, False, False, Theme.Dark, Colour(67, 67, 67))
-    colourManager.setColour(ColourRole.Background, True, False, Theme.Light, Colour(163, 213, 255))
-    colourManager.setColour(ColourRole.Background, True, False, Theme.Dark, Colour(80, 146, 255))
-    colourManager.setColour(ColourRole.Border, False, False, Theme.Light, Colour(215, 237, 255))
-    colourManager.setColour(ColourRole.Border, False, False, Theme.Dark, Colour(73, 81, 93))
-    colourManager.setColour(ColourRole.Border, True, False, Theme.Light, Colour(135, 206, 255))
-    colourManager.setColour(ColourRole.Border, True, False, Theme.Dark, Colour(93, 167, 255))
-    colourManager.setColour(ColourRole.Background, False, True, Theme.Light, Colour(181, 213, 255))
-    colourManager.setColour(ColourRole.Background, False, True, Theme.Dark, Colour(76, 126, 219))
-    colourManager.setColour(ColourRole.Background, True, True, Theme.Light, Colour(193, 224, 255))
-    colourManager.setColour(ColourRole.Background, True, True, Theme.Dark, Colour(84, 146, 255))
-    colourManager.setColour(ColourRole.Border, False, True, Theme.Light, Colour(131, 182, 255))
-    colourManager.setColour(ColourRole.Border, False, True, Theme.Dark, Colour(105, 157, 235))
-    colourManager.setColour(ColourRole.Border, True, True, Theme.Light, Colour(153, 203, 255))
-    colourManager.setColour(ColourRole.Border, True, True, Theme.Dark, Colour(103, 163, 255))
+    
+    # Foreground Colors - Fluent Design 风格
+    colourManager.setColour(ColourRole.Foreground, False, False, Theme.Light, Colour(24, 24, 24))
+    colourManager.setColour(ColourRole.Foreground, False, False, Theme.Dark, Colour(243, 243, 243))
+    colourManager.setColour(ColourRole.Foreground, True, False, Theme.Light, Colour(24, 24, 24))
+    colourManager.setColour(ColourRole.Foreground, True, False, Theme.Dark, Colour(243, 243, 243))
+    colourManager.setColour(ColourRole.Foreground, False, True, Theme.Light, Colour(24, 24, 24))
+    colourManager.setColour(ColourRole.Foreground, False, True, Theme.Dark, Colour(243, 243, 243))
+    colourManager.setColour(ColourRole.Foreground, True, True, Theme.Light, Colour(24, 24, 24))
+    colourManager.setColour(ColourRole.Foreground, True, True, Theme.Dark, Colour(243, 243, 243))
+    
+    # Background Colors - Fluent Design 风格（更柔和的灰度）
+    colourManager.setColour(ColourRole.Background, False, False, Theme.Light, Colour(249, 249, 250))
+    colourManager.setColour(ColourRole.Background, False, False, Theme.Dark, Colour(39, 39, 42))
+    colourManager.setColour(ColourRole.Background, True, False, Theme.Light, Colour(184, 225, 255))
+    colourManager.setColour(ColourRole.Background, True, False, Theme.Dark, Colour(72, 130, 235))
+    colourManager.setColour(ColourRole.Border, False, False, Theme.Light, Colour(218, 218, 219))
+    colourManager.setColour(ColourRole.Border, False, False, Theme.Dark, Colour(68, 68, 70))
+    colourManager.setColour(ColourRole.Border, True, False, Theme.Light, Colour(140, 200, 255))
+    colourManager.setColour(ColourRole.Border, True, False, Theme.Dark, Colour(100, 165, 255))
+    
+    # Primary Colors - 保持主题色不变
+    colourManager.setColour(ColourRole.Background, False, True, Theme.Light, Colour(200, 230, 255))
+    colourManager.setColour(ColourRole.Background, False, True, Theme.Dark, Colour(65, 115, 210))
+    colourManager.setColour(ColourRole.Background, True, True, Theme.Light, Colour(215, 240, 255))
+    colourManager.setColour(ColourRole.Background, True, True, Theme.Dark, Colour(80, 140, 245))
+    colourManager.setColour(ColourRole.Border, False, True, Theme.Light, Colour(155, 205, 255))
+    colourManager.setColour(ColourRole.Border, False, True, Theme.Dark, Colour(110, 170, 255))
+    colourManager.setColour(ColourRole.Border, True, True, Theme.Light, Colour(175, 220, 255))
+    colourManager.setColour(ColourRole.Border, True, True, Theme.Dark, Colour(125, 185, 255))
+    
     globals()["currentThemeColourManager"] = colourManager
 
 

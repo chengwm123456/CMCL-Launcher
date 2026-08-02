@@ -181,7 +181,6 @@ class FramelessWindow(QWidget):
     
     def __updateLinuxWindowFrameless(self):
         super().setWindowFlag(Qt.WindowType.FramelessWindowHint)
-        super().setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint)
     
     def __onScreenChanged(self):
         match self.__platform.system().lower():

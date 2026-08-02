@@ -48,29 +48,92 @@ class Slider(QSlider, Widget):
         self.initStyleOption(op)
         
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
+        rect = self.rect()
+        baseOpacity = self.property("baseOpacity") or 0.85
+        frameOpacity = self.property("frameOpacity") or 0.0
+        
+        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
-        painter.setOpacity(self.property("baseOpacity"))
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
-        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 16, 16)
+        painter.setOpacity(baseOpacity * 0.7)
+        
+        shadowColor1 = QColor(0, 0, 0, int(12 * baseOpacity))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(shadowColor1)
+        shadowRect1 = rect.adjusted(6, 6, -6, -6)
+        painter.drawRoundedRect(shadowRect1, 18, 18)
+        
+        shadowColor2 = QColor(0, 0, 0, int(8 * baseOpacity))
+        painter.setBrush(shadowColor2)
+        shadowRect2 = rect.adjusted(4, 4, -4, -4)
+        painter.drawRoundedRect(shadowRect2, 16, 16)
+        
+        shadowColor3 = QColor(0, 0, 0, int(5 * baseOpacity))
+        painter.setBrush(shadowColor3)
+        shadowRect3 = rect.adjusted(2, 2, -2, -2)
+        painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        if self.property("frameOpacity"):
-            painter.save()
-            painter.setOpacity(self.property("frameOpacity"))
-            painter.setPen(getBorderColour())
-            painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(
-                self.rect().adjusted(
-                    1 + self.property("frameRectAdjustment"),
-                    1 + self.property("frameRectAdjustment"),
-                    -(1 + self.property("frameRectAdjustment")),
-                    -(1 + self.property("frameRectAdjustment"))
-                ), 16, 16
-            )
-            painter.restore()
+        # 绘制毛玻璃背景 (Glassmorphism 风格)
+        painter.save()
+        painter.setOpacity(baseOpacity)
+        
+        bgGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomRight()))
+        bgColor = getBackgroundColour()
+        
+        bgColorLight = QColor(
+            min(255, bgColor.red() + 20),
+            min(255, bgColor.green() + 20),
+            min(255, bgColor.blue() + 20)
+        )
+        bgColorMid = QColor(
+            min(255, bgColor.red() + 10),
+            min(255, bgColor.green() + 10),
+            min(255, bgColor.blue() + 10)
+        )
+        
+        bgGradient.setColorAt(0.0, bgColorLight)
+        bgGradient.setColorAt(0.3, bgColorMid)
+        bgGradient.setColorAt(0.7, bgColorMid)
+        bgGradient.setColorAt(1.0, bgColor)
+        
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(bgGradient)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.restore()
+        
+        # 内发光效果 (Inner Glow - CSS box-shadow inset)
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.3)
+        
+        glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
+        painter.setPen(QPen(glowColor, 1.5))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.restore()
+        
+        # 边框渐变效果
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.9)
+        
+        borderGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomLeft()))
+        borderColor = getBorderColour()
+        borderColorDarker = QColor(
+            max(0, borderColor.red() - 20),
+            max(0, borderColor.green() - 20),
+            max(0, borderColor.blue() - 20)
+        )
+        
+        borderGradient.setColorAt(0.0, borderColorDarker)
+        borderGradient.setColorAt(0.5, borderColor)
+        borderGradient.setColorAt(1.0, borderColor)
+        
+        penBorder = QPen(borderGradient, 1.0)
+        painter.setPen(penBorder)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.restore()
         
         painter.save()
         painter.setPen(getBorderColour(is_highlight=self.isSliderDown()))
@@ -100,14 +163,24 @@ class Slider(QSlider, Widget):
                     ))
         painter.restore()
         
-        rect = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, op, QStyle.SubControl.SC_SliderHandle,
+        handleRect = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, op, QStyle.SubControl.SC_SliderHandle,
                                            self).adjusted(3, 3, -3, -3)
         
         painter.save()
         painter.setOpacity(self.property("baseOpacity"))
         painter.setPen(getBorderColour(is_highlight=self.isSliderDown() and self.isEnabled()))
-        painter.setBrush(getBackgroundColour(is_highlight=self.isSliderDown() and self.isEnabled()))
-        painter.drawEllipse(rect)
+        
+        sliderBgColor = getBackgroundColour(is_highlight=self.isSliderDown() and self.isEnabled())
+        sliderGradient = QLinearGradient(QPointF(handleRect.topLeft()), QPointF(handleRect.bottomLeft()))
+        sliderBgColorLighter = QColor(
+            min(255, sliderBgColor.red() + 10),
+            min(255, sliderBgColor.green() + 10),
+            min(255, sliderBgColor.blue() + 10)
+        )
+        sliderGradient.setColorAt(0.0, sliderBgColorLighter)
+        sliderGradient.setColorAt(1.0, sliderBgColor)
+        painter.setBrush(sliderGradient)
+        painter.drawEllipse(handleRect)
         painter.restore()
         
         if self.property("frameOpacity"):
@@ -121,10 +194,10 @@ class Slider(QSlider, Widget):
                 -self.property("frameRectAdjustment"),
                 -self.property("frameRectAdjustment")
             )
-            rect2 = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, op2, QStyle.SubControl.SC_SliderHandle,
+            handleRect2 = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, op2, QStyle.SubControl.SC_SliderHandle,
                                                 self).adjusted(3, 3, -3, -3)
             painter.setOpacity(self.property("frameOpacity"))
             painter.setPen(getBorderColour(is_highlight=(self.underMouse() or self.hasFocus()) and self.isEnabled()))
             painter.setBrush(getBackgroundColour(is_highlight=self.isSliderDown() and self.isEnabled()))
-            painter.drawEllipse(rect2)
+            painter.drawEllipse(handleRect2)
             painter.restore()

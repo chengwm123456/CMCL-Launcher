@@ -32,25 +32,94 @@ class HeaderView(QHeaderView, Widget):
                 self.setFixedHeight(self.height())
         
         painter = QPainter(self.viewport())
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
+        rect = self.viewport().rect()
+        baseOpacity = self.viewport().property("baseOpacity") or 0.85
+        
+        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
-        painter.setOpacity(self.viewport().property("baseOpacity"))
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
-        painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
+        painter.setOpacity(baseOpacity * 0.7)
+        
+        shadowColor1 = QColor(0, 0, 0, int(12 * baseOpacity))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(shadowColor1)
+        shadowRect1 = rect.adjusted(6, 6, -6, -6)
+        painter.drawRoundedRect(shadowRect1, 18, 18)
+        
+        shadowColor2 = QColor(0, 0, 0, int(8 * baseOpacity))
+        painter.setBrush(shadowColor2)
+        shadowRect2 = rect.adjusted(4, 4, -4, -4)
+        painter.drawRoundedRect(shadowRect2, 16, 16)
+        
+        shadowColor3 = QColor(0, 0, 0, int(5 * baseOpacity))
+        painter.setBrush(shadowColor3)
+        shadowRect3 = rect.adjusted(2, 2, -2, -2)
+        painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        if self.viewport().property("frameOpacity"):
-            painter.save()
-            painter.setOpacity(self.viewport().property("frameOpacity"))
-            painter.setPen(getBorderColour())
-            painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
-            painter.restore()
+        # 绘制毛玻璃背景 (Glassmorphism 风格)
+        painter.save()
+        painter.setOpacity(baseOpacity)
+        
+        bgGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomRight()))
+        bgColor = getBackgroundColour()
+        
+        bgColorLight = QColor(
+            min(255, bgColor.red() + 20),
+            min(255, bgColor.green() + 20),
+            min(255, bgColor.blue() + 20)
+        )
+        bgColorMid = QColor(
+            min(255, bgColor.red() + 10),
+            min(255, bgColor.green() + 10),
+            min(255, bgColor.blue() + 10)
+        )
+        
+        bgGradient.setColorAt(0.0, bgColorLight)
+        bgGradient.setColorAt(0.3, bgColorMid)
+        bgGradient.setColorAt(0.7, bgColorMid)
+        bgGradient.setColorAt(1.0, bgColor)
+        
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(bgGradient)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.restore()
+        
+        # 内发光效果 (Inner Glow - CSS box-shadow inset)
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.3)
+        
+        glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
+        painter.setPen(QPen(glowColor, 1.5))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.restore()
+        
+        # 边框渐变效果
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.9)
+        
+        borderGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomLeft()))
+        borderColor = getBorderColour()
+        borderColorDarker = QColor(
+            max(0, borderColor.red() - 20),
+            max(0, borderColor.green() - 20),
+            max(0, borderColor.blue() - 20)
+        )
+        
+        borderGradient.setColorAt(0.0, borderColorDarker)
+        borderGradient.setColorAt(0.5, borderColor)
+        borderGradient.setColorAt(1.0, borderColor)
+        
+        penBorder = QPen(borderGradient, 1.0)
+        painter.setPen(penBorder)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.restore()
         
         pp = QPainterPath()
-        pp.addRoundedRect(self.viewport().rect().toRectF().adjusted(1.625, 1.625, -1.625, -1.625), 16, 16)
+        pp.addRoundedRect(self.viewport().rect().toRectF().adjusted(1.625, 1.625, -1.625, -1.625), 12, 12)
         painter.setClipPath(pp)
         for section in range(self.count()):
             op = QStyleOptionHeader()
@@ -114,22 +183,91 @@ class TableView(QTableView, Widget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self.viewport())
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
+        rect = self.viewport().rect()
+        baseOpacity = self.viewport().property("baseOpacity") or 0.85
+        
+        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
-        painter.setOpacity(self.viewport().property("baseOpacity"))
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
-        painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
+        painter.setOpacity(baseOpacity * 0.7)
+        
+        shadowColor1 = QColor(0, 0, 0, int(12 * baseOpacity))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(shadowColor1)
+        shadowRect1 = rect.adjusted(6, 6, -6, -6)
+        painter.drawRoundedRect(shadowRect1, 18, 18)
+        
+        shadowColor2 = QColor(0, 0, 0, int(8 * baseOpacity))
+        painter.setBrush(shadowColor2)
+        shadowRect2 = rect.adjusted(4, 4, -4, -4)
+        painter.drawRoundedRect(shadowRect2, 16, 16)
+        
+        shadowColor3 = QColor(0, 0, 0, int(5 * baseOpacity))
+        painter.setBrush(shadowColor3)
+        shadowRect3 = rect.adjusted(2, 2, -2, -2)
+        painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        if self.viewport().property("frameOpacity"):
-            painter.save()
-            painter.setOpacity(self.viewport().property("frameOpacity"))
-            painter.setPen(getBorderColour())
-            painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
-            painter.restore()
+        # 绘制毛玻璃背景 (Glassmorphism 风格)
+        painter.save()
+        painter.setOpacity(baseOpacity)
+        
+        bgGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomRight()))
+        bgColor = getBackgroundColour()
+        
+        bgColorLight = QColor(
+            min(255, bgColor.red() + 20),
+            min(255, bgColor.green() + 20),
+            min(255, bgColor.blue() + 20)
+        )
+        bgColorMid = QColor(
+            min(255, bgColor.red() + 10),
+            min(255, bgColor.green() + 10),
+            min(255, bgColor.blue() + 10)
+        )
+        
+        bgGradient.setColorAt(0.0, bgColorLight)
+        bgGradient.setColorAt(0.3, bgColorMid)
+        bgGradient.setColorAt(0.7, bgColorMid)
+        bgGradient.setColorAt(1.0, bgColor)
+        
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(bgGradient)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.restore()
+        
+        # 内发光效果 (Inner Glow - CSS box-shadow inset)
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.3)
+        
+        glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
+        painter.setPen(QPen(glowColor, 1.5))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.restore()
+        
+        # 边框渐变效果
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.9)
+        
+        borderGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomLeft()))
+        borderColor = getBorderColour()
+        borderColorDarker = QColor(
+            max(0, borderColor.red() - 20),
+            max(0, borderColor.green() - 20),
+            max(0, borderColor.blue() - 20)
+        )
+        
+        borderGradient.setColorAt(0.0, borderColorDarker)
+        borderGradient.setColorAt(0.5, borderColor)
+        borderGradient.setColorAt(1.0, borderColor)
+        
+        penBorder = QPen(borderGradient, 1.0)
+        painter.setPen(penBorder)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.restore()
         
         self.setShowGrid(False)
         op = QStyleOptionFrame()
@@ -161,22 +299,91 @@ class TableWidget(QTableWidget, Widget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
         painter = QPainter(self.viewport())
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
+        rect = self.viewport().rect()
+        baseOpacity = self.viewport().property("baseOpacity") or 0.85
+        
+        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
-        painter.setOpacity(self.viewport().property("baseOpacity"))
-        painter.setPen(getBorderColour())
-        painter.setBrush(getBackgroundColour())
-        painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
+        painter.setOpacity(baseOpacity * 0.7)
+        
+        shadowColor1 = QColor(0, 0, 0, int(12 * baseOpacity))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(shadowColor1)
+        shadowRect1 = rect.adjusted(6, 6, -6, -6)
+        painter.drawRoundedRect(shadowRect1, 18, 18)
+        
+        shadowColor2 = QColor(0, 0, 0, int(8 * baseOpacity))
+        painter.setBrush(shadowColor2)
+        shadowRect2 = rect.adjusted(4, 4, -4, -4)
+        painter.drawRoundedRect(shadowRect2, 16, 16)
+        
+        shadowColor3 = QColor(0, 0, 0, int(5 * baseOpacity))
+        painter.setBrush(shadowColor3)
+        shadowRect3 = rect.adjusted(2, 2, -2, -2)
+        painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        if self.viewport().property("frameOpacity"):
-            painter.save()
-            painter.setOpacity(self.viewport().property("frameOpacity"))
-            painter.setPen(getBorderColour())
-            painter.setBrush(getBackgroundColour())
-            painter.drawRoundedRect(self.viewport().rect().adjusted(1, 1, -1, -1), 16, 16)
-            painter.restore()
+        # 绘制毛玻璃背景 (Glassmorphism 风格)
+        painter.save()
+        painter.setOpacity(baseOpacity)
+        
+        bgGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomRight()))
+        bgColor = getBackgroundColour()
+        
+        bgColorLight = QColor(
+            min(255, bgColor.red() + 20),
+            min(255, bgColor.green() + 20),
+            min(255, bgColor.blue() + 20)
+        )
+        bgColorMid = QColor(
+            min(255, bgColor.red() + 10),
+            min(255, bgColor.green() + 10),
+            min(255, bgColor.blue() + 10)
+        )
+        
+        bgGradient.setColorAt(0.0, bgColorLight)
+        bgGradient.setColorAt(0.3, bgColorMid)
+        bgGradient.setColorAt(0.7, bgColorMid)
+        bgGradient.setColorAt(1.0, bgColor)
+        
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(bgGradient)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.restore()
+        
+        # 内发光效果 (Inner Glow - CSS box-shadow inset)
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.3)
+        
+        glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
+        painter.setPen(QPen(glowColor, 1.5))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.restore()
+        
+        # 边框渐变效果
+        painter.save()
+        painter.setOpacity(baseOpacity * 0.9)
+        
+        borderGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomLeft()))
+        borderColor = getBorderColour()
+        borderColorDarker = QColor(
+            max(0, borderColor.red() - 20),
+            max(0, borderColor.green() - 20),
+            max(0, borderColor.blue() - 20)
+        )
+        
+        borderGradient.setColorAt(0.0, borderColorDarker)
+        borderGradient.setColorAt(0.5, borderColor)
+        borderGradient.setColorAt(1.0, borderColor)
+        
+        penBorder = QPen(borderGradient, 1.0)
+        painter.setPen(penBorder)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.restore()
         
         self.setShowGrid(False)
         op = QStyleOptionFrame()

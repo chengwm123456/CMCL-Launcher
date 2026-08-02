@@ -15,7 +15,7 @@ class LabelBase(QLabel, Widget):
         ...
     
     @overload
-    def __init__(self, text="", parent=None):
+    def __init__(self, text, parent=None):
         ...
     
     def __init__(self, *__args):
@@ -33,18 +33,9 @@ class LabelBase(QLabel, Widget):
         menus = self.findChildren(QMenu)
         if menus:
             menu = menus[-1]
-            menu.BORDER_RADIUS = RoundedMenu.BORDER_RADIUS
             RoundedMenu.updateQSS(menu)
             menu.popup(QCursor.pos())
 
 
 class Label(LabelBase):
-    pass
-
-
-class StrongLabel(LabelBase):
-    pass
-
-
-class TitleLabel(LabelBase):
     pass
