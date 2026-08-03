@@ -38,7 +38,7 @@ class ToolTipLabel(QLabel):
         
         painter.setPen(getBorderColour())
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 8, 8)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         
         self.setStyleSheet(
             f"background: transparent; color: rgba({str(getForegroundColour(is_tuple=True)).strip('()')}, {painter.opacity()});")

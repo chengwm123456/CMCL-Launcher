@@ -617,11 +617,11 @@ class LoginWindow(MaskedDialogue):
             self.hide()
         result = re.match(r"https://login\.live\.com/oauth20_desktop\.srf\?code=.+&lc=.+", self.view.url().toString())
         if result:
-            pos = re.search(r"code=.+&", self.view.url().toString())
+            pos = re.search(r"code=(.+?)&", self.view.url().toString())
             if pos:
-                code = pos.string
+                code = pos.group(1)
                 token = code.split("=")[1]
-                token = token.split(".")[-1].split("&")[0]
+                token = token.split("&")[0]
                 thread = self.LoginThread(token, self.window())
                 thread.start()
                 self.progress.finish(ani=False)

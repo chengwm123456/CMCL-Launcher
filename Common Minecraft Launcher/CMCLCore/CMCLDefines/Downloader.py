@@ -136,13 +136,16 @@ class Downloader:
                 headers={
                     "Range": f"bytes={int(range.startRange)}-{int(range.endRange) - 1}",
                     "Accept-Encoding": "gzip, deflate, zstd, identity"
-                }
+                },
+                stream=range.endRange - range.startRange <= 1024 * 8
         ) as response:
             response.raise_for_status()
             if range.endRange - range.startRange <= 1024 * 8:
                 content = response.content
             else:
-                content = response.iter_content(chunk_size=self.__chunkSize)
+                for chunk in response.iter_content(chunk_size=1024 * 8):
+                    if chunk:
+                        content += chunk
             return self.DownloadedChunk(
                 chunkRange=range,
                 contentEncoding=response.headers.get("Content-Encoding"),
