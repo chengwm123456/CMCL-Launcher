@@ -28,7 +28,6 @@ class ToolBox(QToolBox, Widget):
         baseOpacity = self.property("baseOpacity") or 0.85
         frameOpacity = self.property("frameOpacity") or 0.0
         
-        # 多层柔和阴影效果
         painter.save()
         painter.setOpacity(baseOpacity * 0.7)
         
@@ -49,7 +48,6 @@ class ToolBox(QToolBox, Widget):
         painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        # 绘制渐变背景
         painter.save()
         painter.setOpacity(baseOpacity)
         
@@ -72,10 +70,9 @@ class ToolBox(QToolBox, Widget):
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        # 边框渐变效果
         painter.save()
         painter.setOpacity(baseOpacity * 0.9)
         
@@ -94,7 +91,7 @@ class ToolBox(QToolBox, Widget):
         penBorder = QPen(borderGradient, 1.0)
         painter.setPen(penBorder)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
         for button in (button for button in self.children() if isinstance(button, QAbstractButton)):
@@ -120,7 +117,6 @@ class ToolBox(QToolBox, Widget):
             btnRect = button.rect().adjusted(1, 1, -1, -1)
             btnBaseOpacity = button.property("baseOpacity") or 1
             
-            # 按钮渐变背景
             btnBgColor = getBackgroundColour(is_highlight=isHighlight and button.isEnabled())
             btnGradient = QLinearGradient(QPointF(btnRect.topLeft()), QPointF(btnRect.bottomLeft()))
             btnBgColorLighter = QColor(
@@ -134,7 +130,7 @@ class ToolBox(QToolBox, Widget):
             painter.setOpacity(btnBaseOpacity)
             painter.setPen(getBorderColour(is_highlight=isHighlight and button.isEnabled()))
             painter.setBrush(btnGradient)
-            painter.drawRoundedRect(btnRect, 5, 5)
+            painter.drawRoundedRect(btnRect, 16, 16)
             
             if button.property("frameOpacity"):
                 btnFrameOpacity = button.property("frameOpacity")
@@ -145,11 +141,11 @@ class ToolBox(QToolBox, Widget):
                 glowPen = QPen(QColor(glowColor.red(), glowColor.green(), glowColor.blue(), glowAlpha), 1.5)
                 painter.setPen(glowPen)
                 painter.setBrush(Qt.BrushStyle.NoBrush)
-                painter.drawRoundedRect(btnRect.adjusted(1, 1, -1, -1), 4, 4)
+                painter.drawRoundedRect(btnRect.adjusted(1, 1, -1, -1), 15, 15)
                 
                 highlightPen = QPen(getBorderColour(is_highlight=True), 1.0)
                 painter.setPen(highlightPen)
                 painter.setBrush(Qt.BrushStyle.NoBrush)
-                painter.drawRoundedRect(btnRect.adjusted(1, 1, -1, -1), 4, 4)
+                painter.drawRoundedRect(btnRect.adjusted(1, 1, -1, -1), 15, 15)
             
             painter.restore()

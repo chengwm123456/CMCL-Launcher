@@ -38,7 +38,6 @@ class PushButton(QPushButton, Widget):
         baseOpacity = self.property("baseOpacity") or 0.85
         frameOpacity = self.property("frameOpacity") or 0.0
         
-        # 柔和的阴影效果
         painter.save()
         shadowOpacity = baseOpacity * 0.4
         shadowColor = QColor(0, 0, 0, int(12 * shadowOpacity))
@@ -49,7 +48,6 @@ class PushButton(QPushButton, Widget):
         painter.drawRoundedRect(shadowRect, 14, 14)
         painter.restore()
         
-        # 绘制背景
         painter.save()
         painter.setOpacity(baseOpacity)
         if not self.widgetAttribute("outlinedButton"):
@@ -92,7 +90,6 @@ class PushButton(QPushButton, Widget):
             painter.save()
             painter.setOpacity(frameOpacity)
             
-            # 外发光环
             glowColor = getBorderColour(is_highlight=True, is_primary=self.widgetAttribute("primaryButton"))
             glowAlpha = int(80 * frameOpacity)
             glowPen = QPen(QColor(glowColor.red(), glowColor.green(), glowColor.blue(), glowAlpha), 1.5)
@@ -218,7 +215,6 @@ class ToolButton(QToolButton, Widget):
         baseOpacity = self.property("baseOpacity") or 0.85
         frameOpacity = self.property("frameOpacity") or 0.0
         
-        # 柔和的阴影效果
         painter.save()
         shadowOpacity = baseOpacity * 0.4
         shadowColor = QColor(0, 0, 0, int(12 * shadowOpacity))
@@ -229,7 +225,6 @@ class ToolButton(QToolButton, Widget):
         painter.drawRoundedRect(shadowRect, 14, 14)
         painter.restore()
         
-        # 绘制背景
         painter.save()
         painter.setOpacity(baseOpacity)
         if not self.widgetAttribute("outlinedButton"):
@@ -272,7 +267,6 @@ class ToolButton(QToolButton, Widget):
             painter.save()
             painter.setOpacity(frameOpacity)
             
-            # 外发光环
             glowColor = getBorderColour(is_highlight=True, is_primary=self.widgetAttribute("primaryButton"))
             glowAlpha = int(80 * frameOpacity)
             glowPen = QPen(QColor(glowColor.red(), glowColor.green(), glowColor.blue(), glowAlpha), 1.5)
@@ -459,7 +453,6 @@ class CheckBox(QCheckBox, Widget):
         painter = QPainter(self)
         painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
-        # 多层柔和阴影效果 (CSS box-shadow 风格) - 外围容器
         outerBaseOpacity = self.property("baseOpacity") or 0.85
         outerRect = self.rect()
         
@@ -483,7 +476,6 @@ class CheckBox(QCheckBox, Widget):
         painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        # 绘制毛玻璃背景 (Glassmorphism 风格)
         painter.save()
         painter.setOpacity(outerBaseOpacity)
         
@@ -508,20 +500,18 @@ class CheckBox(QCheckBox, Widget):
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(outerRect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(outerRect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        # 内发光效果 (Inner Glow - CSS box-shadow inset)
         painter.save()
         painter.setOpacity(outerBaseOpacity * 0.3)
         
         glowColor = QColor(255, 255, 255, int(180 * outerBaseOpacity))
         painter.setPen(QPen(glowColor, 1.5))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(outerRect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.drawRoundedRect(outerRect.adjusted(2, 2, -2, -2), 14, 14)
         painter.restore()
         
-        # 边框渐变效果
         painter.save()
         painter.setOpacity(outerBaseOpacity * 0.9)
         
@@ -540,12 +530,11 @@ class CheckBox(QCheckBox, Widget):
         penBorder = QPen(borderGradient, 1.0)
         painter.setPen(penBorder)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(outerRect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(outerRect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
         rect = self.style().subElementRect(QStyle.SubElement.SE_CheckBoxIndicator, op).adjusted(1, 1, -1, -1)
         
-        # 阴影效果
         baseOpacity = self.property("baseOpacity") or 0.85
         frameOpacity = self.property("frameOpacity") or 0.0
         painter.save()
@@ -553,7 +542,7 @@ class CheckBox(QCheckBox, Widget):
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(0, 0, 0, int(10 * baseOpacity)))
         shadowRect = rect.adjusted(2, 2, -2, -2)
-        painter.drawRoundedRect(shadowRect, 5, 5)
+        painter.drawRoundedRect(shadowRect, 16, 16)
         painter.restore()
         
         painter.save()
@@ -563,7 +552,6 @@ class CheckBox(QCheckBox, Widget):
                     (self.isDown() or self.isChecked()) and self.isEnabled())
         ))
         
-        # 渐变背景
         bgColor = getBackgroundColour(
             is_highlight=(self.isDown() or self.isChecked()) or (
                     (self.isDown() or self.isChecked()) and self.isEnabled())
@@ -577,7 +565,7 @@ class CheckBox(QCheckBox, Widget):
         bgGradient.setColorAt(0.0, bgColorLighter)
         bgGradient.setColorAt(1.0, bgColor)
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(rect, 5, 5)
+        painter.drawRoundedRect(rect, 16, 16)
         painter.restore()
         
         if frameOpacity > 0.1:
@@ -585,7 +573,7 @@ class CheckBox(QCheckBox, Widget):
             painter.setOpacity(frameOpacity)
             painter.setPen(getBorderColour(is_highlight=True))
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawRoundedRect(rect, 5, 5)
+            painter.drawRoundedRect(rect, 16, 16)
             painter.restore()
         
         painter.save()
@@ -656,7 +644,6 @@ class RadioButton(QRadioButton, Widget):
         painter = QPainter(self)
         painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         
-        # 多层柔和阴影效果 (CSS box-shadow 风格) - 外围容器
         outerBaseOpacity = self.property("baseOpacity") or 0.85
         outerRect = self.rect()
         
@@ -680,7 +667,6 @@ class RadioButton(QRadioButton, Widget):
         painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        # 绘制毛玻璃背景 (Glassmorphism 风格)
         painter.save()
         painter.setOpacity(outerBaseOpacity)
         
@@ -705,20 +691,18 @@ class RadioButton(QRadioButton, Widget):
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(outerRect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(outerRect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        # 内发光效果 (Inner Glow - CSS box-shadow inset)
         painter.save()
         painter.setOpacity(outerBaseOpacity * 0.3)
         
         glowColor = QColor(255, 255, 255, int(180 * outerBaseOpacity))
         painter.setPen(QPen(glowColor, 1.5))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(outerRect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.drawRoundedRect(outerRect.adjusted(2, 2, -2, -2), 14, 14)
         painter.restore()
         
-        # 边框渐变效果
         painter.save()
         painter.setOpacity(outerBaseOpacity * 0.9)
         
@@ -737,7 +721,7 @@ class RadioButton(QRadioButton, Widget):
         penBorder = QPen(borderGradient, 1.0)
         painter.setPen(penBorder)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(outerRect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(outerRect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
         rect = self.style().subElementRect(QStyle.SubElement.SE_RadioButtonIndicator, op).adjusted(1, 1, -1, -1)

@@ -27,39 +27,32 @@ class Panel(Widget):
         baseOpacity = self.property("baseOpacity") or 0.85
         frameOpacity = self.property("frameOpacity") or 0.0
         
-        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
         painter.setOpacity(baseOpacity * 0.7)
         
-        # 外层大阴影 - 模糊
         shadowColor1 = QColor(0, 0, 0, int(12 * baseOpacity))
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(shadowColor1)
         shadowRect1 = rect.adjusted(6, 6, -6, -6)
         painter.drawRoundedRect(shadowRect1, 18, 18)
         
-        # 中层阴影
         shadowColor2 = QColor(0, 0, 0, int(8 * baseOpacity))
         painter.setBrush(shadowColor2)
         shadowRect2 = rect.adjusted(4, 4, -4, -4)
         painter.drawRoundedRect(shadowRect2, 16, 16)
         
-        # 内层阴影 - 更清晰
         shadowColor3 = QColor(0, 0, 0, int(5 * baseOpacity))
         painter.setBrush(shadowColor3)
         shadowRect3 = rect.adjusted(2, 2, -2, -2)
         painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        # 绘制毛玻璃背景 (Glassmorphism 风格)
         painter.save()
         painter.setOpacity(baseOpacity)
         
-        # 对角线渐变背景
         bgGradient = QLinearGradient(QPointF(rect.topLeft()), QPointF(rect.bottomRight()))
         bgColor = getBackgroundColour()
         
-        # 创建柔和的渐变色
         bgColorLight = QColor(
             min(255, bgColor.red() + 20),
             min(255, bgColor.green() + 20),
@@ -78,20 +71,18 @@ class Panel(Widget):
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        # 内发光效果 (Inner Glow - CSS box-shadow inset)
         painter.save()
         painter.setOpacity(baseOpacity * 0.3)
         
         glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
         painter.setPen(QPen(glowColor, 1.5))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 14, 14)
         painter.restore()
         
-        # 边框渐变效果
         painter.save()
         painter.setOpacity(baseOpacity * 0.9)
         
@@ -110,5 +101,5 @@ class Panel(Widget):
         penBorder = QPen(borderGradient, 1.0)
         painter.setPen(penBorder)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()

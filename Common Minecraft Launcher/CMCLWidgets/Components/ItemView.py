@@ -65,7 +65,6 @@ class ItemDelegateLineEdit(QLineEdit, Widget):
         painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        # Hover/Focus 状态效果
         if frameOpacity > 0.1:
             painter.save()
             painter.setOpacity(frameOpacity)
@@ -135,7 +134,7 @@ class ItemDelegate(QItemDelegate):
                 bgGradient.setColorAt(0.0, bgColorLighter)
                 bgGradient.setColorAt(1.0, bgColor)
                 painter.setBrush(bgGradient)
-                painter.drawRoundedRect(rowRect.adjusted(0, -1, 0, 0), 16, 16)
+                painter.drawRoundedRect(rowRect.adjusted(1, 0, -1, 0), 16, 16)
                 
                 painter.restore()
         
@@ -162,7 +161,7 @@ class ItemDelegate(QItemDelegate):
             rowRect = QRect(option.rect)
             rowRect.setX(rowRect.x() + 5)
             rowRect.setWidth(rowRect.width() + 5)
-            painter.drawRoundedRect(rowRect.adjusted(0, -1, 0, 0), 16, 16)
+            painter.drawRoundedRect(rowRect.adjusted(1, 0, -1, 0), 16, 16)
             
             painter.restore()
         
@@ -199,7 +198,6 @@ class ItemView(QAbstractItemView, Widget):
         rect = self.viewport().rect()
         baseOpacity = self.property("baseOpacity") or 0.85
         
-        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
         painter.setOpacity(baseOpacity * 0.7)
         
@@ -220,7 +218,6 @@ class ItemView(QAbstractItemView, Widget):
         painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        # 绘制毛玻璃背景 (Glassmorphism 风格)
         painter.save()
         painter.setOpacity(baseOpacity)
         
@@ -245,20 +242,18 @@ class ItemView(QAbstractItemView, Widget):
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        # 内发光效果 (Inner Glow - CSS box-shadow inset)
         painter.save()
         painter.setOpacity(baseOpacity * 0.3)
         
         glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
         painter.setPen(QPen(glowColor, 1.5))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 14, 14)
         painter.restore()
         
-        # 边框渐变效果
         painter.save()
         painter.setOpacity(baseOpacity * 0.9)
         
@@ -277,7 +272,7 @@ class ItemView(QAbstractItemView, Widget):
         penBorder = QPen(borderGradient, 1.0)
         painter.setPen(penBorder)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
         op = QStyleOptionFrame()

@@ -462,7 +462,6 @@ class RoundedMenu(QMenu):
         rect = self.rect()
         baseOpacity = 0.95
         
-        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
         painter.setOpacity(baseOpacity * 0.7)
         
@@ -483,7 +482,6 @@ class RoundedMenu(QMenu):
         painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        # 绘制毛玻璃背景 (Glassmorphism 风格)
         painter.save()
         painter.setOpacity(baseOpacity)
         
@@ -511,7 +509,6 @@ class RoundedMenu(QMenu):
         painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), self.BORDER_RADIUS, self.BORDER_RADIUS)
         painter.restore()
         
-        # 内发光效果 (Inner Glow - CSS box-shadow inset)
         painter.save()
         painter.setOpacity(baseOpacity * 0.3)
         
@@ -521,7 +518,6 @@ class RoundedMenu(QMenu):
         painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), self.BORDER_RADIUS - 2, self.BORDER_RADIUS - 2)
         painter.restore()
         
-        # 边框渐变效果
         painter.save()
         painter.setOpacity(baseOpacity * 0.9)
         
@@ -544,7 +540,6 @@ class RoundedMenu(QMenu):
         painter.restore()
         painter.end()
         
-        # 让 QMenu 绘制菜单项（QSS 已设 background: transparent，只渲染 item/separator 等）
         super().paintEvent(a0)
     
     def updateQSS(self, name=None):
@@ -552,7 +547,6 @@ class RoundedMenu(QMenu):
             name = self.__class__.__name__
         
         if isinstance(self, RoundedMenu):
-            # RoundedMenu 实例：背景由 paintEvent 绘制，QSS 仅处理项目和分隔线
             self.setStyleSheet(f"""{name}{{
     background: transparent;
     color: rgb({str(getForegroundColour(is_tuple=True)).strip('()')});

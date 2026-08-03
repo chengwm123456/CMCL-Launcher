@@ -37,7 +37,6 @@ class HeaderView(QHeaderView, Widget):
         rect = self.viewport().rect()
         baseOpacity = self.viewport().property("baseOpacity") or 0.85
         
-        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
         painter.setOpacity(baseOpacity * 0.7)
         
@@ -58,7 +57,6 @@ class HeaderView(QHeaderView, Widget):
         painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        # 绘制毛玻璃背景 (Glassmorphism 风格)
         painter.save()
         painter.setOpacity(baseOpacity)
         
@@ -83,20 +81,18 @@ class HeaderView(QHeaderView, Widget):
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        # 内发光效果 (Inner Glow - CSS box-shadow inset)
         painter.save()
         painter.setOpacity(baseOpacity * 0.3)
         
         glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
         painter.setPen(QPen(glowColor, 1.5))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 14, 14)
         painter.restore()
         
-        # 边框渐变效果
         painter.save()
         painter.setOpacity(baseOpacity * 0.9)
         
@@ -115,11 +111,11 @@ class HeaderView(QHeaderView, Widget):
         penBorder = QPen(borderGradient, 1.0)
         painter.setPen(penBorder)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
         pp = QPainterPath()
-        pp.addRoundedRect(self.viewport().rect().toRectF().adjusted(1.625, 1.625, -1.625, -1.625), 12, 12)
+        pp.addRoundedRect(self.viewport().rect().toRectF().adjusted(1.625, 1.625, -1.625, -1.625), 16, 16)
         painter.setClipPath(pp)
         for section in range(self.count()):
             op = QStyleOptionHeader()
@@ -188,7 +184,6 @@ class TableView(QTableView, Widget):
         rect = self.viewport().rect()
         baseOpacity = self.viewport().property("baseOpacity") or 0.85
         
-        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
         painter.setOpacity(baseOpacity * 0.7)
         
@@ -209,7 +204,6 @@ class TableView(QTableView, Widget):
         painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        # 绘制毛玻璃背景 (Glassmorphism 风格)
         painter.save()
         painter.setOpacity(baseOpacity)
         
@@ -234,20 +228,18 @@ class TableView(QTableView, Widget):
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        # 内发光效果 (Inner Glow - CSS box-shadow inset)
         painter.save()
         painter.setOpacity(baseOpacity * 0.3)
         
         glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
         painter.setPen(QPen(glowColor, 1.5))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 14, 14)
         painter.restore()
         
-        # 边框渐变效果
         painter.save()
         painter.setOpacity(baseOpacity * 0.9)
         
@@ -266,7 +258,7 @@ class TableView(QTableView, Widget):
         penBorder = QPen(borderGradient, 1.0)
         painter.setPen(penBorder)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
         self.setShowGrid(False)
@@ -304,7 +296,6 @@ class TableWidget(QTableWidget, Widget):
         rect = self.viewport().rect()
         baseOpacity = self.viewport().property("baseOpacity") or 0.85
         
-        # 多层柔和阴影效果 (CSS box-shadow 风格)
         painter.save()
         painter.setOpacity(baseOpacity * 0.7)
         
@@ -325,7 +316,6 @@ class TableWidget(QTableWidget, Widget):
         painter.drawRoundedRect(shadowRect3, 14, 14)
         painter.restore()
         
-        # 绘制毛玻璃背景 (Glassmorphism 风格)
         painter.save()
         painter.setOpacity(baseOpacity)
         
@@ -350,20 +340,18 @@ class TableWidget(QTableWidget, Widget):
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(bgGradient)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
-        # 内发光效果 (Inner Glow - CSS box-shadow inset)
         painter.save()
         painter.setOpacity(baseOpacity * 0.3)
         
         glowColor = QColor(255, 255, 255, int(180 * baseOpacity))
         painter.setPen(QPen(glowColor, 1.5))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 10, 10)
+        painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 14, 14)
         painter.restore()
         
-        # 边框渐变效果
         painter.save()
         painter.setOpacity(baseOpacity * 0.9)
         
@@ -382,7 +370,7 @@ class TableWidget(QTableWidget, Widget):
         penBorder = QPen(borderGradient, 1.0)
         painter.setPen(penBorder)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 12, 12)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 16, 16)
         painter.restore()
         
         self.setShowGrid(False)
