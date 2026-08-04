@@ -619,9 +619,8 @@ class LoginWindow(MaskedDialogue):
         if result:
             pos = re.search(r"code=(.+?)&", self.view.url().toString())
             if pos:
-                code = pos.group(1)
-                token = code.split("=")[1]
-                token = token.split("&")[0]
+                token = pos.group(1)
+                token = token.removesuffix("%24")
                 thread = self.LoginThread(token, self.window())
                 thread.start()
                 self.progress.finish(ani=False)
