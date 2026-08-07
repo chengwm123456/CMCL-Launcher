@@ -41,8 +41,8 @@ def DownloadFabricLibraries(json_info, minecraft_path):
 
 def DownloadFabricFull(game, loader, minecraft_path, vanilla_download=True, **options):
     versions_path = Path(minecraft_path) / "versions"
-    (Path(minecraft_path) / "versions" / f"fabric-loader-{loader}-{game}").mkdir(parents=True, exist_ok=True)
     if not (versions_path / f"fabric-loader-{loader}-{game}").exists():
+        (Path(minecraft_path) / "versions" / f"fabric-loader-{loader}-{game}").mkdir(parents=True, exist_ok=True)
         DownloadFabricZip(game, loader, versions_path, **options)
         zip_path = versions_path / f"fabric-loader-{loader}-{game}.zip"
         zip_file = ZipFile(zip_path)
