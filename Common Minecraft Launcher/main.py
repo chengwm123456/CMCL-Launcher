@@ -1999,9 +1999,16 @@ class DownloadPage(QFrame):
                 
                 def run(self):
                     result = {}
-                    result["NeoForge"] = GetNeoForgeVersions()
-                    result["Fabric"] = GetFabricLoaderVersions()
-                    result["FabricAPI"] = GetFabricApiVersions()
+                    try:
+                        result["NeoForge"] = GetNeoForgeVersions()
+                    except:
+                        result["NeoForge"] = None
+                    try:  # We usually download these two together.
+                        result["Fabric"] = GetFabricLoaderVersions()
+                        result["FabricAPI"] = GetFabricApiVersions()
+                    except:
+                        result["Fabric"] = None
+                        result["FabricAPI"] = None
                     self.fetched.emit(result)
             
             class DownloadVersionThread(QThread):
@@ -2051,6 +2058,8 @@ class DownloadPage(QFrame):
                 super().__init__(parent, getBackgroundColour(), QColor(0, 0, 255, 200), 10)
                 self.version = version
                 self.icon_path = icon_path
+                
+                self.loaders = None
                 
                 self.mainLayout = QVBoxLayout(self)
                 self.mainLayout.setSpacing(8)
@@ -2266,8 +2275,6 @@ class DownloadPage(QFrame):
                 
                 self.updateModLoadersAvailability()
                 
-                self.loaders = None
-                
                 app.registerRetranslateFunction(self.retranslateUI)
                 self.retranslateUI()
             
@@ -2346,26 +2353,30 @@ jar 下载位置在：
                 self.displayModLoaders()
             
             def displayModLoaders(self):
-                loaders = self.loaders
-                for version in reversed(loaders["NeoForge"]["versions"]):
-                    display_version = version
-                    display_version = "NeoForge " + display_version
-                    self.form_5_ComboBox.addItem(display_version, version)
+                loaders = self.loaders or {}
+                if loaders.get("NeoForge", {}).get("versions", None):
+                    for version in reversed(loaders["NeoForge"]["versions"]):
+                        display_version = version
+                        display_version = "NeoForge " + display_version
+                        self.form_5_ComboBox.addItem(display_version, version)
                 
-                for loader in loaders["Fabric"]:
-                    version = loader["version"]
-                    version = "Fabric " + version.split(":")[-1]
-                    self.form_6_ComboBox.addItem(
-                        "{} ({})".format(version,
-                                         self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Loader.Stable") if
-                                         loader["stable"] else self.tr(
-                                             "DownloadPage.DownloadVanilla.DownloadOptions.Loader.Beta")),
-                        loader["version"])
-                for api in loaders["FabricAPI"]:
-                    if self.version in api["game_versions"]:
-                        version_number = api["version_number"]
-                        version_number = "Fabric API " + version_number.split("+")[0]
-                        self.form_7_ComboBox.addItem(version_number, api["version_number"])
+                if loaders.get("Fabric", {}).get("versions", None):
+                    for loader in loaders["Fabric"]:
+                        version = loader["version"]
+                        version = "Fabric " + version.split(":")[-1]
+                        self.form_6_ComboBox.addItem(
+                            "{} ({})".format(version,
+                                             self.tr("DownloadPage.DownloadVanilla.DownloadOptions.Loader.Stable") if
+                                             loader["stable"] else self.tr(
+                                                 "DownloadPage.DownloadVanilla.DownloadOptions.Loader.Beta")),
+                            loader["version"])
+                
+                if loaders.get("FabricAPI"):
+                    for api in loaders["FabricAPI"]:
+                        if self.version in api["game_versions"]:
+                            version_number = api["version_number"]
+                            version_number = "Fabric API " + version_number.split("+")[0]
+                            self.form_7_ComboBox.addItem(version_number, api["version_number"])
             
             def updateModLoadersAvailability(self):
                 if self.form_5_ComboBox.currentIndex() > 0:
@@ -2396,8 +2407,31 @@ jar 下载位置在：
                             "DownloadPage.DownloadVanilla.DownloadOptions.Actions.DoNotDownload"))
                         self.form_7_ComboBox.setCurrentIndex(0)
                         self.form_7_ComboBox.setItemText(0, self.tr(
-                            "DownloadPage.DownloadVanilla.DownloadOptions.State.SelectFabricFirst"))  # 请先选择一个 Fabric 版本
+                            "DownloadPage.DownloadVanilla.DownloadOptions.State.SelectFabricFirst"))
                         self.form_7_ComboBox.setDisabled(True)
+                
+                if not self.loaders["NeoForge"]:
+                    self.form_5_ComboBox.setDisabled(True)
+                    self.form_5_ComboBox.setCurrentIndex(0)
+                    self.form_5_ComboBox.setItemText(0, self.tr(
+                        "DownloadPage.DownloadVanilla.DownloadOptions.State.NoLoadersFetched").format(
+                        "NeoForge"))  # 未获取到 {} 版本。
+                
+                if not self.loaders["FabricAPI"]:
+                    self.form_7_ComboBox.setDisabled(True)
+                    self.form_7_ComboBox.setCurrentIndex(0)
+                    self.form_7_ComboBox.setItemText(0, self.tr(
+                        "DownloadPage.DownloadVanilla.DownloadOptions.State.NoFabricAPIFetched"))  # 未获取到 Fabric API。
+                
+                if not self.loaders["Fabric"]:
+                    self.form_6_ComboBox.setDisabled(True)
+                    self.form_6_ComboBox.setCurrentIndex(0)
+                    self.form_6_ComboBox.setItemText(0, self.tr(
+                        "DownloadPage.DownloadVanilla.DownloadOptions.State.NoLoadersFetched").format("Fabric"))
+                    self.form_7_ComboBox.setDisabled(True)
+                    self.form_7_ComboBox.setCurrentIndex(0)
+                    self.form_7_ComboBox.setItemText(0, self.tr(
+                        "DownloadPage.DownloadVanilla.DownloadOptions.State.FabricAPIUnavailable"))  # Fabric API 不可用
             
             def openWiki(self):
                 wikiUrls = {
@@ -6089,9 +6123,14 @@ with Path("latest.log").open("w", encoding="utf-8") as out:
         outUpd.setInterval(5000)
         outUpd.start()
         app.exec()
+        qCleanupResources()
 
+# The following commands are for building resources. (Only works on my computer. Please change `rcc.exe` and `lupdate.exe` on your computer)
+
+# This command is used to build resources.qrc to resources.py. If you don't run this after changing resources.qrc, it won't affect.
 # "%appdata%\Python\Python311\Scripts\pyside6-rcc.exe" resources.qrc -o resources.py
 
+# The following commands are used to generate translation files.
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-cn.ts
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-hk.ts
 # "%appdata%\Python\Python311\Scripts\pyside6-lupdate.exe" main.py -ts CMCL_zh-tw.ts
