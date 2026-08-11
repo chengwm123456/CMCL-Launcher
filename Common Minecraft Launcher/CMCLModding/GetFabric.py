@@ -14,8 +14,8 @@ def GetFabricLoaderVersions():
     return response
 
 
-def GetFabricApiVersions():
-    return ListModVersions("Fabric API")
+def GetFabricApiVersions(game_version=None):
+    return ListModVersions("Fabric API", game_version=game_version)
 
 
 def GetDownloadUrlBase(game, loader):

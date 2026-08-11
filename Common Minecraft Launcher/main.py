@@ -1997,18 +1997,24 @@ class DownloadPage(QFrame):
             class FetchModLoadersThread(QThread):
                 fetched = pyqtSignal(dict)
                 
+                def __init__(self, parent, game_version=None):
+                    super().__init__(parent)
+                    self.game_version = game_version
+                
                 def run(self):
                     result = {}
                     try:
                         result["NeoForge"] = GetNeoForgeVersions()
                     except:
-                        result["NeoForge"] = None
+                        result["NeoForge"] = {}
+                        traceback.print_exc()
                     try:  # We usually download these two together.
                         result["Fabric"] = GetFabricLoaderVersions()
-                        result["FabricAPI"] = GetFabricApiVersions()
+                        result["FabricAPI"] = GetFabricApiVersions(game_version=self.game_version)
                     except:
-                        result["Fabric"] = None
-                        result["FabricAPI"] = None
+                        result["Fabric"] = []
+                        result["FabricAPI"] = []
+                        traceback.print_exc()
                     self.fetched.emit(result)
             
             class DownloadVersionThread(QThread):
@@ -2269,7 +2275,7 @@ class DownloadPage(QFrame):
                 
                 self.scrollArea.verticalScrollBar().valueChanged.connect(self.updateTopSelections)
                 
-                self.fetchModLoadersThread = self.FetchModLoadersThread(self)
+                self.fetchModLoadersThread = self.FetchModLoadersThread(self, self.version)
                 self.fetchModLoadersThread.fetched.connect(self.modLoadersFetched)
                 self.fetchModLoadersThread.start()
                 
@@ -2360,7 +2366,7 @@ jar 下载位置在：
                         display_version = "NeoForge " + display_version
                         self.form_5_ComboBox.addItem(display_version, version)
                 
-                if loaders.get("Fabric", {}).get("versions", None):
+                if loaders.get("Fabric"):
                     for loader in loaders["Fabric"]:
                         version = loader["version"]
                         version = "Fabric " + version.split(":")[-1]
@@ -2410,20 +2416,28 @@ jar 下载位置在：
                             "DownloadPage.DownloadVanilla.DownloadOptions.State.SelectFabricFirst"))
                         self.form_7_ComboBox.setDisabled(True)
                 
-                if not self.loaders["NeoForge"]:
+                loaders = self.loaders or {}
+                self.form_5_ComboBox.setEnabled(True)
+                self.form_5_ComboBox.setCurrentIndex(0)
+                self.form_6_ComboBox.setEnabled(True)
+                self.form_6_ComboBox.setCurrentIndex(0)
+                self.form_7_ComboBox.setEnabled(True)
+                self.form_7_ComboBox.setCurrentIndex(0)
+                
+                if not loaders.get("NeoForge"):
                     self.form_5_ComboBox.setDisabled(True)
                     self.form_5_ComboBox.setCurrentIndex(0)
                     self.form_5_ComboBox.setItemText(0, self.tr(
                         "DownloadPage.DownloadVanilla.DownloadOptions.State.NoLoadersFetched").format(
                         "NeoForge"))  # 未获取到 {} 版本。
                 
-                if not self.loaders["FabricAPI"]:
+                if not loaders.get("FabricAPI"):
                     self.form_7_ComboBox.setDisabled(True)
                     self.form_7_ComboBox.setCurrentIndex(0)
                     self.form_7_ComboBox.setItemText(0, self.tr(
                         "DownloadPage.DownloadVanilla.DownloadOptions.State.NoFabricAPIFetched"))  # 未获取到 Fabric API。
                 
-                if not self.loaders["Fabric"]:
+                if not loaders.get("Fabric"):
                     self.form_6_ComboBox.setDisabled(True)
                     self.form_6_ComboBox.setCurrentIndex(0)
                     self.form_6_ComboBox.setItemText(0, self.tr(
@@ -4618,6 +4632,25 @@ JVM 参数就是：
             app.translator.load(f":/CMCL_{currentLanguage}.qm")
             # app.installTranslator(app.translator)
             app.retranslate()
+            
+            # The following code will automatically change the fonts to be consistent with the language.
+            
+            font = "HarmonyOS Sans"
+            
+            if currentLanguage == "zh-cn":
+                font += " SC"
+            elif currentLanguage == "zh-hk":
+                font += " TC"
+            
+            UIFontList = [font, "Segoe UI Emoji"]
+            UIFont = QFont(UIFontList)
+            UIFont.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
+            UIFont.setStyleStrategy(QFont.StyleStrategy.PreferAntialias)
+            
+            font = QFont(UIFontList, 10)
+            font.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
+            font.setStyleStrategy(QFont.StyleStrategy.PreferAntialias)
+            app.setFont(font)
         
         def selectMirrorSource(self):
             value = self.form_3_ComboBox.currentIndex()
@@ -6123,7 +6156,7 @@ with Path("latest.log").open("w", encoding="utf-8") as out:
         outUpd.setInterval(5000)
         outUpd.start()
         app.exec()
-        qCleanupResources()
+        resources.qCleanupResources()
 
 # The following commands are for building resources. (Only works on my computer. Please change `rcc.exe` and `lupdate.exe` on your computer)
 

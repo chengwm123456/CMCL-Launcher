@@ -45,12 +45,14 @@ def GetProjects(limit=10, offset=0, project_type="mod"):
     return res_json
 
 
-def ListModVersions(name="", project_type="mod"):
+def ListModVersions(name="", project_type="mod", game_version=None):
     hit = requests.get("https://api.modrinth.com/v2/search",
                        params={"facets": f"[[\"project_type: {project_type}\"]]", "limit": 1, "query": name},
                        headers={"User-Agent": "CMCL"}).json()["hits"][0]
-    mod_id = hit["id"]
+    mod_id = hit["project_id"]
     response = requests.get(f"https://api.modrinth.com/v2/project/{mod_id}/version").json()
+    if game_version:
+        response = [version for version in response if game_version in version["game_versions"]]
     return response
 
 
